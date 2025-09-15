@@ -15,7 +15,9 @@
     <script src="player.js" defer></script>
 </head>
 
-<body><dreamdesk-window id="player-window" title="player" width="300px" height="145px" resizable="false" style="
+<body>
+    <div class="container"></div><dreamdesk-window id="player-window" title="player" width="300px" height="145px"
+        resizable="false" style="
 --dd-window-body: #000;
 --dd-window-text: #fff6a9;
 --dd-window-border: 1px solid #fff6a9;
@@ -88,6 +90,32 @@
             </div>
         </div>
     </dreamdesk-window>
+    <div id="playlist-dock" style="display:none;">
+        <div class="track-list scrollable" id="track-list">
+            <ol class="track-items" id="track-items"></ol>
+        </div>
+    </div>
+    <div id="eq-dock" style="display:none;">
+        <div class="eq-panel">
+            <div class="eq-header">equalizer</div>
+            <div class="eq-bands">
+                <label><span>60</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="0"></label>
+                <label><span>170</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="1"></label>
+                <label><span>350</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="2"></label>
+                <label><span>1k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="3"></label>
+                <label><span>3k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="4"></label>
+                <label><span>10k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="5"></label>
+                <label><span>16k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                        data-band="6"></label>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
