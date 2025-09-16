@@ -976,16 +976,12 @@ window.addEventListener('resize', () => {
 });
   
 
-
 window.DreamDeskAnimations = {
   customFullscreen(el, { isFullscreen, previousState }) {
     try {
       const playlistDock = document.getElementById('playlist-dock');
       const eqDock = document.getElementById('eq-dock');
       if (!playlistDock || !eqDock) return;
-
-      // keep logs minimal; we only log when unfullscreening
-
       const firstInvocation = typeof window._preFsPlaylistVisible === 'undefined' && typeof window._preFsEqVisible === 'undefined';
       if (!isFullscreen && firstInvocation && !window._fsBootstrapDone) {
         
@@ -998,14 +994,26 @@ window.DreamDeskAnimations = {
           positionDock(playlistDock);
           positionDockBelow(playlistDock, eqDock);
           startFollowingDock();
-          try { console.log('[FS] positioned (first enter)'); } catch(_) {}
         });
         window._fsBootstrapDone = true;
+        window._isFullscreenActive = true;
+        return;
+      }
+
+      if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
+        playlistDock.style.display = 'none';
+        eqDock.style.display = 'none';
+        stopFollowingDock();
+        try { console.log('[FS] unfullscreen: hide docks'); } catch(_) {}
+        window._isFullscreenActive = false;
+        // reset bootstrap and previous-state markers so next enter can bootstrap again
+        window._fsBootstrapDone = false;
+        window._preFsPlaylistVisible = undefined;
+        window._preFsEqVisible = undefined;
         return;
       }
 
       if (isFullscreen) {
-        // Capture player window position/styles to restore on exit using the cached rect
         try {
           const win = document.getElementById('player-window');
           if (win) {
@@ -1035,12 +1043,15 @@ window.DreamDeskAnimations = {
           window._isFullscreenActive = true;
         });
       } else {
-        // Unfullscreen: simply hide both docks and stop following
         playlistDock.style.display = 'none';
         eqDock.style.display = 'none';
         stopFollowingDock();
         try { console.log('[FS] unfullscreen: hide docks'); } catch(_) {}
         window._isFullscreenActive = false;
+        // reset bootstrap and previous-state markers so next enter can bootstrap again
+        window._fsBootstrapDone = false;
+        window._preFsPlaylistVisible = undefined;
+        window._preFsEqVisible = undefined;
       }
     } catch (_) {}
   },
