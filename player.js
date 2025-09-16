@@ -155,7 +155,6 @@ function processAudioData(data) {
         f.gain.value = 0;
         this.eqFilters.push(f);
       }
-      try { console.log('[eq] init', { sampleRate: this.audioContext.sampleRate, filters: this.eqFilters.map(f => ({ type: f.type, freq: f.frequency.value, q: f.Q?.value, gain: f.gain.value })) }); } catch(_) {}
     }
 
     // connect the chain from the given input node -> EQ filters -> analyser -> destination
@@ -173,7 +172,6 @@ function processAudioData(data) {
       }
       node.connect(this.analyser);
       this.analyser.connect(this.audioContext.destination);
-      try { console.log('[eq] chain connected', { from: inputNode === this.panner ? 'panner' : (inputNode === this.merger ? 'merger' : 'unknown'), filters: this.eqFilters.length }); } catch(_) {}
     }
 
     // set stereo balance: -1 (left) .. 0 .. +1 (right)
@@ -334,7 +332,7 @@ function processAudioData(data) {
       const val = Number(gainDb) || 0;
       if (this.eqFilters && this.eqFilters[idx]) {
         this.eqFilters[idx].gain.value = val;
-        try { console.log('[eq] setEqGain', { bandIndex: idx, gainDb: val, nodeGain: this.eqFilters[idx].gain.value }); } catch(_) {}
+
       }
     }
 
@@ -653,7 +651,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       const v = Number(volumeSlider.value);
       const vol = Math.max(0, Math.min(1, (isNaN(v) ? 50 : v) / 100));
       if (visualizer.audio) visualizer.audio.volume = vol;
-      // try { console.log('[ui] volumeSlider input', { value: v, volume: vol }); } catch(_) {}
       if (trackLabelEl && window._baseTrackLabel) {
         const pct = Math.round(isNaN(v) ? 50 : v);
         trackLabelEl.textContent = `Volume: ${pct}%`;
@@ -678,7 +675,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       const raw = Number(balanceSlider.value) || 0;
       const pan = Math.max(-1, Math.min(1, raw / 100));
       visualizer.setPan?.(pan);
-      // try { console.log('[ui] balanceSlider input', { value: raw, pan }); } catch(_) {}
     };
     if (visualizer.audio.readyState >= 1) applyPan();
     visualizer.audio.addEventListener('loadedmetadata', applyPan);
@@ -786,6 +782,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
   plButton?.addEventListener('click', () => {
     const playlistDock = document.getElementById('playlist-dock');
     const isHidden = playlistDock.style.display === 'none' || !playlistDock.style.display;
+    try { console.log('[PL] toggle click', { isHiddenBefore: isHidden, plVisible: isVisible(playlistDock) }); } catch(_) {}
     if (isHidden) {
       updatePlayerRectCache();
       positionDock(playlistDock);
@@ -795,7 +792,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     } else {
       playlistDock.style.display = 'none';
       const eqDock = document.getElementById('eq-dock');
-      if (isVisible(eqDock)) {y
+      if (isVisible(eqDock)) {
         updatePlayerRectCache();
         positionDock(eqDock);
         startFollowingDock();
@@ -807,7 +804,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
 
   eqButton?.addEventListener('click', () => {
     const eqDock = document.getElementById('eq-dock');
-    if (!eqDock) { try { console.log('[ui] eq toggle: no eqDock'); } catch(_) {} return; }
     const isHidden = eqDock.style.display === 'none' || !eqDock.style.display;
     if (isHidden) {
       const playlistDock = document.getElementById('playlist-dock');
@@ -892,7 +888,6 @@ setupPlayerRectCache();
 
 // === Equalizer UI wiring (use 3k band slider to control 3 kHz peaking filter) ===
 function wireEq() {
-  try {
     const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-bands input.eq-slider'));
     if (!sliders.length) return;
     const onInput = (e) => {
@@ -900,7 +895,6 @@ function wireEq() {
       if (!el) return;
       const bandIndex = Number(el.getAttribute('data-band')) || 0;
       const v = Number(el.value) || 0;
-      try { console.log('[ui] eq input', { bandIndex, value: v }); } catch(_) {}
       visualizer.setEqGain?.(bandIndex, v);
     };
     sliders.forEach((el) => {
@@ -908,7 +902,6 @@ function wireEq() {
       el.addEventListener('change', onInput);
       onInput({ currentTarget: el });
     });
-  } catch(err) { try { console.log('[ui] eq wire error', err); } catch(_) {} }
 }
 
 if (document.readyState === 'loading') {
@@ -982,3 +975,75 @@ window.addEventListener('resize', () => {
   positionDock(document.getElementById('eq-dock'));
 });
   
+
+
+window.DreamDeskAnimations = {
+  customFullscreen(el, { isFullscreen, previousState }) {
+    try {
+      const playlistDock = document.getElementById('playlist-dock');
+      const eqDock = document.getElementById('eq-dock');
+      if (!playlistDock || !eqDock) return;
+
+      // keep logs minimal; we only log when unfullscreening
+
+      const firstInvocation = typeof window._preFsPlaylistVisible === 'undefined' && typeof window._preFsEqVisible === 'undefined';
+      if (!isFullscreen && firstInvocation && !window._fsBootstrapDone) {
+        
+        playlistDock.style.display = 'block';
+        eqDock.style.display = 'block';
+        try { (window.visualizer || visualizer)?.buildTrackList?.(); } catch (_) {}
+        try { wireEq(); } catch (_) {}
+        window.requestAnimationFrame(() => {
+          updatePlayerRectCache();
+          positionDock(playlistDock);
+          positionDockBelow(playlistDock, eqDock);
+          startFollowingDock();
+          try { console.log('[FS] positioned (first enter)'); } catch(_) {}
+        });
+        window._fsBootstrapDone = true;
+        return;
+      }
+
+      if (isFullscreen) {
+        // Capture player window position/styles to restore on exit using the cached rect
+        try {
+          const win = document.getElementById('player-window');
+          if (win) {
+            const r = getPlayerRectCached();
+            window._playerPrevWindow = {
+              left: win.style.left,
+              top: win.style.top,
+              width: win.style.width,
+              height: win.style.height,
+              transform: win.style.transform,
+              rect: r
+            };
+          }
+        } catch(_) {}
+        window._preFsPlaylistVisible = isVisible(playlistDock);
+        window._preFsEqVisible = isVisible(eqDock);
+        playlistDock.style.display = 'block';
+        eqDock.style.display = 'block';
+        try { (window.visualizer || visualizer)?.buildTrackList?.(); } catch (_) {}
+        try { wireEq(); } catch (_) {}
+
+        window.requestAnimationFrame(() => {
+          updatePlayerRectCache();
+          positionDock(playlistDock);
+          positionDockBelow(playlistDock, eqDock);
+          startFollowingDock();
+          window._isFullscreenActive = true;
+        });
+      } else {
+        // Unfullscreen: simply hide both docks and stop following
+        playlistDock.style.display = 'none';
+        eqDock.style.display = 'none';
+        stopFollowingDock();
+        try { console.log('[FS] unfullscreen: hide docks'); } catch(_) {}
+        window._isFullscreenActive = false;
+      }
+    } catch (_) {}
+  },
+};
+
+window.DreamDeskAnimations.customUnfullscreen = window.DreamDeskAnimations.customFullscreen;

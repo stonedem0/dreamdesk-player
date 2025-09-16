@@ -16,8 +16,8 @@
 </head>
 
 <body>
-    <div class="container"></div><dreamdesk-window id="player-window" title="player" width="300px" height="145px"
-        resizable="false" style="
+    <div class="container"><dreamdesk-window id="player-window" title="player" width="300px" height="145px"
+            resizable="false" style="
 --dd-window-body: #000;
 --dd-window-text: #fff6a9;
 --dd-window-border: 1px solid #fff6a9;
@@ -37,6 +37,7 @@
 --dd-header-color: #2d1b3d;
 --dd-border: 2px solid #2d1b3d;;
 --dd-header-shadow: none;
+--dd-header-height: 1.2rem; 
 --dd-body-padding: 0;
 --dd-controls-bg: #1d1c1c;
 --dd-controls-bg-hover: #121212;
@@ -46,73 +47,77 @@
 --dd-controls-shadow: 0 0 6px rgba(255,133,0,0.35);
 --dd-controls-icon-size: 2rem;
 " minimize-icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff8500"><rect x="0" y="20" width="22" height="7"/></svg>'
-        fullscreen-icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff8500" stroke-width="3"><rect x="3" y="3" width="18" height="18" fill="none"/><line x1="3" y1="7" x2="21" y2="7" stroke="#ff8500" stroke-width="3"/></svg>'
-        close-icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="#ff8500" stroke-width="5" stroke-linecap="butt"><line x1="3" y1="3" x2="21" y2="21"/><line x1="21" y1="3" x2="3" y2="21"/></svg>'>
-        <div class="player">
-            <div class="display">
-                <div class="audiowave" id="audiowave">
-                    <div class="timer" id="countdown-timer">3:05</div>
-                    <div id="visualizer-container">
-                        <canvas id="visualizer" width="100" height="49"></canvas>
+            fullscreen-icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff8500" stroke-width="3"><rect x="3" y="3" width="18" height="18" fill="none"/><line x1="3" y1="7" x2="21" y2="7" stroke="#ff8500" stroke-width="3"/></svg>'
+            close-icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="#ff8500" stroke-width="5" stroke-linecap="butt"><line x1="3" y1="3" x2="21" y2="21"/><line x1="21" y1="3" x2="3" y2="21"/></svg>'
+            fullscreen-animation="customFullscreen" fullscreen-mode="expand">
+            <div class="player">
+                <div class="display">
+                    <div class="audiowave" id="audiowave">
+                        <div class="timer" id="countdown-timer">3:05</div>
+                        <div id="visualizer-container">
+                            <canvas id="visualizer" width="100" height="49"></canvas>
+                        </div>
+                    </div>
+                    <div class="current-track" id="current-track">
+                        <p class="neon" data-text=""></p>
+                    </div>
+                    <div class="player-controls">
+                        <button id="prev-button" data-action="prev">⏮︎</button>
+                        <button id="pause-button" data-action="pause">⏸︎</button>
+                        <button id="play-button" data-action="play">▶︎</button>
+                        <button id="stop-button" data-action="stop">⏹︎</button>
+                        <button id="next-button" data-action="next">⏭︎</button>
+                        <button id="upload-button" title="upload">⏏︎</button>
+                        <button id="shuffle-toggle" class="toggle-btn" aria-pressed="false"
+                            title="Shuffle">Shuffle</button>
+                        <button id="repeat-toggle" class="toggle-btn" aria-pressed="false"
+                            title="Repeat">Repeat</button>
+
+                    </div>
+                    <input id="upload-input" type="file" accept="audio/*" style="display:none" />
+                    <div class="screen" id="kbps"><span class="value"></span><span class="unit">kbps</span>
+                    </div>
+                    <div class="screen" id="khz"><span class="value"></span><span class="unit">kHz</span>
+                    </div>
+                    <div class="volume-controls-top">
+                        <input type="range" min="0" max="100" value="50" class="volume-slider" id="volume-slider">
+                        <input type="range" min="-100" max="100" value="0" step="1" class="balance-slider"
+                            id="balance-slider" title="Balance: Left (-) / Right (+)" aria-label="Balance">
+                        <button type="button" id="eq-button" class="mini-btn" title="Equalizer"
+                            aria-label="Equalizer">EQ</button>
+                        <button type="button" id="pl-button" class="mini-btn" title="Playlist"
+                            aria-label="Playlist">PL</button>
+                    </div>
+                    <div class="seek-controls">
+                        <input type="range" min="0" max="100" value="0" step="1" class="seek-slider" id="seek-slider">
                     </div>
                 </div>
-                <div class="current-track" id="current-track">
-                    <p class="neon" data-text=""></p>
-                </div>
-                <div class="player-controls">
-                    <button id="prev-button" data-action="prev">⏮︎</button>
-                    <button id="pause-button" data-action="pause">⏸︎</button>
-                    <button id="play-button" data-action="play">▶︎</button>
-                    <button id="stop-button" data-action="stop">⏹︎</button>
-                    <button id="next-button" data-action="next">⏭︎</button>
-                    <button id="upload-button" title="upload">⏏︎</button>
-                    <button id="shuffle-toggle" class="toggle-btn" aria-pressed="false" title="Shuffle">Shuffle</button>
-                    <button id="repeat-toggle" class="toggle-btn" aria-pressed="false" title="Repeat">Repeat</button>
-
-                </div>
-                <input id="upload-input" type="file" accept="audio/*" style="display:none" />
-                <div class="screen" id="kbps"><span class="value"></span><span class="unit">kbps</span>
-                </div>
-                <div class="screen" id="khz"><span class="value"></span><span class="unit">kHz</span>
-                </div>
-                <div class="volume-controls-top">
-                    <input type="range" min="0" max="100" value="50" class="volume-slider" id="volume-slider">
-                    <input type="range" min="-100" max="100" value="0" step="1" class="balance-slider"
-                        id="balance-slider" title="Balance: Left (-) / Right (+)" aria-label="Balance">
-                    <button type="button" id="eq-button" class="mini-btn" title="Equalizer"
-                        aria-label="Equalizer">EQ</button>
-                    <button type="button" id="pl-button" class="mini-btn" title="Playlist"
-                        aria-label="Playlist">PL</button>
-                </div>
-                <div class="seek-controls">
-                    <input type="range" min="0" max="100" value="0" step="1" class="seek-slider" id="seek-slider">
-                </div>
+            </div>
+        </dreamdesk-window>
+        <div id="playlist-dock" style="display:none;">
+            <div class="track-list scrollable" id="track-list">
+                <ol class="track-items" id="track-items"></ol>
             </div>
         </div>
-    </dreamdesk-window>
-    <div id="playlist-dock" style="display:none;">
-        <div class="track-list scrollable" id="track-list">
-            <ol class="track-items" id="track-items"></ol>
-        </div>
-    </div>
-    <div id="eq-dock" style="display:none;">
-        <div class="eq-panel">
-            <div class="eq-header">equalizer</div>
-            <div class="eq-bands">
-                <label><span>60</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="0"></label>
-                <label><span>170</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="1"></label>
-                <label><span>350</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="2"></label>
-                <label><span>1k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="3"></label>
-                <label><span>3k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="4"></label>
-                <label><span>10k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="5"></label>
-                <label><span>16k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
-                        data-band="6"></label>
+        <div id="eq-dock" style="display:none;">
+            <div class="eq-panel">
+                <div class="eq-header">equalizer</div>
+                <div class="eq-bands">
+                    <label><span>60</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="0"></label>
+                    <label><span>170</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="1"></label>
+                    <label><span>350</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="2"></label>
+                    <label><span>1k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="3"></label>
+                    <label><span>3k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="4"></label>
+                    <label><span>10k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="5"></label>
+                    <label><span>16k</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
+                            data-band="6"></label>
+                </div>
             </div>
         </div>
     </div>

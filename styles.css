@@ -1,12 +1,18 @@
 html, body {
     height: 100%;
   }
-  
 
- #playlist-window { position: fixed; top: calc(var(--player-top) + 146px); left: var(--player-left); z-index: 9; }
-  #playlist-window .win-body { overflow: hidden; }
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+#playlist-window { position: fixed; top: calc(var(--player-top) + 146px); left: var(--player-left); z-index: 9; }
+#playlist-window .win-body { overflow: hidden; }
   
-  #playlist-dock {
+#playlist-dock {
     position: fixed;
     top: calc(var(--player-top) + 146px);
     left: var(--player-left);
@@ -146,16 +152,6 @@ html, body {
     align-self: end
   }
   
-  @keyframes audio-wave {
-    from {
-      background-position-x: 0px;
-    }
-  
-    to {
-      background-position-x: -354px;
-    }
-  }
-  
   .player .display .current-track {
     grid-area: title;
     display: flex;
@@ -244,25 +240,14 @@ html, body {
     
   }
   #track-list::-webkit-scrollbar-button:vertical:decrement {
-  
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><polygon points='5,2 9,8 1,8' fill='%230d1624'/></svg>") no-repeat center #d0774a;
   }
   #track-list::-webkit-scrollbar-button:vertical:increment {
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><polygon points='1,2 9,2 5,8' fill='%230d1624'/></svg>") no-repeat center #d0774a;
     }
   
-  /* keep Dreamdesk’s “hide duplicate buttons” behavior */
   #track-list::-webkit-scrollbar-button:vertical:increment:start,
   #track-list::-webkit-scrollbar-button:vertical:decrement:end { display: none; }
-  /* .player .track-list .track-items {
-    margin: 0;
-    padding-left: 22px;
-  } */
-  
-  /* .player .track-list .track-items li {
-    margin: 1px 0;
-  } */
-  
   .track-items {
     margin: 0;
     padding-left: 19px;
