@@ -141,9 +141,11 @@ function processAudioData(data) {
 
     // initialize EQ nodes: 7 bands matching UI (60, 170, 350, 1k, 3k, 10k, 16k)
     initEQ() {
-      try {
-        this.eqFilters.forEach(f => { try { f.disconnect?.(); } catch(_) {} });
-      } catch(_) {}
+      if (Array.isArray(this.eqFilters) && this.eqFilters.length) {
+        this.eqFilters.forEach(f => {
+          if (f && typeof f.disconnect === 'function') f.disconnect();
+        });
+      }
       this.eqFilters = [];
       const freqs = [60, 170, 350, 1000, 3000, 10000, 16000];
       for (let i = 0; i < freqs.length; i++) {
@@ -160,12 +162,12 @@ function processAudioData(data) {
     // connect the chain from the given input node -> EQ filters -> analyser -> destination
     connectToAnalyser(inputNode) {
       if (!inputNode || !this.analyser) return;
-      try { if (typeof inputNode.disconnect === 'function') inputNode.disconnect(); } catch(_) {}
-      try { this.analyser.disconnect(); } catch(_) {}
+      if (typeof inputNode.disconnect === 'function') inputNode.disconnect();
+      if (this.analyser && typeof this.analyser.disconnect === 'function') this.analyser.disconnect();
       let node = inputNode;
       if (Array.isArray(this.eqFilters) && this.eqFilters.length) {
         for (const filter of this.eqFilters) {
-          try { filter.disconnect(); } catch(_) {}
+          if (filter && typeof filter.disconnect === 'function') filter.disconnect();
           node.connect(filter);
           node = filter;
         }
@@ -192,14 +194,12 @@ function processAudioData(data) {
       if (!this.source || !this.analyser) return;
       if (this.source && typeof this.source.disconnect === 'function') this.source.disconnect();
       if (this.panner && typeof this.panner.disconnect === 'function') this.panner.disconnect();
-      try {
-        if (!this.panner) {
-          if (!this.splitter) this.splitter = this.audioContext.createChannelSplitter(2);
-          if (!this.leftGain) this.leftGain = this.audioContext.createGain();
-          if (!this.rightGain) this.rightGain = this.audioContext.createGain();
-          if (!this.merger) this.merger = this.audioContext.createChannelMerger(2);
-        }
-      } catch (_) {}
+      if (!this.panner) {
+        if (!this.splitter) this.splitter = this.audioContext.createChannelSplitter(2);
+        if (!this.leftGain) this.leftGain = this.audioContext.createGain();
+        if (!this.rightGain) this.rightGain = this.audioContext.createGain();
+        if (!this.merger) this.merger = this.audioContext.createChannelMerger(2);
+      }
 
       if (this.panner) {
         this.source.connect(this.panner);
@@ -337,19 +337,17 @@ function processAudioData(data) {
     }
 
     resetVisualization() {
-      try {
-        const canvas = document.getElementById("visualizer");
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        const silent = new Float32Array(this.bufferLength);
-        for (let i = 0; i < silent.length; i++) silent[i] = -100;
-        if (Array.isArray(this.prevData)) this.prevData.fill(-100);
-        const data = this.processor ? this.processor(silent) : silent;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (typeof this.currentEffect === 'function') {
-          this.currentEffect(ctx, canvas, data, this.prevData, this);
-        }
-      } catch (_) { /* ignore drawing errors */ }
+      const canvas = document.getElementById("visualizer");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const silent = new Float32Array(this.bufferLength);
+      for (let i = 0; i < silent.length; i++) silent[i] = -100;
+      if (Array.isArray(this.prevData)) this.prevData.fill(-100);
+      const data = this.processor ? this.processor(silent) : silent;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (typeof this.currentEffect === 'function') {
+        this.currentEffect(ctx, canvas, data, this.prevData, this);
+      }
     }
 
     // --- UI helpers ---
@@ -375,24 +373,24 @@ function processAudioData(data) {
     }
 
     async computeAndUpdateKbps(durationSeconds) {
+      const src = this.audio?.src || '';
+      if (!src || !durationSeconds) return;
+      let bytes = 0;
       try {
-        const src = this.audio?.src || '';
-        if (!src || !durationSeconds) return;
-        let bytes = 0;
+        const head = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
+        const len = head.headers.get('content-length');
+        if (len) bytes = parseInt(len, 10) || 0;
+      } catch (_) { /* ignore: some servers block HEAD */ }
+      if (!bytes) {
         try {
-          const head = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
-          const len = head.headers.get('content-length');
-          if (len) bytes = parseInt(len, 10) || 0;
-        } catch (_) {}
-        if (!bytes) {
           const resp = await fetch(src, { cache: 'force-cache' });
           const blob = await resp.blob();
           bytes = blob.size || 0;
-        }
-        if (!bytes) return;
-        const kbps = Math.max(1, Math.round((bytes * 8) / 1000 / Math.max(1, durationSeconds)));
-        this.updateKbpsLabel(kbps);
-      } catch (_) {}
+        } catch (_) { return; }
+      }
+      if (!bytes) return;
+      const kbps = Math.max(1, Math.round((bytes * 8) / 1000 / Math.max(1, durationSeconds)));
+      this.updateKbpsLabel(kbps);
     }
   }
   
@@ -492,14 +490,12 @@ function processAudioData(data) {
     const el = document.getElementById('player-window');
     if (!el) return;
     updatePlayerRectCache();
-    try {
-      const mo = new MutationObserver(() => updatePlayerRectCache());
-      mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
-      window.addEventListener('resize', updatePlayerRectCache);
-      el.addEventListener('pointerup', updatePlayerRectCache, { passive: true });
-      el.addEventListener('pointercancel', updatePlayerRectCache, { passive: true });
-      window._playerRectObserver = mo;
-    } catch(_) {}
+    const mo = new MutationObserver(() => updatePlayerRectCache());
+    mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+    window.addEventListener('resize', updatePlayerRectCache);
+    el.addEventListener('pointerup', updatePlayerRectCache, { passive: true });
+    el.addEventListener('pointercancel', updatePlayerRectCache, { passive: true });
+    window._playerRectObserver = mo;
   }
 
   function positionDock(dockEl) {
@@ -570,7 +566,6 @@ function processAudioData(data) {
   document
     .getElementById("play-button")
     .addEventListener("click", async () => {
-      try {
         const shuffleOn = document.getElementById('shuffle-toggle')?.getAttribute('aria-pressed') === 'true';
         if (shuffleOn && !window._playerStarted) {
           const items = Array.from(document.querySelectorAll('#track-items li'));
@@ -590,7 +585,6 @@ function processAudioData(data) {
             }
           }
         }
-      } catch (_) { /* ignore optional shuffle pre-play errors */ }
       window._playerStarted = true;
       await visualizer.start(histogram, processAudioData);
     });
@@ -640,7 +634,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       if (visualizer.audio && isFinite(visualizer.audio.duration)) {
         visualizer.audio.currentTime = Math.min(Math.max(0, v), visualizer.audio.duration);
       }
-      try {} catch(_) {}
+      
     });
     seekSlider.addEventListener('change', commitSeek);
   }
@@ -698,7 +692,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     visualizer.audio.play();
     list.forEach((it, idx) => it.el.classList.toggle('active', idx === i));
     visualizer.currentIndex = i;
-    // try { console.log('[player] playByIndex', { index, resolvedIndex: i, src }); } catch(_) {}
+    
   }
   visualizer.currentIndex = visualizer.currentIndex || 0;
   let isShuffle = shuffleBtn?.getAttribute('aria-pressed') === 'true';
@@ -732,7 +726,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       if (nextIdx >= len) { if (isRepeat) nextIdx = 0; else return; }
     }
     history.push(visualizer.currentIndex); if (history.length > 50) history.shift();
-    // try { console.log('[player] goNext', { currentIndex: visualizer.currentIndex, nextIdx, isShuffle, isRepeat }); } catch(_) {}
     window.playerPlayByIndex(nextIdx);
   }
 
@@ -741,10 +734,10 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     const len = list.length;
     if (!len) return;
     resolveCurrentIndex();
-    if (isShuffle && history.length) { const prevIdx = history.pop(); try { console.log('[player] goPrev(history)', { prevIdx }); } catch(_) {} window.playerPlayByIndex(prevIdx); return; }
+    if (isShuffle && history.length) { const prevIdx = history.pop(); window.playerPlayByIndex(prevIdx); return; }
     let prevIdx = visualizer.currentIndex - 1;
     if (prevIdx < 0) { prevIdx = isRepeat ? len - 1 : 0; }
-    // try { console.log('[player] goPrev', { currentIndex: visualizer.currentIndex, prevIdx, isShuffle, isRepeat }); } catch(_) {}
+    
     window.playerPlayByIndex(prevIdx);
   }
 
@@ -756,38 +749,34 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
   uploadInput?.addEventListener('change', () => {
     const file = uploadInput.files && uploadInput.files[0];
     if (!file) return;
-    try {
-      const url = URL.createObjectURL(file);
-      const name = (file.name || 'track').replace(/\.(mp3|wav|ogg|m4a)$/i, '');
-      const listEl = document.getElementById('track-items');
-      if (listEl) {
-        const li = document.createElement('li');
-        li.textContent = name;
-        li.dataset.src = url;
-        li.tabIndex = 0;
-        li.addEventListener('click', () => {
-          const items = Array.from(document.querySelectorAll('#track-items li'));
-          const idx = items.indexOf(li);
-          if (idx >= 0) window.playerPlayByIndex?.(idx);
-        });
-        listEl.appendChild(li);
-      }
-      const items = Array.from(document.querySelectorAll('#track-items li'));
-      const idxNew = Math.max(0, items.length - 1);
-      window.playerPlayByIndex?.(idxNew);
-    } catch (err) {
-      console.error('[player] upload failed', err);
+    const url = URL.createObjectURL(file);
+    const name = (file.name || 'track').replace(/\.(mp3|wav|ogg|m4a)$/i, '');
+    const listEl = document.getElementById('track-items');
+    if (listEl) {
+      const li = document.createElement('li');
+      li.textContent = name;
+      li.dataset.src = url;
+      li.tabIndex = 0;
+      li.addEventListener('click', () => {
+        const items = Array.from(document.querySelectorAll('#track-items li'));
+        const idx = items.indexOf(li);
+        if (idx >= 0) window.playerPlayByIndex?.(idx);
+      });
+      listEl.appendChild(li);
     }
+    const items = Array.from(document.querySelectorAll('#track-items li'));
+    const idxNew = Math.max(0, items.length - 1);
+    window.playerPlayByIndex?.(idxNew);
   });
   plButton?.addEventListener('click', () => {
     const playlistDock = document.getElementById('playlist-dock');
     const isHidden = playlistDock.style.display === 'none' || !playlistDock.style.display;
-    try { console.log('[PL] toggle click', { isHiddenBefore: isHidden, plVisible: isVisible(playlistDock) }); } catch(_) {}
+    
     if (isHidden) {
       updatePlayerRectCache();
       positionDock(playlistDock);
       playlistDock.style.display = 'block';
-      try { visualizer.buildTrackList?.(); } catch(_) {}
+      if (window.visualizer?.buildTrackList) window.visualizer.buildTrackList();
       startFollowingDock();
     } else {
       playlistDock.style.display = 'none';
@@ -838,7 +827,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       if (len) {
         resolveCurrentIndex();
         const rand = pickRandomIndex(visualizer.currentIndex, len);
-        // try { console.log('[player] shuffle pick', { currentIndex, rand }); } catch(_) {}
         if (visualizer.audio && !visualizer.audio.paused) {
           window.playerPlayByIndex(rand);
         } else if (visualizer.audio) {
@@ -939,7 +927,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
             .map((e) => ({ file: e.file, title: e.title, artist: e.artist, path: `public/tracks/${e.file}` }));
         }
       }
-    } catch (_) {}
+    } catch (_) { /* ignore manifest fetch/parse errors; fall back to defaults */ }
     if (!known.length) {
       known = [
         { file: 'untitled.mp3', title: 'untitled', artist: 'Circle Takes the Square', path: 'public/tracks/untitled.mp3' },
@@ -959,11 +947,11 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
       container.appendChild(li);
     }
     // Do not set label from the initial list; wait until playback starts
-  } catch (_) {}
+  } catch (_) { /* ignore unexpected build list errors to avoid breaking UI */ }
 };
 
 // build initial track list after DOM is ready, so hidden dock exists
-const _buildOnReady = () => { try { visualizer.buildTrackList(); } catch(_) {} };
+const _buildOnReady = () => { if (window.visualizer?.buildTrackList) window.visualizer.buildTrackList(); };
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _buildOnReady, { once: true });
 } else {
@@ -978,7 +966,6 @@ window.addEventListener('resize', () => {
 
 window.DreamDeskAnimations = {
   customFullscreen(el, { isFullscreen, previousState }) {
-    try {
       const playlistDock = document.getElementById('playlist-dock');
       const eqDock = document.getElementById('eq-dock');
       if (!playlistDock || !eqDock) return;
@@ -987,8 +974,8 @@ window.DreamDeskAnimations = {
         
         playlistDock.style.display = 'block';
         eqDock.style.display = 'block';
-        try { (window.visualizer || visualizer)?.buildTrackList?.(); } catch (_) {}
-        try { wireEq(); } catch (_) {}
+        if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
+        if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
           updatePlayerRectCache();
           positionDock(playlistDock);
@@ -1004,7 +991,6 @@ window.DreamDeskAnimations = {
         playlistDock.style.display = 'none';
         eqDock.style.display = 'none';
         stopFollowingDock();
-        try { console.log('[FS] unfullscreen: hide docks'); } catch(_) {}
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
         window._fsBootstrapDone = false;
@@ -1032,8 +1018,8 @@ window.DreamDeskAnimations = {
         window._preFsEqVisible = isVisible(eqDock);
         playlistDock.style.display = 'block';
         eqDock.style.display = 'block';
-        try { (window.visualizer || visualizer)?.buildTrackList?.(); } catch (_) {}
-        try { wireEq(); } catch (_) {}
+        if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
+        if (typeof wireEq === 'function') wireEq();
 
         window.requestAnimationFrame(() => {
           updatePlayerRectCache();
@@ -1046,14 +1032,12 @@ window.DreamDeskAnimations = {
         playlistDock.style.display = 'none';
         eqDock.style.display = 'none';
         stopFollowingDock();
-        try { console.log('[FS] unfullscreen: hide docks'); } catch(_) {}
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
         window._fsBootstrapDone = false;
         window._preFsPlaylistVisible = undefined;
         window._preFsEqVisible = undefined;
       }
-    } catch (_) {}
   },
 };
 
