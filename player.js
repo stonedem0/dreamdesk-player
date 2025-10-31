@@ -114,9 +114,7 @@ function processAudioData(data) {
         this.rightGain = this.audioContext.createGain();
         this.merger = this.audioContext.createChannelMerger(2);
       }
-      this.beatThreshold = 0.5;
-      this.beatDetected = false;
-      this.isBeatMode = !audioSrc;
+      
 
       if (audioSrc) {
         this.audio = new Audio(audioSrc);
@@ -214,31 +212,7 @@ function processAudioData(data) {
       }
     }
 
-    setSampleRate(sampleRate) {
-      if (this.audioContext && this.audioContext.state !== 'closed') {
-        this.audioContext.close().catch(() => {});
-      }
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate });
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = fftSizes.get(2048);
-      this.bufferLength = this.analyser.frequencyBinCount;
-      this.dataArray = new Float32Array(this.bufferLength);
-      this.prevData = new Array(this.bufferLength).fill(0);
-
-      if (this.audio) {
-        this.source = this.audioContext.createMediaElementSource(this.audio);
-        this.panner = (this.audioContext.createStereoPanner ? this.audioContext.createStereoPanner() : null);
-        if (!this.panner) {
-          this.splitter = this.audioContext.createChannelSplitter(2);
-          this.leftGain = this.audioContext.createGain();
-          this.rightGain = this.audioContext.createGain();
-          this.merger = this.audioContext.createChannelMerger(2);
-        }
-        this.initEQ();
-        this.buildPannerChain();
-      }
-      this.updateKhzLabel();
-    }
+    
   
     async start(effect, processor) {
       this.processor = processor;
@@ -250,8 +224,6 @@ function processAudioData(data) {
   
       if (this.audio) {
         this.audio.play();
-      } else {
-        this.startBeatMode(); // use test beat mode if no audio file
       }
   
       this.cancelAnimation();
