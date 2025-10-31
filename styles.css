@@ -63,7 +63,7 @@ html, body {
   
   .player {
     height: 109px;
-    background-image: url('/public/img/image-asset.jpeg');
+    background-image: url('public/img/image-asset.jpeg');
     background-size: 100% ;
     background-position: center;
     background-repeat: no-repeat;
