@@ -544,6 +544,35 @@ function processAudioData(data) {
     _dockFollowRaf = 0;
   }
 
+  // Smooth dock show/hide helpers for nicer transitions
+  function smoothShowDock(el) {
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.willChange = 'opacity, transform';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-6px)';
+    el.style.transition = 'opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+    requestAnimationFrame(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
+  }
+  function smoothHideDock(el, onHidden) {
+    if (!el) return;
+    el.style.willChange = 'opacity, transform';
+    el.style.transition = 'opacity 200ms ease, transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-6px)';
+    const done = () => {
+      el.style.display = 'none';
+      el.style.transition = '';
+      el.style.willChange = '';
+      el.removeEventListener('transitionend', done);
+      if (typeof onHidden === 'function') onHidden();
+    };
+    el.addEventListener('transitionend', done);
+  }
+
   window.setCurrentTrackLabel = (name) => {
     const el = document.querySelector('.neon');
     if (!el) return;
@@ -775,11 +804,11 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     if (isHidden) {
       updatePlayerRectCache();
       positionDock(playlistDock);
-      playlistDock.style.display = 'block';
+      smoothShowDock(playlistDock);
       if (window.visualizer?.buildTrackList) window.visualizer.buildTrackList();
       startFollowingDock();
     } else {
-      playlistDock.style.display = 'none';
+      smoothHideDock(playlistDock);
       const eqDock = document.getElementById('eq-dock');
       if (isVisible(eqDock)) {
         updatePlayerRectCache();
@@ -800,10 +829,10 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       updatePlayerRectCache();
       if (playlistVisible) { positionDock(playlistDock); positionDockBelow(playlistDock, eqDock); }
       else positionDock(eqDock);
-      eqDock.style.display = 'block';
+      smoothShowDock(eqDock);
       startFollowingDock();
     } else {
-      eqDock.style.display = 'none';
+      smoothHideDock(eqDock);
       const playlistDock = document.getElementById('playlist-dock');
       if (isVisible(playlistDock)) {
         updatePlayerRectCache();
@@ -972,8 +1001,8 @@ window.DreamDeskAnimations = {
       const firstInvocation = typeof window._preFsPlaylistVisible === 'undefined' && typeof window._preFsEqVisible === 'undefined';
       if (!isFullscreen && firstInvocation && !window._fsBootstrapDone) {
         
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        smoothShowDock(playlistDock);
+        smoothShowDock(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
@@ -988,8 +1017,8 @@ window.DreamDeskAnimations = {
       }
 
       if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        smoothHideDock(playlistDock);
+        smoothHideDock(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
@@ -1016,8 +1045,8 @@ window.DreamDeskAnimations = {
         } catch(_) {}
         window._preFsPlaylistVisible = isVisible(playlistDock);
         window._preFsEqVisible = isVisible(eqDock);
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        smoothShowDock(playlistDock);
+        smoothShowDock(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
 
@@ -1029,8 +1058,8 @@ window.DreamDeskAnimations = {
           window._isFullscreenActive = true;
         });
       } else {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        smoothHideDock(playlistDock);
+        smoothHideDock(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
