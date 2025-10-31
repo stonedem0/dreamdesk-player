@@ -104,7 +104,7 @@ function processAudioData(data) {
       this.bufferLength = this.analyser.frequencyBinCount;
       this.dataArray = new Float32Array(this.bufferLength);
       this.prevData = new Array(this.bufferLength).fill(0);
-      // Equalizer filters (start with 60 Hz low-shelf)
+      // equalizer filters (start with 60 Hz low-shelf)
       this.eqFilters = [];
       this.initEQ();
       this.panner = (this.audioContext.createStereoPanner ? this.audioContext.createStereoPanner() : null);
@@ -298,7 +298,7 @@ function processAudioData(data) {
       this.cancelAnimation();
     }
 
-    // Set EQ gain in dB for a given band index
+    // set EQ gain in dB for a given band index
     setEqGain(bandIndex, gainDb) {
       const idx = Math.max(0, Math.min((this.eqFilters?.length || 1) - 1, Number(bandIndex) || 0));
       const val = Number(gainDb) || 0;
@@ -846,7 +846,6 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
 visualizer.bindTransportControls();
 setupPlayerRectCache();
 
-// === Equalizer UI wiring (use 3k band slider to control 3 kHz peaking filter) ===
 function wireEq() {
     const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-bands input.eq-slider'));
     if (!sliders.length) return;
@@ -880,7 +879,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
       if (resp.ok) {
         const files = await resp.json();
         if (Array.isArray(files)) {
-          // Accept either strings or rich objects { file, title, artist }
+          // accept either strings or rich objects { file, title, artist }
           known = files
             .map((entry) => {
               if (typeof entry === 'string') {
@@ -899,7 +898,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
             .map((e) => ({ file: e.file, title: e.title, artist: e.artist, path: `public/tracks/${e.file}` }));
         }
       }
-    } catch (_) { /* ignore manifest fetch/parse errors; fall back to defaults */ }
+    } catch (_) { /* ignore manifest fetch/parse errors, fall back to defaults */ }
     if (!known.length) {
       known = [
         { file: 'untitled.mp3', title: 'untitled', artist: 'Circle Takes the Square', path: 'public/tracks/untitled.mp3' },
@@ -918,7 +917,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
       li.addEventListener('click', () => window.playerPlayByIndex(idx));
       container.appendChild(li);
     }
-    // Do not set label from the initial list; wait until playback starts
+    // do not set label from the initial list; wait until playback starts
   } catch (_) { /* ignore unexpected build list errors to avoid breaking UI */ }
 };
 
