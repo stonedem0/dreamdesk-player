@@ -38,7 +38,8 @@ html, body {
     background-clip: padding-box, border-box;
     z-index: 2147483637; /* above app windows, below EQ */
   }
-  #playlist-dock .track-list { height: 100%; max-height: 100%; overflow-y: auto; }
+  #playlist-dock .playlist-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 10px; text-align: center; }
+  #playlist-dock .track-list { height: calc(100% - 22px); max-height: calc(100% - 22px); overflow-y: auto; }
   
   #eq-dock{
     position:fixed;
@@ -53,8 +54,8 @@ html, body {
     z-index:2147483638; /* above playlist */
   }
   #eq-dock .eq-panel{height:100%;display:flex;flex-direction:column;color:#fff6a9;font-size:10px}
-  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a}
-  #eq-dock .eq-bands{flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-end;padding:6px}
+  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a; text-align: center;}
+  #eq-dock .eq-bands{flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-end;padding:6px} 
   #eq-dock .eq-bands label{display:flex;flex-direction:column;align-items:center;gap:4px;color:#d0774a}
   #eq-dock .eq-bands input.eq-slider{-webkit-appearance:none;appearance:none;-moz-orient:vertical;writing-mode:vertical-lr;direction:rtl;width:6px;height:112px;background:transparent;border:0}
   #eq-dock .eq-bands input.eq-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:8px;background:#080808;border:1px solid #d0774a}
@@ -504,7 +505,7 @@ html, body {
   #stop-button { padding-top: 0; }
   
   #eq-dock .eq-panel { height: 100%; display: flex; flex-direction: column; }
-  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #fff6a9; font-size: 10px; }
+  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 10px; }
   #eq-dock .eq-bands label { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d0774a;}
   
   #eq-dock .eq-bands label { height: 140px; justify-content: flex-end; }
