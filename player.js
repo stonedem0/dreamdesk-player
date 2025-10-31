@@ -516,6 +516,25 @@ function processAudioData(data) {
     _dockFollowRaf = 0;
   }
 
+  // Smooth show/hide helpers for docks
+  function showDockAnimated(el) {
+    if (!el) return;
+    el.classList.add('dock-anim');
+    el.style.display = 'block';
+    // force reflow before toggling the class so transition runs
+    void el.getBoundingClientRect();
+    el.classList.add('show');
+  }
+  function hideDockAnimated(el) {
+    if (!el) return;
+    el.classList.add('dock-anim');
+    el.classList.remove('show');
+    const done = () => { el.style.display = 'none'; el.removeEventListener('transitionend', done); };
+    el.addEventListener('transitionend', done, { once: true });
+    // Fallback in case transitionend doesn't fire
+    setTimeout(done, 260);
+  }
+
   window.setCurrentTrackLabel = (name) => {
     const el = document.querySelector('.neon');
     if (!el) return;
@@ -747,11 +766,11 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     if (isHidden) {
       updatePlayerRectCache();
       positionDock(playlistDock);
-      playlistDock.style.display = 'block';
+      showDockAnimated(playlistDock);
       if (window.visualizer?.buildTrackList) window.visualizer.buildTrackList();
       startFollowingDock();
     } else {
-      playlistDock.style.display = 'none';
+      hideDockAnimated(playlistDock);
       const eqDock = document.getElementById('eq-dock');
       if (isVisible(eqDock)) {
         updatePlayerRectCache();
@@ -772,10 +791,10 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       updatePlayerRectCache();
       if (playlistVisible) { positionDock(playlistDock); positionDockBelow(playlistDock, eqDock); }
       else positionDock(eqDock);
-      eqDock.style.display = 'block';
+      showDockAnimated(eqDock);
       startFollowingDock();
     } else {
-      eqDock.style.display = 'none';
+      hideDockAnimated(eqDock);
       const playlistDock = document.getElementById('playlist-dock');
       if (isVisible(playlistDock)) {
         updatePlayerRectCache();
@@ -943,8 +962,8 @@ window.DreamDeskAnimations = {
       const firstInvocation = typeof window._preFsPlaylistVisible === 'undefined' && typeof window._preFsEqVisible === 'undefined';
       if (!isFullscreen && firstInvocation && !window._fsBootstrapDone) {
         
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        showDockAnimated(playlistDock);
+        showDockAnimated(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
@@ -959,8 +978,8 @@ window.DreamDeskAnimations = {
       }
 
       if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        hideDockAnimated(playlistDock);
+        hideDockAnimated(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
@@ -987,8 +1006,8 @@ window.DreamDeskAnimations = {
         } catch(_) {}
         window._preFsPlaylistVisible = isVisible(playlistDock);
         window._preFsEqVisible = isVisible(eqDock);
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        showDockAnimated(playlistDock);
+        showDockAnimated(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
 
@@ -1000,8 +1019,8 @@ window.DreamDeskAnimations = {
           window._isFullscreenActive = true;
         });
       } else {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        hideDockAnimated(playlistDock);
+        hideDockAnimated(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again

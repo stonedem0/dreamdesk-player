@@ -6,6 +6,10 @@ html, body {
     background-repeat: no-repeat;
   }
 
+/* Smooth dock open/close transitions */
+.dock-anim { opacity: 0; transform: translateY(-6px); transition: opacity 220ms ease, transform 220ms ease; will-change: opacity, transform; }
+.dock-anim.show { opacity: 1; transform: translateY(0); }
+
 .container {
     display: flex;
     flex-direction: column;
