@@ -62,7 +62,7 @@ html, body {
 
   
   .player {
-    height: 109px;
+    height: 108px;
     background-image: url('public/img/image-asset.jpeg');
     background-size: 100% ;
     background-position: center;
@@ -208,10 +208,10 @@ html, body {
     max-height: 247px;
     border: 2px solid transparent;
     background-color: #000b19;
-    color: #d0774a;
+    color: #ff9e00;
     display: block;
     position: relative;
-    font-size: 10px;
+    font-size: 11px;
     box-sizing: border-box;
   }
   
