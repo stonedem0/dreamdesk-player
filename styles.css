@@ -20,6 +20,15 @@ html, body {
 #playlist-window { position: fixed; top: calc(var(--player-top) + 146px); left: var(--player-left); z-index: 9; }
 #playlist-window .win-body { overflow: hidden; }
   
+#player-window {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(#000, #000),
+    var(--player-gradient, linear-gradient(90deg,#ff4800 0%,#ff5400 10%,#ff6000 20%,#ff6d00 30%,#ff7900 40%,#ff8500 50%,#ff9100 60%,#ff9e00 70%,#ffaa00 80%,#ffb600 100%));
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+}
+
 #playlist-dock {
     position: fixed;
     top: calc(var(--player-top) + 146px);
