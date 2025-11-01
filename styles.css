@@ -90,11 +90,11 @@ html, body {
 
   
   .player {
-    height: 108px;
+    height: 116px;
     background-image: url('public/img/image-asset.jpeg');
     background-size: 100% ;
     background-position: center;
-    background-repeat: no-repeat;
+    background-position: 50% 33%;
     
   }
   
