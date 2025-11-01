@@ -56,7 +56,7 @@ html, body {
     background-clip: padding-box, border-box;
     z-index: 2147483637; /* above app windows, below EQ */
   }
-  #playlist-dock .playlist-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 10px; text-align: center; }
+  #playlist-dock .playlist-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 9px; text-align: center; }
   #playlist-dock .track-list { height: calc(100% - 22px); max-height: calc(100% - 22px); overflow-y: auto; }
   
   #eq-dock{
@@ -523,7 +523,7 @@ html, body {
   #stop-button { padding-top: 0; }
   
   #eq-dock .eq-panel { height: 100%; display: flex; flex-direction: column; }
-  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 10px; }
+  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 9px; }
   #eq-dock .eq-bands label { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d0774a;}
   
   #eq-dock .eq-bands label { height: 140px; justify-content: flex-end; }
