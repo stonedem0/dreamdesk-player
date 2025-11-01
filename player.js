@@ -104,7 +104,7 @@ function processAudioData(data) {
       this.bufferLength = this.analyser.frequencyBinCount;
       this.dataArray = new Float32Array(this.bufferLength);
       this.prevData = new Array(this.bufferLength).fill(0);
-      // Equalizer filters (start with 60 Hz low-shelf)
+      // equalizer filters (start with 60 Hz low-shelf)
       this.eqFilters = [];
       this.initEQ();
       this.panner = (this.audioContext.createStereoPanner ? this.audioContext.createStereoPanner() : null);
@@ -114,9 +114,7 @@ function processAudioData(data) {
         this.rightGain = this.audioContext.createGain();
         this.merger = this.audioContext.createChannelMerger(2);
       }
-      this.beatThreshold = 0.5;
-      this.beatDetected = false;
-      this.isBeatMode = !audioSrc;
+      
 
       if (audioSrc) {
         this.audio = new Audio(audioSrc);
@@ -214,31 +212,7 @@ function processAudioData(data) {
       }
     }
 
-    setSampleRate(sampleRate) {
-      if (this.audioContext && this.audioContext.state !== 'closed') {
-        this.audioContext.close().catch(() => {});
-      }
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate });
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = fftSizes.get(2048);
-      this.bufferLength = this.analyser.frequencyBinCount;
-      this.dataArray = new Float32Array(this.bufferLength);
-      this.prevData = new Array(this.bufferLength).fill(0);
-
-      if (this.audio) {
-        this.source = this.audioContext.createMediaElementSource(this.audio);
-        this.panner = (this.audioContext.createStereoPanner ? this.audioContext.createStereoPanner() : null);
-        if (!this.panner) {
-          this.splitter = this.audioContext.createChannelSplitter(2);
-          this.leftGain = this.audioContext.createGain();
-          this.rightGain = this.audioContext.createGain();
-          this.merger = this.audioContext.createChannelMerger(2);
-        }
-        this.initEQ();
-        this.buildPannerChain();
-      }
-      this.updateKhzLabel();
-    }
+    
   
     async start(effect, processor) {
       this.processor = processor;
@@ -250,8 +224,6 @@ function processAudioData(data) {
   
       if (this.audio) {
         this.audio.play();
-      } else {
-        this.startBeatMode(); // use test beat mode if no audio file
       }
   
       this.cancelAnimation();
@@ -326,7 +298,7 @@ function processAudioData(data) {
       this.cancelAnimation();
     }
 
-    // Set EQ gain in dB for a given band index
+    // set EQ gain in dB for a given band index
     setEqGain(bandIndex, gainDb) {
       const idx = Math.max(0, Math.min((this.eqFilters?.length || 1) - 1, Number(bandIndex) || 0));
       const val = Number(gainDb) || 0;
@@ -542,6 +514,25 @@ function processAudioData(data) {
   function stopFollowingDock() {
     if (_dockFollowRaf) cancelAnimationFrame(_dockFollowRaf);
     _dockFollowRaf = 0;
+  }
+
+  // Smooth show/hide helpers for docks
+  function showDockAnimated(el) {
+    if (!el) return;
+    el.classList.add('dock-anim');
+    el.style.display = 'block';
+    // force reflow before toggling the class so transition runs
+    void el.getBoundingClientRect();
+    el.classList.add('show');
+  }
+  function hideDockAnimated(el) {
+    if (!el) return;
+    el.classList.add('dock-anim');
+    el.classList.remove('show');
+    const done = () => { el.style.display = 'none'; el.removeEventListener('transitionend', done); };
+    el.addEventListener('transitionend', done, { once: true });
+    // Fallback in case transitionend doesn't fire
+    setTimeout(done, 260);
   }
 
   window.setCurrentTrackLabel = (name) => {
@@ -775,11 +766,11 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     if (isHidden) {
       updatePlayerRectCache();
       positionDock(playlistDock);
-      playlistDock.style.display = 'block';
+      showDockAnimated(playlistDock);
       if (window.visualizer?.buildTrackList) window.visualizer.buildTrackList();
       startFollowingDock();
     } else {
-      playlistDock.style.display = 'none';
+      hideDockAnimated(playlistDock);
       const eqDock = document.getElementById('eq-dock');
       if (isVisible(eqDock)) {
         updatePlayerRectCache();
@@ -800,10 +791,10 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       updatePlayerRectCache();
       if (playlistVisible) { positionDock(playlistDock); positionDockBelow(playlistDock, eqDock); }
       else positionDock(eqDock);
-      eqDock.style.display = 'block';
+      showDockAnimated(eqDock);
       startFollowingDock();
     } else {
-      eqDock.style.display = 'none';
+      hideDockAnimated(eqDock);
       const playlistDock = document.getElementById('playlist-dock');
       if (isVisible(playlistDock)) {
         updatePlayerRectCache();
@@ -814,6 +805,43 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       }
     }
   });
+
+  // EQ presets context menu (dummy)
+  (function setupEqPresetsMenu(){
+    const btn = document.getElementById('eq-presets-btn');
+    const menu = document.getElementById('eq-presets-menu');
+    if (!btn || !menu) return;
+    let visible = false;
+    const open = () => {
+      if (visible) return;
+      menu.classList.add('show');
+      menu.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      visible = true;
+    };
+    const close = () => {
+      if (!visible) return;
+      menu.classList.remove('show');
+      menu.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      visible = false;
+    };
+    const toggle = () => { (visible ? close : open)(); };
+    btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggle(); });
+    menu.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t && t.matches('button[role="menuitem"]')) {
+        close();
+      }
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!visible) return;
+      const t = e.target;
+      if (t === btn || menu.contains(t)) return;
+      close();
+    });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  })();
 
   shuffleBtn?.addEventListener('click', () => {
     const pressed = shuffleBtn.getAttribute('aria-pressed') === 'true';
@@ -874,9 +902,8 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
 visualizer.bindTransportControls();
 setupPlayerRectCache();
 
-// === Equalizer UI wiring (use 3k band slider to control 3 kHz peaking filter) ===
 function wireEq() {
-    const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-bands input.eq-slider'));
+    const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-presets input.eq-slider'));
     if (!sliders.length) return;
     const onInput = (e) => {
       const el = e?.currentTarget || e?.target;
@@ -908,7 +935,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
       if (resp.ok) {
         const files = await resp.json();
         if (Array.isArray(files)) {
-          // Accept either strings or rich objects { file, title, artist }
+          // accept either strings or rich objects { file, title, artist }
           known = files
             .map((entry) => {
               if (typeof entry === 'string') {
@@ -927,7 +954,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
             .map((e) => ({ file: e.file, title: e.title, artist: e.artist, path: `public/tracks/${e.file}` }));
         }
       }
-    } catch (_) { /* ignore manifest fetch/parse errors; fall back to defaults */ }
+    } catch (_) { /* ignore manifest fetch/parse errors, fall back to defaults */ }
     if (!known.length) {
       known = [
         { file: 'untitled.mp3', title: 'untitled', artist: 'Circle Takes the Square', path: 'public/tracks/untitled.mp3' },
@@ -946,7 +973,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
       li.addEventListener('click', () => window.playerPlayByIndex(idx));
       container.appendChild(li);
     }
-    // Do not set label from the initial list; wait until playback starts
+    // do not set label from the initial list; wait until playback starts
   } catch (_) { /* ignore unexpected build list errors to avoid breaking UI */ }
 };
 
@@ -972,8 +999,8 @@ window.DreamDeskAnimations = {
       const firstInvocation = typeof window._preFsPlaylistVisible === 'undefined' && typeof window._preFsEqVisible === 'undefined';
       if (!isFullscreen && firstInvocation && !window._fsBootstrapDone) {
         
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        showDockAnimated(playlistDock);
+        showDockAnimated(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
@@ -988,8 +1015,8 @@ window.DreamDeskAnimations = {
       }
 
       if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        hideDockAnimated(playlistDock);
+        hideDockAnimated(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
@@ -1016,8 +1043,8 @@ window.DreamDeskAnimations = {
         } catch(_) {}
         window._preFsPlaylistVisible = isVisible(playlistDock);
         window._preFsEqVisible = isVisible(eqDock);
-        playlistDock.style.display = 'block';
-        eqDock.style.display = 'block';
+        showDockAnimated(playlistDock);
+        showDockAnimated(eqDock);
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
 
@@ -1029,8 +1056,8 @@ window.DreamDeskAnimations = {
           window._isFullscreenActive = true;
         });
       } else {
-        playlistDock.style.display = 'none';
-        eqDock.style.display = 'none';
+        hideDockAnimated(playlistDock);
+        hideDockAnimated(eqDock);
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
