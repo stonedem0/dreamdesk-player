@@ -903,7 +903,7 @@ visualizer.bindTransportControls();
 setupPlayerRectCache();
 
 function wireEq() {
-    const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-bands input.eq-slider'));
+    const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-presets input.eq-slider'));
     if (!sliders.length) return;
     const onInput = (e) => {
       const el = e?.currentTarget || e?.target;

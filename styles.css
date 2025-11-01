@@ -73,17 +73,19 @@ html, body {
     z-index:2147483638; /* above playlist */
   }
   #eq-dock .eq-panel{height:100%;display:flex;flex-direction:column;color:#fff6a9;font-size:10px;position:relative}
-  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a;display:flex;align-items:center;justify-content:space-between}
+  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a;display:flex;align-items:center;justify-content:center}
   #eq-dock .eq-header span{flex:1;text-align:center;color:#ff9e00}
-  #eq-dock .eq-header #eq-presets-btn{min-width:auto;padding:0 6px;height:16px;font-size:10px;line-height:16px}
-  #eq-dock .presets-menu{position:absolute;right:6px;top:22px;min-width:180px;max-height:220px;overflow:auto;background:#000b19;border:1px solid #d0774a;box-shadow:0 6px 18px rgba(0,0,0,0.45);z-index:2147483640;display:none}
-  #eq-dock .presets-menu.show{display:block}
-  #eq-dock .presets-menu button{all:unset;display:block;width:100%;padding:6px 10px;cursor:pointer;color:#fff6a9}
-  #eq-dock .presets-menu button:hover{background:#0d1624;color:#ff9e00}
-  #eq-dock .eq-bands{flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-end;padding:6px} 
-  #eq-dock .eq-bands label{display:flex;flex-direction:column;align-items:center;gap:4px;color:#d0774a}
-  #eq-dock .eq-bands input.eq-slider{-webkit-appearance:none;appearance:none;-moz-orient:vertical;writing-mode:vertical-lr;direction:rtl;width:6px;height:112px;background:transparent;border:0}
-  #eq-dock .eq-bands input.eq-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:8px;background:#080808;border:1px solid #d0774a}
+  #eq-dock .eq-presets{position:relative;flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-start;padding:6px}
+  #eq-dock .eq-sliders{flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-end;background:#041024;padding:6px;height:120px}
+  #eq-dock .eq-side{position:relative;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;padding:0;background:transparent}
+  #eq-dock .eq-side #eq-presets-btn{min-width:auto;padding:0 8px;height:18px;font-size:10px;line-height:18px}
+  #eq-dock .eq-side .presets-menu{position:absolute;right:0;top:24px;min-width:180px;max-height:220px;overflow:auto;background:#000b19;border:1px solid #d0774a;box-shadow:0 6px 18px rgba(0,0,0,0.45);z-index:2147483640;display:none}
+  #eq-dock .eq-side .presets-menu.show{display:block}
+  #eq-dock .eq-side .presets-menu button{all:unset;display:block;width:100%;padding:6px 10px;cursor:pointer;color:#fff6a9}
+  #eq-dock .eq-side .presets-menu button:hover{background:#0d1624;color:#ff9e00}
+  #eq-dock .nds label{display:flex;flex-direction:column;align-items:center;gap:4px;color:#d0774a}
+  #eq-dock .eq-presets input.eq-slider{-webkit-appearance:none;appearance:none;-moz-orient:vertical;writing-mode:vertical-lr;direction:rtl;width:6px;height:112px;background:transparent;border:0}
+  #eq-dock .eq-presets input.eq-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:8px;background:#080808;border:1px solid #d0774a}
   
 
   
@@ -530,22 +532,16 @@ html, body {
   
   #eq-dock .eq-panel { height: 100%; display: flex; flex-direction: column; }
   #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 9px; }
-  #eq-dock .eq-bands label { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d0774a;}
+  #eq-dock .eq-presets label { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d0774a;}
   
-  #eq-dock .eq-bands label { height: 140px; justify-content: flex-end; }
+  #eq-dock .eq-sliders label { height: 140px; justify-content: flex-end; width: 1px; }
   
   
-  #eq-dock .eq-bands  {
-    flex: 1; display:
-    flex; gap: 8px;
+  #eq-dock .eq-presets  {
+    flex: 1; display: flex; gap: 8px;
     justify-content: space-between; 
-    align-items: flex-end; 
+    align-items: flex-start; 
     padding: 6px; 
-    background: #041024;
-    height: 124px;
-    font-size: 10px;
-    appearance: none;
-    width: 278px;
   }
   
   .eq-slider{appearance:none;margin:0;width:6px;height:112px;background:transparent;color:#d0774a;box-shadow:none;-moz-orient:vertical;writing-mode:vertical-lr;direction:rtl}
