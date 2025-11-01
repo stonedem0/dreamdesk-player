@@ -103,7 +103,27 @@
         </div>
         <div id="eq-dock" style="display:none;">
             <div class="eq-panel">
-                <div class="eq-header">equalizer</div>
+                <div class="eq-header"><span>equalizer</span><button id="eq-presets-btn" class="mini-btn"
+                        title="Presets" aria-haspopup="menu" aria-expanded="false">presets ▾</button></div>
+                <div id="eq-presets-menu" class="presets-menu" role="menu" aria-hidden="true">
+                    <button role="menuitem">Classical</button>
+                    <button role="menuitem">Club</button>
+                    <button role="menuitem">Dance</button>
+                    <button role="menuitem">Laptop speakers/headphones</button>
+                    <button role="menuitem">Large hall</button>
+                    <button role="menuitem">Party</button>
+                    <button role="menuitem">Pop</button>
+                    <button role="menuitem">Reggae</button>
+                    <button role="menuitem">Rock</button>
+                    <button role="menuitem">Soft</button>
+                    <button role="menuitem">Ska</button>
+                    <button role="menuitem">Full Bass</button>
+                    <button role="menuitem">Soft Rock</button>
+                    <button role="menuitem">Full Treble</button>
+                    <button role="menuitem">Full Bass & Treble</button>
+                    <button role="menuitem">Live</button>
+                    <button role="menuitem">Techno</button>
+                </div>
                 <div class="eq-bands">
                     <label><span>60</span><input class="eq-slider" type="range" min="-12" max="12" value="0"
                             data-band="0"></label>

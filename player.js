@@ -806,6 +806,43 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     }
   });
 
+  // EQ presets context menu (dummy)
+  (function setupEqPresetsMenu(){
+    const btn = document.getElementById('eq-presets-btn');
+    const menu = document.getElementById('eq-presets-menu');
+    if (!btn || !menu) return;
+    let visible = false;
+    const open = () => {
+      if (visible) return;
+      menu.classList.add('show');
+      menu.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      visible = true;
+    };
+    const close = () => {
+      if (!visible) return;
+      menu.classList.remove('show');
+      menu.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      visible = false;
+    };
+    const toggle = () => { (visible ? close : open)(); };
+    btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggle(); });
+    menu.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t && t.matches('button[role="menuitem"]')) {
+        close();
+      }
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!visible) return;
+      const t = e.target;
+      if (t === btn || menu.contains(t)) return;
+      close();
+    });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  })();
+
   shuffleBtn?.addEventListener('click', () => {
     const pressed = shuffleBtn.getAttribute('aria-pressed') === 'true';
     const nextState = !pressed;
