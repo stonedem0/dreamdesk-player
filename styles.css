@@ -302,10 +302,10 @@ html, body {
     display: inline-flex;
     align-items: center;
     background: transparent;
-    color: #fff6a9;   
-    font-size: 11px;
+    color: #ffb600;   
+    font-size: 10px;
     height: 20px;
-    white-space: nowrap;
+    white-space: nowrap;  
   }
   
   #kbps {
