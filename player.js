@@ -914,16 +914,26 @@ setupPlayerRectCache();
   const apply = (minimized) => {
     const root = getRootEl();
     if (!root) return;
+    host.classList.toggle('minimized-host', !!minimized);
     root.style.transformOrigin = 'left bottom';
-    root.style.transition = 'transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+    root.style.willChange = 'transform, opacity';
+    root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
     if (minimized) {
       const r = host.getBoundingClientRect();
       const margin = 8;
       const dx = Math.round(margin - r.left);
       const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
-      root.style.transform = `translate(${dx}px, ${dy}px) scale(0.9)`;
+      // force reflow so transition applies
+      void root.getBoundingClientRect();
+      root.style.transform = `translate(${dx}px, ${dy}px) scale(0.72)`;
+      root.style.opacity = '0';
     } else {
+      // force reflow so reverse transition applies
+      void root.getBoundingClientRect();
       root.style.transform = '';
+      root.style.opacity = '1';
+      const clear = () => { root.style.willChange = ''; root.removeEventListener('transitionend', clear); };
+      root.addEventListener('transitionend', clear, { once: true });
     }
   };
   const inferMinimized = () => {
@@ -1112,18 +1122,24 @@ window.DreamDeskAnimations.customMinimize = function customMinimize(el, { isMini
   if (!el) return;
   const sr = el.getRootNode && el.getRootNode();
   const root = sr && sr.querySelector && sr.querySelector('.component-root');
-  console.log(root);
   if (!root) return;
   root.style.transformOrigin = 'left bottom';
-  root.style.transition = 'transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+  root.style.willChange = 'transform, opacity';
+  root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
   if (isMinimized) {
     const r = el.getBoundingClientRect();
     const margin = 8;
     const dx = Math.round(margin - r.left);
     const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
-    root.style.transform = `translate(${dx}px, ${dy}px) scale(0.9)`;
+    void root.getBoundingClientRect();
+    root.style.transform = `translate(${dx}px, ${dy}px) scale(0.72)`;
+    root.style.opacity = '0';
   } else {
+    void root.getBoundingClientRect();
     root.style.transform = '';
+    root.style.opacity = '1';
+    const clear = () => { root.style.willChange = ''; root.removeEventListener('transitionend', clear); };
+    root.addEventListener('transitionend', clear, { once: true });
   }
 };
 window.DreamDeskAnimations.customUnminimize = window.DreamDeskAnimations.customMinimize;

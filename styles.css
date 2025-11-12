@@ -28,6 +28,14 @@ html, body {
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
 }
+/* When minimized, suppress the host's painted background to prevent ghost box */
+#player-window.minimized-host {
+  background: transparent;
+  border: 0;
+  background-image: none;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
 
 #playlist-dock {
     position: fixed;
