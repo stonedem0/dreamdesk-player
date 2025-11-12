@@ -902,6 +902,44 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
 visualizer.bindTransportControls();
 setupPlayerRectCache();
 
+// Minimal minimize sync: when the DreamDesk window toggles minimized state,
+// translate/scale the shadow root container to the bottom-left.
+(function setupMinimizeSync(){
+  const host = document.getElementById('player-window');
+  if (!host) return;
+  const getRootEl = () => {
+    const sr = host.shadowRoot || (host.getRootNode && host.getRootNode());
+    return sr && sr.querySelector && sr.querySelector('.component-root');
+  };
+  const apply = (minimized) => {
+    const root = getRootEl();
+    if (!root) return;
+    root.style.transformOrigin = 'left bottom';
+    root.style.transition = 'transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+    if (minimized) {
+      const r = host.getBoundingClientRect();
+      const margin = 8;
+      const dx = Math.round(margin - r.left);
+      const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
+      root.style.transform = `translate(${dx}px, ${dy}px) scale(0.9)`;
+    } else {
+      root.style.transform = '';
+    }
+  };
+  const inferMinimized = () => {
+    // Heuristics: library may toggle one of these
+    return (
+      host.hasAttribute('minimized') ||
+      host.getAttribute('data-dd-state') === 'minimized' ||
+      host.classList.contains('minimized')
+    );
+  };
+  const mo = new MutationObserver(() => apply(inferMinimized()));
+  mo.observe(host, { attributes: true, attributeFilter: ['class','minimized','data-dd-state','style'] });
+  // Apply once in case it's already minimized
+  apply(inferMinimized());
+})();
+
 function wireEq() {
     const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-presets input.eq-slider'));
     if (!sliders.length) return;
@@ -1069,3 +1107,23 @@ window.DreamDeskAnimations = {
 };
 
 window.DreamDeskAnimations.customUnfullscreen = window.DreamDeskAnimations.customFullscreen;
+// Minimize by animating the shadow root's component container to the bottom-left corner.
+window.DreamDeskAnimations.customMinimize = function customMinimize(el, { isMinimized }) {
+  if (!el) return;
+  const sr = el.getRootNode && el.getRootNode();
+  const root = sr && sr.querySelector && sr.querySelector('.component-root');
+  console.log(root);
+  if (!root) return;
+  root.style.transformOrigin = 'left bottom';
+  root.style.transition = 'transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+  if (isMinimized) {
+    const r = el.getBoundingClientRect();
+    const margin = 8;
+    const dx = Math.round(margin - r.left);
+    const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
+    root.style.transform = `translate(${dx}px, ${dy}px) scale(0.9)`;
+  } else {
+    root.style.transform = '';
+  }
+};
+window.DreamDeskAnimations.customUnminimize = window.DreamDeskAnimations.customMinimize;
