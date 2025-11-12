@@ -902,6 +902,54 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
 visualizer.bindTransportControls();
 setupPlayerRectCache();
 
+// Minimal minimize sync: when the DreamDesk window toggles minimized state,
+// translate/scale the shadow root container to the bottom-left.
+(function setupMinimizeSync(){
+  const host = document.getElementById('player-window');
+  if (!host) return;
+  const getRootEl = () => {
+    const sr = host.shadowRoot || (host.getRootNode && host.getRootNode());
+    return sr && sr.querySelector && sr.querySelector('.component-root');
+  };
+  const apply = (minimized) => {
+    const root = getRootEl();
+    if (!root) return;
+    host.classList.toggle('minimized-host', !!minimized);
+    root.style.transformOrigin = 'left bottom';
+    root.style.willChange = 'transform, opacity';
+    root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
+    if (minimized) {
+      const r = host.getBoundingClientRect();
+      const margin = 8;
+      const dx = Math.round(margin - r.left);
+      const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
+      // force reflow so transition applies
+      void root.getBoundingClientRect();
+      root.style.transform = `translate(${dx}px, ${dy}px) scale(0.72)`;
+      root.style.opacity = '0';
+    } else {
+      // force reflow so reverse transition applies
+      void root.getBoundingClientRect();
+      root.style.transform = '';
+      root.style.opacity = '1';
+      const clear = () => { root.style.willChange = ''; root.removeEventListener('transitionend', clear); };
+      root.addEventListener('transitionend', clear, { once: true });
+    }
+  };
+  const inferMinimized = () => {
+    // Heuristics: library may toggle one of these
+    return (
+      host.hasAttribute('minimized') ||
+      host.getAttribute('data-dd-state') === 'minimized' ||
+      host.classList.contains('minimized')
+    );
+  };
+  const mo = new MutationObserver(() => apply(inferMinimized()));
+  mo.observe(host, { attributes: true, attributeFilter: ['class','minimized','data-dd-state','style'] });
+  // Apply once in case it's already minimized
+  apply(inferMinimized());
+})();
+
 function wireEq() {
     const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-presets input.eq-slider'));
     if (!sliders.length) return;
@@ -1069,3 +1117,29 @@ window.DreamDeskAnimations = {
 };
 
 window.DreamDeskAnimations.customUnfullscreen = window.DreamDeskAnimations.customFullscreen;
+// Minimize by animating the shadow root's component container to the bottom-left corner.
+window.DreamDeskAnimations.customMinimize = function customMinimize(el, { isMinimized }) {
+  if (!el) return;
+  const sr = el.getRootNode && el.getRootNode();
+  const root = sr && sr.querySelector && sr.querySelector('.component-root');
+  if (!root) return;
+  root.style.transformOrigin = 'left bottom';
+  root.style.willChange = 'transform, opacity';
+  root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
+  if (isMinimized) {
+    const r = el.getBoundingClientRect();
+    const margin = 8;
+    const dx = Math.round(margin - r.left);
+    const dy = Math.round(Math.max(margin, (window.innerHeight || 0) - r.height - margin) - r.top);
+    void root.getBoundingClientRect();
+    root.style.transform = `translate(${dx}px, ${dy}px) scale(0.72)`;
+    root.style.opacity = '0';
+  } else {
+    void root.getBoundingClientRect();
+    root.style.transform = '';
+    root.style.opacity = '1';
+    const clear = () => { root.style.willChange = ''; root.removeEventListener('transitionend', clear); };
+    root.addEventListener('transitionend', clear, { once: true });
+  }
+};
+window.DreamDeskAnimations.customUnminimize = window.DreamDeskAnimations.customMinimize;

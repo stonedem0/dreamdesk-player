@@ -28,6 +28,14 @@ html, body {
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
 }
+/* When minimized, suppress the host's painted background to prevent ghost box */
+#player-window.minimized-host {
+  background: transparent;
+  border: 0;
+  background-image: none;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
 
 #playlist-dock {
     position: fixed;
@@ -118,7 +126,7 @@ html, body {
     margin-top: 6px;
     margin-left: 3px;
     display: flex;
-    background-color: #001127bf;
+    background-color: #001127c9;
     width: 100px;
     height: 31px;
     position: relative;
@@ -138,11 +146,11 @@ html, body {
     margin: 0;
     width: auto;
     text-align: right;
-    color: #4cd5a5;
-    font-size: 12px;
-    color: #fff6a9;
+    font-size: 11px;
     pointer-events: none;
-    z-index: 1;
+    color: #fff6a9;
+    z-index: 1;                
+    text-shadow: 0 0 2px #ffa500, 0 0 2px rgba(255, 165, 0, 0.85), 0 0 7px rgba(255, 69, 0, 0.7);
   
   }
   
@@ -185,13 +193,12 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #000b19db;
-    height: 16px;
+    background-color: #001127c9;
+    height: 18px;
     width: 180px;
     font-size: 10px;
     margin-top: 7px;
     margin-right: 0px;
-    color: #4cd5a5;
     overflow: hidden;
     white-space: nowrap;  
     border: .5px solid #d0774a;
@@ -205,7 +212,7 @@ html, body {
     text-align: center;
     color: #fff6a9;
     z-index: 1;                
-    text-shadow: 0 0 2px #ffa500, 0 0 6px rgba(255,165,0,0.85), 0 0 12px rgba(255,69,0,0.7);
+    text-shadow: 0 0 2px #ffa500, 0 0 2px rgba(255, 165, 0, 0.85), 0 0 7px rgba(255, 69, 0, 0.7);
   }
   
   .neon::before {
@@ -303,10 +310,10 @@ html, body {
     display: inline-flex;
     align-items: center;
     background: transparent;
-    color: #fff6a9;   
-    font-size: 11px;
+    color: #ffb600;   
+    font-size: 10px;
     height: 20px;
-    white-space: nowrap;
+    white-space: nowrap;  
   }
   
   #kbps {
@@ -348,7 +355,7 @@ html, body {
     min-width: 28px;
     padding: 0 6px;
     background-color: #000b19ba;
-    color: #fff6a9;
+    color: #ffb600;
     border: .5px solid #d0774a;
     box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
     display: inline-flex;
@@ -361,26 +368,28 @@ html, body {
   .volume-slider {
     appearance: none;
     width: 70px;
-    height: 4px;
+    height: 6px;
     margin-top: 0px;
     margin-left: 0;
     background: #0d1624;
     border: 1px solid #d0774a;
     pointer-events: auto;
     touch-action: none;
+    box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
     
   }
   
   .balance-slider {
     appearance: none;
     width: 40px;
-    height: 4px;
+    height: 6px;
     margin-top: 0px;
     margin-left: 0;
     background: #0d1624;
     border: 1px solid #d0774a;
     pointer-events: auto;
     touch-action: none;
+    box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
   }
   
   .volume-slider::-webkit-slider-thumb {
@@ -392,6 +401,7 @@ html, body {
     border: 1px solid #000;
     cursor: pointer;
     border: 1px solid #d0774a;
+    box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
   }
   
   .balance-slider::-webkit-slider-thumb {
@@ -403,6 +413,7 @@ html, body {
     border: 1px solid #000;
     cursor: pointer;
     border: 1px solid #d0774a;
+    box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
   }
   
   .volume-slider::-moz-range-thumb { width: 12px; height: 12px; background: #080808; border: 1px solid #000; cursor: pointer; }
@@ -478,7 +489,7 @@ html, body {
     width: 23px;
     text-align: center;
     background-color: #000000b9;
-    color: #fff6a9;
+    color: #ffb600;
     border: .5px solid #d0774a;
     box-shadow: inset 1px 1px 0 rgba(255, 246, 169, 0.22), inset -1px -1px 0 rgba(0, 0, 0, 0.65);
     display: flex;
