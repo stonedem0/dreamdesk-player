@@ -95,6 +95,68 @@ function processAudioData(data) {
     [32768, 32768],
   ]);
   
+  // Winamp-style EQ presets (10-band originals, downsampled to our 7-band UI)
+  const WINAMP_10_BAND_PRESETS = {
+    flat:      [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+    classical: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0],
+    club:      [ 0.0,  0.0,  3.0,  4.0,  4.0,  4.0,  3.0,  0.0,  0.0,  0.0],
+    dance:     [ 5.0,  4.0,  1.0, -2.0, -1.0,  1.0,  3.0,  4.0,  5.0,  5.0],
+    'laptop speakers/headphones': [ 3.0,  6.0,  4.0, -2.0, -1.0,  1.0,  3.0,  5.0,  7.0,  8.0],
+    'large hall':[ 7.0,  7.0,  5.0,  5.0,  3.0,  1.0,  0.0,  0.0,  0.0,  0.0],
+    party:     [ 4.0,  4.0,  1.0,  0.0,  0.0,  0.0,  1.0,  3.0,  4.0,  4.0],
+    pop:       [-1.0,  2.0,  4.0,  5.0,  5.0,  4.0,  2.0,  0.0, -1.0, -1.0],
+    reggae:    [ 0.0,  0.0,  0.0, -2.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
+    rock:      [ 5.0,  3.0, -2.0, -4.0, -2.0,  2.0,  6.0,  8.0,  8.0,  7.0],
+    soft:      [ 2.0,  1.0,  0.0, -1.0, -1.0, -1.0,  0.0,  1.0,  2.0,  3.0],
+    ska:       [-2.0,  0.0,  3.0,  3.0,  2.0,  1.0,  0.0,  0.0,  0.0,  0.0],
+    'full bass':[10.0,  9.0,  7.0,  4.0,  0.0, -4.0, -6.0, -8.0, -8.0, -8.0],
+    'soft rock':[ 4.0,  2.0, -1.0, -2.0, -1.0,  1.0,  3.0,  4.0,  6.0,  8.0],
+    'full treble':[-8.0, -8.0, -8.0, -6.0, -4.0,  0.0,  4.0,  8.0,  9.0, 10.0],
+    'full bass & treble':[10.0,  8.0,  6.0,  2.0, -2.0, -4.0, -2.0,  6.0,  8.0, 10.0],
+    live:      [-4.0, -2.0,  0.0,  4.0,  4.0,  4.0,  2.0,  0.0, -2.0, -4.0],
+    techno:    [ 4.0,  3.0,  2.0,  0.0, -2.0, -1.0,  1.0,  3.0,  4.0,  4.0],
+  };
+
+  function map10BandTo7(values10) {
+    const v = Array.isArray(values10) ? values10 : [];
+    const safe = (idx) => Number.isFinite(v[idx]) ? v[idx] : 0;
+    const avg = (a, b) => (safe(a) + safe(b)) / 2;
+    return [
+      safe(0),                // 60 Hz
+      safe(1),                // 170 Hz
+      avg(2, 3),              // ~350 Hz from 310/600
+      safe(4),                // 1 kHz
+      safe(5),                // 3 kHz
+      avg(6, 7),              // ~10 kHz from 6k/12k
+      avg(8, 9),              // 16 kHz from 14k/16k
+    ];
+  }
+
+  const EQ_PRESET_ORDER = [
+    'flat',
+    'classical',
+    'club',
+    'dance',
+    'laptop speakers/headphones',
+    'large hall',
+    'party',
+    'pop',
+    'reggae',
+    'rock',
+    'soft',
+    'ska',
+    'full bass',
+    'soft rock',
+    'full treble',
+    'full bass & treble',
+    'live',
+    'techno',
+  ];
+
+  const EQ_PRESETS = Object.fromEntries(
+    EQ_PRESET_ORDER.map((key) => [key, map10BandTo7(WINAMP_10_BAND_PRESETS[key])])
+  );
+  
   class AudioVisualizer {
     constructor(audioSrc = null, ctxOptions = {}) {
       this.audioContext = new (window.AudioContext ||
@@ -469,7 +531,7 @@ function processAudioData(data) {
     el.addEventListener('pointercancel', updatePlayerRectCache, { passive: true });
     window._playerRectObserver = mo;
   }
-
+  
   function positionDock(dockEl) {
     if (!dockEl || dockEl.style.display === 'none') return;
     const r = getPlayerRectCached();
@@ -811,6 +873,27 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     const btn = document.getElementById('eq-presets-btn');
     const menu = document.getElementById('eq-presets-menu');
     if (!btn || !menu) return;
+
+    const labelize = (name) => name.replace(/\b\w/g, (m) => m.toUpperCase());
+    menu.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    EQ_PRESET_ORDER.forEach((key) => {
+      const values = EQ_PRESETS[key];
+      if (!values) return;
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.setAttribute('role', 'menuitem');
+      item.dataset.preset = key;
+      item.textContent = labelize(key);
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        applyEqPreset(key);
+        close();
+      });
+      fragment.appendChild(item);
+    });
+    menu.appendChild(fragment);
+
     let visible = false;
     const open = () => {
       if (visible) return;
@@ -965,12 +1048,27 @@ function wireEq() {
       el.addEventListener('change', onInput);
       onInput({ currentTarget: el });
     });
+    applyEqPreset('flat');
 }
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', wireEq, { once: true });
 } else {
   wireEq();
+}
+
+function applyEqPreset(name) {
+  const values = EQ_PRESETS[name];
+  if (!values || !values.length) return;
+  const sliders = Array.from(document.querySelectorAll('#eq-dock .eq-presets input.eq-slider'));
+  if (!sliders.length) return;
+  const count = Math.min(values.length, sliders.length);
+  for (let i = 0; i < count; i++) {
+    const el = sliders[i];
+    el.value = String(values[i]);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
 }
 
 AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
