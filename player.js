@@ -1077,7 +1077,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
   try {
     let known = [];
     try {
-      const resp = await fetch('/public/tracks/manifest.json', { cache: 'no-store' });
+      const resp = await fetch('public/tracks/manifest.json', { cache: 'no-store' });
       if (resp.ok) {
         const files = await resp.json();
         if (Array.isArray(files)) {
