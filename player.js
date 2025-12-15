@@ -1000,7 +1000,7 @@ setupPlayerRectCache();
     host.classList.toggle('minimized-host', !!minimized);
     root.style.transformOrigin = 'left bottom';
     root.style.willChange = 'transform, opacity';
-    root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
+    root.style.transition = 'transform 840ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 380ms ease-out';
     if (minimized) {
       const r = host.getBoundingClientRect();
       const margin = 8;
@@ -1077,7 +1077,7 @@ AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
   try {
     let known = [];
     try {
-      const resp = await fetch('/public/tracks/manifest.json', { cache: 'no-store' });
+      const resp = await fetch('public/tracks/manifest.json', { cache: 'no-store' });
       if (resp.ok) {
         const files = await resp.json();
         if (Array.isArray(files)) {
@@ -1223,7 +1223,7 @@ window.DreamDeskAnimations.customMinimize = function customMinimize(el, { isMini
   if (!root) return;
   root.style.transformOrigin = 'left bottom';
   root.style.willChange = 'transform, opacity';
-  root.style.transition = 'transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 240ms ease-out';
+  root.style.transition = 'transform 3240ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 5080ms ease-out';
   if (isMinimized) {
     const r = el.getBoundingClientRect();
     const margin = 8;
