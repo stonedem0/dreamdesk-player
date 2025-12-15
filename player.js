@@ -507,6 +507,7 @@ function processAudioData(data) {
   let visualizer = new AudioVisualizer('public/tracks/moonlight.mp3');
   window.visualizer = visualizer;
   let _dockFollowRaf = 0;
+  const DOCK_GAP_PX = 0; // vertical gap between player window and docks
 
   // Cache player window rect to avoid repeated layout reads
   function updatePlayerRectCache() {
@@ -537,14 +538,14 @@ function processAudioData(data) {
     const r = getPlayerRectCached();
     if (!r) return;
     dockEl.style.left = `${r.left}px`;
-    dockEl.style.top  = `${r.bottom}px`;
+    dockEl.style.top  = `${Math.round(r.bottom + DOCK_GAP_PX)}px`;
   }
 
   function positionDockBelow(anchorEl, dockEl) {
     if (!anchorEl || !dockEl || dockEl.style.display === 'none') return;
     const r = anchorEl.getBoundingClientRect();
     dockEl.style.left = `${r.left}px`;
-    dockEl.style.top  = `${r.bottom}px`;
+    dockEl.style.top  = `${Math.round(r.bottom + DOCK_GAP_PX)}px`;
   }
 
   function isVisible(el) {
