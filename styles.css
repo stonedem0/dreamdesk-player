@@ -72,7 +72,7 @@ html, body {
   #eq-dock{
     position:fixed;
     width:297px; height:160px;
-    background:#000;
+    background:#000b19;
     border:2px solid transparent;
     border-top: none;
     background-image:
