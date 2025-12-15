@@ -19,23 +19,6 @@ If no manifest is found, a small default list is shown.
 - Volume and Balance
 - Equalizer (7‑band) with presets
 
-## Deploy to GitHub Pages
-
-This repo is already Pages‑friendly:
-
-- Asset paths are relative (e.g. `public/tracks/manifest.json`).
-- `.nojekyll` is included so files are served “as is”.
-
-Steps:
-1. Push to GitHub.
-2. Repo → Settings → Pages
-3. Source: “Deploy from a branch” → Branch: `master` (or `main`) → Folder: `/(root)`.
-4. Wait ~1–2 minutes. Your site will be at:
-   - `https://<your-username>.github.io/winamp-tokyo-3/`
-
-Notes:
-- Private repos can deploy; the site itself is public (unless you use an org with Enterprise).
-- You can add a custom domain later by adding a `CNAME` file and setting it in Pages.
 
 ## File structure
 
