@@ -14,8 +14,10 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
+  
     justify-content: center;
     height: 100%;
+    margin-top: -40px; /* move player up without affecting fixed-position docks */
 }
 #playlist-window { position: fixed; top: calc(var(--player-top) + 146px); left: var(--player-left); z-index: 9; }
 #playlist-window .win-body { overflow: hidden; }
