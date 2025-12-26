@@ -6,6 +6,11 @@ html, body {
     background-repeat: no-repeat;
   }
 
+:root {
+  --player-font-size: 12px;
+  --player-font-size-small: 10px;
+}
+
 /* Smooth dock open/close transitions */
 .dock-anim { opacity: 0; transform: translateY(-6px); transition: opacity 220ms ease, transform 220ms ease; will-change: opacity, transform; }
 .dock-anim.show { opacity: 1; transform: translateY(0); }
@@ -66,7 +71,7 @@ html, body {
     background-clip: padding-box, border-box;
     z-index: 2147483637; /* above app windows, below EQ */
   }
-  #playlist-dock .playlist-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 9px; text-align: center; }
+  #playlist-dock .playlist-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: var(--player-font-size-small); text-transform: uppercase; font-weight: 600; letter-spacing: .5px; text-align: center; }
   #playlist-dock .track-list { height: calc(100% - 22px); max-height: calc(100% - 22px); overflow-y: auto; }
   
   #eq-dock{
@@ -82,13 +87,13 @@ html, body {
     background-clip:padding-box,border-box;
     z-index:2147483638; /* above playlist */
   }
-  #eq-dock .eq-panel{height:100%;display:flex;flex-direction:column;color:#fff6a9;font-size:10px;position:relative}
-  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a;display:flex;align-items:center;justify-content:center}
+  #eq-dock .eq-panel{height:100%;display:flex;flex-direction:column;color:#fff6a9;font-size:var(--player-font-size);position:relative}
+  #eq-dock .eq-header{padding:4px 6px;background:#000b19ba;border-bottom:.5px solid #d0774a;display:flex;align-items:center;justify-content:center; font-size: var(--player-font-size-small); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; text-align: center;}
   #eq-dock .eq-header span{flex:1;text-align:center;color:#ff9e00}
   #eq-dock .eq-presets{position:relative;flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-start;padding:6px}
   #eq-dock .eq-sliders{flex:1;display:flex;gap:8px;justify-content:space-between;align-items:flex-end;background:#041024;padding:6px;height:120px}
   #eq-dock .eq-side{position:relative;margin-left:8px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;padding:0;background:transparent}
-  #eq-dock .eq-side #eq-presets-btn{min-width:auto;padding:0 8px;height:18px;font-size:10px;line-height:18px}
+  #eq-dock .eq-side #eq-presets-btn{min-width:auto;padding:0 8px;height:18px;font-size:var(--player-font-size);line-height:18px}
   #eq-dock .eq-side .presets-menu{position:absolute;right:0;top:24px;min-width:180px;max-height:220px;overflow:auto;background:#000b19;border:1px solid #d0774a;box-shadow:0 6px 18px rgba(0,0,0,0.45);z-index:2147483640;display:none}
   #eq-dock .eq-side .presets-menu.show{display:block}
   #eq-dock .eq-side .presets-menu button{all:unset;display:block;width:100%;padding:6px 10px;cursor:pointer;color:#fff6a9}
@@ -148,7 +153,7 @@ html, body {
     margin: 0;
     width: auto;
     text-align: right;
-    font-size: 11px;
+    font-size: calc(var(--player-font-size) * 1.1);
     pointer-events: none;
     color: #fff6a9;
     z-index: 1;                
@@ -198,7 +203,7 @@ html, body {
     background-color: #001127c9;
     height: 18px;
     width: 180px;
-    font-size: 10px;
+    font-size: var(--player-font-size);
     margin-top: 7px;
     margin-right: 0px;
     overflow: hidden;
@@ -247,7 +252,7 @@ html, body {
     color: #ff9e00;
     display: block;
     position: relative;
-    font-size: 11px;
+    font-size: var(--player-font-size-small);
     box-sizing: border-box;
   }
   
@@ -313,7 +318,7 @@ html, body {
     align-items: center;
     background: transparent;
     color: #ffb600;   
-    font-size: 10px;
+    font-size: var(--player-font-size);
     height: 20px;
     white-space: nowrap;  
   }
@@ -352,7 +357,7 @@ html, body {
   }
   
   .mini-btn {
-    font-size: 10px;
+    font-size: var(--player-font-size);
     height: 18px;
     min-width: 28px;
     padding: 0 6px;
@@ -486,7 +491,7 @@ html, body {
   }
   
   .player .display .player-controls button {
-    font-size: 10px;
+    font-size: var(--player-font-size);
     height: 20px;
     width: 23px;
     text-align: center;
@@ -534,9 +539,9 @@ html, body {
   }
   .player .display .player-controls #shuffle-toggle { margin-left: 8px; }
   
-  .player .display .player-controls #play-button { font-size: 8px; }
+  .player .display .player-controls #play-button { font-size: calc(var(--player-font-size) * 0.8); }
   
-  .player .display .player-controls span { font-size: 10px; }
+  .player .display .player-controls span { font-size: var(--player-font-size); }
   
   .player .display .player-controls #rewind-button { transform: scaleX(-1); }
   
@@ -544,7 +549,7 @@ html, body {
   #stop-button { padding-top: 0; }
   
   #eq-dock .eq-panel { height: 100%; display: flex; flex-direction: column; }
-  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: 9px; }
+  #eq-dock .eq-header { padding: 4px 6px; background: #000b19ba; border-bottom: .5px solid #d0774a; color: #ff9e00; font-size: calc(var(--player-font-size) * 0.9); }
   #eq-dock .eq-presets label { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #d0774a;}
   
   #eq-dock .eq-sliders label { height: 140px; justify-content: flex-end; width: 1px; }
