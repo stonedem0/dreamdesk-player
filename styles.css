@@ -128,13 +128,12 @@ html, body {
           "viz sliders sliders sliders"
           "seek seek seek seek"
           "controls controls controls controls";
-      column-gap: 2px;
   }
   
   .display .audiowave {
     grid-area: viz;
     margin-top: 6px;
-    margin-left: 3px;
+    margin-left: 5px;
     display: flex;
     background-color: #001127c9;
     width: 100px;
@@ -205,10 +204,9 @@ html, body {
     justify-content: center;
     background-color: #001127c9;
     height: 18px;
-    width: 180px;
+    width: 177px;
     font-size: var(--player-font-size);
-    margin-top: 7px;
-    margin-right: 0px;
+    margin-top: 6px;
     overflow: hidden;
     white-space: nowrap;  
     border: .5px solid #d0774a;
@@ -353,7 +351,7 @@ html, body {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin: 0;
+    margin-right: 6px;
     position: relative;
     z-index: 5;
     gap: 2px;
@@ -464,8 +462,8 @@ html, body {
   }
   .seek-slider {
     appearance: none;
-    margin-left: 5px;
-    width: 288px;
+    margin-left: 3px;
+    width: 286px;
     height: 6px;
     background: var(--player-gradient, #d0774a);
     color: #d0774a;
@@ -487,10 +485,10 @@ html, body {
     grid-area: controls;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     margin-left: 4px;
     justify-self: start;    
-    padding: 2px 4px;
+    padding: 6px 3px;
   }
   
   .player .display .player-controls button {
