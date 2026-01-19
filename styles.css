@@ -241,10 +241,6 @@ body {
 
 .player {
   height: 116px;
-  background-image: url("public/img/image-asset.jpeg");
-  background-size: 100%;
-  background-position: center;
-  background-position: 50% 33%;
 }
 
 .player .display {

@@ -64,3 +64,11 @@
   --player-bg-soft: var(--color-bg-soft);
   --player-bg-strong: var(--color-bg-strong);
 }
+
+/* Player background image */
+.player {
+  background-image: url("public/img/image-asset.jpeg");
+  background-size: 100%;
+  background-position: center;
+  background-position: 50% 33%;
+}
