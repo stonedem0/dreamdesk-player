@@ -84,8 +84,14 @@ void main() {
     baseRadius = 0.6;
   }
   
-  // Expand radius based on FFT energy
+  // Expand radius based on FFT energy - large spikes for crown effect
   float expandAmount = fftVal * 1.8 + u_audio * 1.5;
+  
+  // Add jagged crown effect with sine wave spikes
+  float spikeFreq = 40.0; // Number of spikes around the circle
+  float spike = sin(vertexRatio * spikeFreq * 3.14159 * 1.0) * 0.3 + 0.3;
+  expandAmount *= spike; // Modulate expansion by spike pattern
+  
   float radius = baseRadius + expandAmount;
   
   float x = cos(vertexRadians) * radius / aspect;
