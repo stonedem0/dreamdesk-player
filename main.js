@@ -108,38 +108,33 @@ in float v_ringId;
 out vec4 outColor;
 
 void main() {
-  // Draw smooth anti-aliased line with liquid glass effect
+  // Draw circle point with soft edges
   vec2 coord = gl_PointCoord - vec2(0.5);
   float dist = length(coord);
   
-  // Smooth anti-aliasing for glass effect
-  float edge = 0.15; // Smooth transition range
-  float alpha = smoothstep(0.5 + edge, 0.5 - edge, dist);
+  if (dist > 0.5) discard;
   
-  if (alpha < 0.01) discard;
+  // Soft circle
+  float alpha = 1.0 - dist * 2.0;
   
   // Color based on which ring
   vec3 color;
   if (v_ringId < 1.0) {
-    // Inner ring: Pink
-    color = vec3(1.0, 0.2, 0.6);
+    // Inner ring: #ff0054
+    color = vec3(1.0, 0.0, 0.33);
   } else if (v_ringId < 2.0) {
-    // Middle ring: Purple #6610f2
-    color = vec3(0.40, 0.06, 0.95);
+    // Middle ring: #fb5607
+    color = vec3(0.98, 0.34, 0.03);
   } else {
     // Outer ring: Orange
     color = vec3(1.0, 0.6, 0.0);
   }
   
-  // Add bright inner glow for liquid effect
-  float innerGlow = exp(-dist * dist * 8.0);
-  color += vec3(1.0) * innerGlow * 0.3;
-  
-  // Brighten on bass hit - add outer glow
+  // Brighten on bass hit - add glow
   float glow = u_audio * 2.0;
-  color += vec3(0.5, 0.5, 1.0) * glow * 0.5;
+  color += vec3(0.5, 0.5, 1.0) * glow;
   
-  outColor = vec4(color, alpha * 0.9 + u_audio * 0.3);
+  outColor = vec4(color, alpha * 0.8 + u_audio * 0.5);
 }
 `;
 
