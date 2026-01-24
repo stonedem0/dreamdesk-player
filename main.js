@@ -311,6 +311,10 @@ function drawOnce(timeMs = 0) {
 
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
+  
+  // Enable alpha blending for smooth layered effect
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
   gl.useProgram(program);
   if (timeLoc) {
