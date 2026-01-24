@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/pastelcore.css" />
     <link rel="stylesheet" href="styles.css" />
     <script src="player.js" defer></script>
+    <script src="main.js" defer></script>
 </head>
 
 <body>
@@ -96,6 +97,9 @@
                 </div>
             </div>
         </dreamdesk-window>
+        <div id="webgl-viz" style="width: 420px; height: 320px; background: #000; border: 2px solid #ff8500; margin-left: 10px;">
+            <canvas id="glcanvas" width="420" height="320"></canvas>
+        </div>
         <div id="playlist-dock" style="display:none;">
             <div class="playlist-header">playlist</div>
             <div class="track-list scrollable" id="track-list">
