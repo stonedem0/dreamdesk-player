@@ -136,11 +136,9 @@ void main() {
     color = vec3(1.0, 0.6, 0.0);
   }
   
-  // Brighten on bass hit - add glow
-  float glow = u_audio * 2.0;
-  color += vec3(0.5, 0.5, 1.0) * glow;
+
   
-  outColor = vec4(color, alpha * 0.8 + u_audio * 0.5);
+  outColor = vec4(color, alpha * 0.6 + u_audio * 0.3);
 }
 `;
 
