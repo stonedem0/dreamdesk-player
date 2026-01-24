@@ -6,7 +6,7 @@ if (!canvas) throw new Error('Missing <canvas id="glcanvas"> in index.html');
 let gl = /** @type {WebGL2RenderingContext|null} */ (null);
 let program = /** @type {WebGLProgram|null} */ (null);
 let vao = /** @type {WebGLVertexArrayObject|null} */ (null);
-let vertexCount = 600; // 3 rings × 200 vertices each
+let vertexCount = 2400; // 3 rings × 800 vertices each for ultra-smooth lines
 let timeLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let resolutionLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let fftLoc = /** @type {WebGLUniformLocation|null} */ (null);
@@ -57,11 +57,11 @@ out float v_vertexRatio;
 out float v_ringId;
 
 void main() {
-  // Divide 600 vertices into 3 rings of 200 each
-  float ringId = floor(a_vertexId / 200.0);  // 0, 1, or 2
+  // Divide 2400 vertices into 3 rings of 800 each
+  float ringId = floor(a_vertexId / 800.0);  // 0, 1, or 2
   v_ringId = ringId; // Pass to fragment shader for color
-  float vertexInRing = mod(a_vertexId, 200.0); // 0-199 within each ring
-  float vertexRatio = vertexInRing / 200.0; // 0 to 1 position in ring
+  float vertexInRing = mod(a_vertexId, 800.0); // 0-799 within each ring
+  float vertexRatio = vertexInRing / 800.0; // 0 to 1 position in ring
   v_vertexRatio = vertexRatio;
   float vertexRadians = vertexRatio * 3.14159 * 2.0;
   
@@ -93,9 +93,9 @@ void main() {
   
   gl_Position = vec4(x, y, 0.0, 1.0);
   
-  // Point size based on frequency energy
-  float pointSize = 3.0 + fftVal * fftVal * 20.0 + u_audio * 15.0;
-  gl_PointSize = max(3.0, pointSize);
+  // Point size - large enough to create smooth liquid line effect
+  float pointSize = 20.0 + fftVal * fftVal * 60.0 + u_audio * 50.0;
+  gl_PointSize = max(20.0, pointSize);
 }
 `;
 
@@ -108,14 +108,15 @@ in float v_ringId;
 out vec4 outColor;
 
 void main() {
-  // Draw circle point with soft edges
+  // Draw smooth anti-aliased line with liquid glass effect
   vec2 coord = gl_PointCoord - vec2(0.5);
   float dist = length(coord);
   
-  if (dist > 0.5) discard;
+  // Smooth anti-aliasing for glass effect
+  float edge = 0.15; // Smooth transition range
+  float alpha = smoothstep(0.5 + edge, 0.5 - edge, dist);
   
-  // Soft circle
-  float alpha = 1.0 - dist * 2.0;
+  if (alpha < 0.01) discard;
   
   // Color based on which ring
   vec3 color;
@@ -130,11 +131,15 @@ void main() {
     color = vec3(1.0, 0.6, 0.0);
   }
   
-  // Brighten on bass hit - add glow
-  float glow = u_audio * 2.0;
-  color += vec3(0.5, 0.5, 1.0) * glow;
+  // Add bright inner glow for liquid effect
+  float innerGlow = exp(-dist * dist * 8.0);
+  color += vec3(1.0) * innerGlow * 0.3;
   
-  outColor = vec4(color, alpha * 0.8 + u_audio * 0.5);
+  // Brighten on bass hit - add outer glow
+  float glow = u_audio * 2.0;
+  color += vec3(0.5, 0.5, 1.0) * glow * 0.5;
+  
+  outColor = vec4(color, alpha * 0.9 + u_audio * 0.3);
 }
 `;
 
