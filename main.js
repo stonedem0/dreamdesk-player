@@ -99,9 +99,9 @@ void main() {
   
   gl_Position = vec4(x, y, 0.0, 1.0);
   
-  // Point size - large enough to create smooth liquid line effect
-  float pointSize = 20.0 + fftVal * fftVal * 60.0 + u_audio * 50.0;
-  gl_PointSize = max(20.0, pointSize);
+  // Point size - very thin rings
+  float pointSize = 6.0 + fftVal * fftVal * 18.0 + u_audio * 14.0;
+  gl_PointSize = max(6.0, pointSize);
 }
 `;
 
