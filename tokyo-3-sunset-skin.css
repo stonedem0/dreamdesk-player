@@ -5,8 +5,8 @@
 
 :root {
   /* Typography */
-  --player-font-size: 12px;
-  --player-font-size-small: 10px;
+  --player-font-size-sunset: 12px;
+  --player-font-size-small-sunset: 10px;
 
   /* Primary Background Colors */
   --color-bg-primary: #000b19;
@@ -14,8 +14,9 @@
   --color-bg-strong: #000b19db;
 
   /* Border & Accent Colors */
-  --color-border-main: #d0774a;
-  --color-border-subtle: #d0694a;
+  --color-border-sunset: #d0774a;
+  --color-border-subtle-sunset: #d0694a;
+  --color-border-subtle: var(--color-border-subtle-sunset);
 
   /* Primary Accent Colors */
   --color-accent-primary: #ff9e00;
@@ -35,6 +36,21 @@
     #ff9e00 70%,
     #ffaa00 80%,
     #ffb600 100%
+  );
+
+  /* Gradient - Vertical for EQ sliders */
+  --gradient-eq-vertical: linear-gradient(
+    180deg,
+    #ff4800 0%,
+    #ff5400 10%,
+    #ff6000 20%,
+    #ff6d00 30%,
+    #ff7900 40%,
+    var(--color-accent-mid) 50%,
+    #ff9100 60%,
+    var(--color-accent-primary) 70%,
+    #ffaa00 80%,
+    var(--color-accent-light) 100%
   );
 
   /* Text Colors */
@@ -63,6 +79,7 @@
   --player-bg: var(--color-bg-primary);
   --player-bg-soft: var(--color-bg-soft);
   --player-bg-strong: var(--color-bg-strong);
+  --player-gradient: var(--gradient-primary);
 }
 
 /* Player background image */
@@ -71,4 +88,152 @@
   background-size: 100%;
   background-position: center;
   background-position: 50% 33%;
+}
+
+/* Skin-specific EQ slider styling */
+.eq-slider::-webkit-slider-runnable-track {
+  width: 6px;
+  height: 112px;
+  background: var(--gradient-eq-vertical);
+  border: 1px solid var(--color-border-sunset);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 246, 169, 0.22),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.65);
+}
+.eq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 8px;
+  background: var(--color-slider-thumb);
+  border: 1px solid var(--color-border-sunset);
+  border-radius: 0;
+  cursor: pointer;
+  margin-left: -3.5px;
+  transform: translateX(-0.5px);
+}
+
+/* Firefox */
+.eq-slider::-moz-range-track {
+  width: 6px;
+  height: 112px;
+  background: var(--gradient-eq-vertical);
+  border: 1px solid var(--color-border-sunset);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 246, 169, 0.22),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.65);
+}
+.eq-slider::-moz-range-thumb {
+  width: 13px;
+  height: 8px;
+  background: var(--color-slider-thumb);
+  border: 1px solid var(--color-border-sunset);
+  border-radius: 0;
+  margin-left: -3.5px;
+  transform: translateX(-0.5px);
+}
+
+/* Override all --color-border usages with sunset colors */
+#playlist-dock .playlist-header {
+  border-bottom-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-header {
+  border-bottom-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-side .presets-menu {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .nds label {
+  color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-presets input.eq-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.display .audiowave {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .display .current-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#track-list::-webkit-scrollbar-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#track-list::-webkit-scrollbar-button:vertical:decrement {
+  background-color: var(--color-border-sunset) !important;
+}
+
+#track-list::-webkit-scrollbar-button:vertical:increment {
+  background-color: var(--color-border-sunset) !important;
+}
+
+.mini-btn {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.volume-slider {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.balance-slider {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.balance-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.volume-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.seek-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.balance-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .screen .value {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.seek-slider {
+  color: var(--color-border-sunset) !important;
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .display .player-controls button {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-presets label {
+  color: var(--color-border-sunset) !important;
+}
+
+.eq-slider {
+  color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-webkit-slider-runnable-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
 }
