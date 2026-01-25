@@ -6,7 +6,7 @@ if (!canvas) throw new Error('Missing <canvas id="glcanvas"> in index.html');
 let gl = /** @type {WebGL2RenderingContext|null} */ (null);
 let program = /** @type {WebGLProgram|null} */ (null);
 let vao = /** @type {WebGLVertexArrayObject|null} */ (null);
-let vertexCount = 4800; // 6 rings × 800 vertices each
+let vertexCount = 7200; // 9 rings × 800 vertices each
 let timeLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let resolutionLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let fftLoc = /** @type {WebGLUniformLocation|null} */ (null);
@@ -57,43 +57,45 @@ out float v_vertexRatio;
 out float v_ringId;
 
 void main() {
-  // Divide 4800 vertices into 6 rings of 800 each
-  float ringId = floor(a_vertexId / 800.0);  // 0-5
-  v_ringId = ringId; // Pass to fragment shader for color
-  float vertexInRing = mod(a_vertexId, 800.0); // 0-799 within each ring
-  float vertexRatio = vertexInRing / 800.0; // 0 to 1 position in ring
+  // Divide 7200 vertices into 9 rings of 800 each
+  float ringId = floor(a_vertexId / 800.0);  // 0-8
+  v_ringId = ringId;
+  float vertexInRing = mod(a_vertexId, 800.0);
+  float vertexRatio = vertexInRing / 800.0;
   v_vertexRatio = vertexRatio;
-  float vertexRadians = vertexRatio * 3.14159 * 2.0 + u_time * 0.5; // Add rotation based on time
+  float vertexRadians = vertexRatio * 3.14159 * 2.0 + u_time * 0.1;
   
   float aspect = u_resolution.x / u_resolution.y;
   
-  // Sample FFT at different ranges for each ring
   float fftVal;
   float baseRadius;
   if (ringId < 1.0) {
-    // Ring 0: Bass low
-    fftVal = texture(u_fft, vec2(vertexRatio * 0.15, 0.5)).r / 255.0;
-    baseRadius = 0.05;
+    fftVal = texture(u_fft, vec2(vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.01;
   } else if (ringId < 2.0) {
-    // Ring 1: Bass high
-    fftVal = texture(u_fft, vec2(0.15 + vertexRatio * 0.15, 0.5)).r / 255.0;
-    baseRadius = 0.15;
+    fftVal = texture(u_fft, vec2(0.11 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.1;
   } else if (ringId < 3.0) {
-    // Ring 2: Midrange low
-    fftVal = texture(u_fft, vec2(0.33 + vertexRatio * 0.15, 0.5)).r / 255.0;
-    baseRadius = 0.27;
+    fftVal = texture(u_fft, vec2(0.22 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.19;
   } else if (ringId < 4.0) {
-    // Ring 3: Midrange high
-    fftVal = texture(u_fft, vec2(0.51 + vertexRatio * 0.15, 0.5)).r / 255.0;
-    baseRadius = 0.41;
+    fftVal = texture(u_fft, vec2(0.33 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.27;
   } else if (ringId < 5.0) {
-    // Ring 4: Treble low
-    fftVal = texture(u_fft, vec2(0.66 + vertexRatio * 0.17, 0.5)).r / 255.0;
+    fftVal = texture(u_fft, vec2(0.44 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.36;
+  } else if (ringId < 6.0) {
+    fftVal = texture(u_fft, vec2(0.55 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.45;
+  } else if (ringId < 7.0) {
+    fftVal = texture(u_fft, vec2(0.66 + vertexRatio * 0.11, 0.5)).r / 255.0;
     baseRadius = 0.53;
+  } else if (ringId < 8.0) {
+    fftVal = texture(u_fft, vec2(0.77 + vertexRatio * 0.11, 0.5)).r / 255.0;
+    baseRadius = 0.61;
   } else {
-    // Ring 5: Treble high
-    fftVal = texture(u_fft, vec2(0.83 + vertexRatio * 0.17, 0.5)).r / 255.0;
-    baseRadius = 0.65;
+    fftVal = texture(u_fft, vec2(0.88 + vertexRatio * 0.12, 0.5)).r / 255.0;
+    baseRadius = 0.70;
   }
   
   // Expand radius based on FFT energy - large spikes for crown effect
@@ -112,8 +114,8 @@ void main() {
   gl_Position = vec4(x, y, 0.0, 1.0);
   
   // Point size - responds dramatically to bass
-  float pointSize = 6.0 + fftVal * fftVal * 18.0 + u_audio * 35.0;
-  gl_PointSize = max(6.0, pointSize);
+  float pointSize = 3.0 + fftVal * fftVal * 10.0 + u_audio * 20.0;
+  gl_PointSize = max(3.0, pointSize);
 }
 `;
 
