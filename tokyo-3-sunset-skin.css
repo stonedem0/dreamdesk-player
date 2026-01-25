@@ -176,10 +176,12 @@
 
 /* Override all --color-border usages with sunset colors */
 #playlist-dock .playlist-header {
+  color: var(--color-text-secondary);
   border-bottom-color: var(--color-border-sunset) !important;
 }
 
 #eq-dock .eq-header {
+  color: var(--color-text-secondary);
   border-bottom-color: var(--color-border-sunset) !important;
 }
 
@@ -203,6 +205,10 @@
   border-color: var(--color-border-sunset) !important;
 }
 
+#track-list {
+  color: var(--color-text-secondary);
+}
+
 #track-list::-webkit-scrollbar-thumb {
   border-color: var(--color-border-sunset) !important;
 }
@@ -217,6 +223,7 @@
 
 .mini-btn {
   border-color: var(--color-border-sunset) !important;
+  color: var(--color-text-secondary);
 }
 
 .volume-slider {
@@ -229,10 +236,14 @@
 
 .volume-slider::-webkit-slider-thumb {
   border-color: var(--color-border-sunset) !important;
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-text-secondary) !important;
 }
 
 .balance-slider::-webkit-slider-thumb {
   border-color: var(--color-border-sunset) !important;
+  color: var(--color-texty) !important;
+  background-color: var(--color-text-secondary) !important;
 }
 
 .volume-slider::-moz-range-track {
@@ -242,6 +253,18 @@
 .seek-slider::-moz-range-track {
   border-color: var(--color-border-sunset) !important;
 }
+
+.seek-slider::-moz-range-thumb {
+  color: var(--color-text-accent);
+  background-color: black
+}
+
+.seek-slider::-webkit-slider-thumb {
+  color: var(--color-text-secondary);
+  background-color: black;
+}
+
+
 
 .balance-slider::-moz-range-track {
   border-color: var(--color-border-sunset) !important;
@@ -258,6 +281,7 @@
 
 .player .display .player-controls button {
   border-color: var(--color-border-sunset) !important;
+  color: var(--color-text-secondary) !important;
 }
 
 #eq-dock .eq-presets label {

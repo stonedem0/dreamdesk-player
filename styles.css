@@ -30,7 +30,7 @@
   --dd-controls-bg-hover: var(--player-bg-soft);
   --dd-controls-bg-active: var(--player-bg-strong);
   --dd-controls-border: 1px solid var(--border-color);  
-  --dd-controls-fg: var(--color-text-primary);
+  /* --dd-controls-fg: var(--color-text-primary); */
   --dd-controls-shadow: 0 0 6px rgba(255,133,0,0.35);
   --dd-controls-icon-size: 2rem;
 }
@@ -224,7 +224,6 @@ body {
 #eq-dock .eq-header span {
   flex: 1;
   text-align: center;
-  color: var(--color-text-primary);
 }
 #eq-dock .eq-presets {
   position: relative;
@@ -462,6 +461,7 @@ body {
 #track-list {
   max-height: 247px;
   background-color: var(--player-bg);
+  /* color: var(--color-text-secondary); */
   color: var(--color-text-primary);
   display: block;
   position: relative;
