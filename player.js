@@ -441,17 +441,18 @@ function processAudioData(data) {
   
     const barWidth = (canvas.width / bufferLength) * 10;
     let x = 0;
-    const gradientStops = [
-      [0.0, "#ff4800"],
-      [0.1, "#ff5400"],
-      [0.2, "#ff6000"],
-      [0.3, "#ff6d00"],
-      [0.4, "#ff7900"],
-      [0.5, "#ff8500"],
-      [0.6, "#ff9100"],
-      [0.7, "#ff9e00"],
-      [0.8, "#ffaa00"],
-      [1.0, "#ffb600"],
+    // Get histogram gradient from skin switcher or use default
+    const gradientStops = (window.getCurrentHistogramGradient && window.getCurrentHistogramGradient()) || [
+      [0.0, "#fa73ab"],
+      [0.1, "#f26bc5"],
+      [0.2, "#ea63dd"],
+      [0.3, "#e25bf5"],
+      [0.4, "#da53ff"],
+      [0.5, "#d24bff"],
+      [0.6, "#ca43ff"],
+      [0.7, "#c23bff"],
+      [0.8, "#ba33ff"],
+      [1.0, "#b22bff"],
     ];
   
     for (let i = 0; i < bufferLength; i++) {
