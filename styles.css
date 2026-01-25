@@ -125,11 +125,8 @@ body {
 }
 
 #player-window {
-  border: 2px solid transparent;
-  background-image:
-    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-    var(--player-gradient, var(--gradient-primary));
-  background-origin: padding-box, border-box;
+  border: 1px solid var(--border-color);
+
   background-clip: padding-box, border-box;
 }
 /* When minimized, suppress the host's painted background to prevent ghost box */
@@ -149,11 +146,8 @@ body {
   height: 145px;
   max-height: 320px;
   background: var(--color-bg-primary);
-  border: 2px solid transparent;
+  border: 1px solid var(--border-color);
   border-top: none;
-  background-image:
-    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-    var(--gradient-primary);
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
   z-index: 2147483637; /* above app windows, below EQ */
@@ -162,7 +156,7 @@ body {
   padding: 4px 6px;
   background: var(--player-bg);
   border-bottom: 0.5px solid var(--border-color);
-  color: var(--color-accent-primary);
+  color: var(--color-text-primary);
   font-size: var(--player-font-size-small);
   text-transform: uppercase;
   font-weight: 600;
@@ -181,23 +175,8 @@ body {
   width: 297px;
   height: 165px;
   background: var(--player-bg);
-  border: 2px solid transparent;
+  border: 1px solid var(--border-color);
   border-top: none;
-  /* background-image:
-    linear-gradient(#000, #000),
-    linear-gradient(
-      90deg,
-      #ff4800 0%,
-      #ff5400 10%,
-      #ff6000 20%,
-      #ff6d00 30%,
-      #ff7900 40%,
-      var(--color-accent-mid) 50%,
-      #ff9100 60%,
-      var(--color-accent-primary) 70%,
-      #ffaa00 80%,
-      var(--color-accent-light) 100%
-    ); */
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
   z-index: 2147483638; /* above playlist */
@@ -227,7 +206,7 @@ body {
 #eq-dock .eq-header span {
   flex: 1;
   text-align: center;
-  color: var(--color-accent-primary);
+  color: var(--color-text-primary);
 }
 #eq-dock .eq-presets {
   position: relative;
@@ -292,7 +271,7 @@ body {
 }
 #eq-dock .eq-side .presets-menu button:hover {
   background: var(--player-bg);
-  color: var(--color-accent-primary);
+  color: var(--color-text-primary);
 }
 #eq-dock .nds label {
   display: flex;
@@ -465,7 +444,7 @@ body {
 #track-list {
   max-height: 247px;
   background-color: var(--player-bg);
-  color: var(--color-accent-primary);
+  color: var(--color-text-primary);
   display: block;
   position: relative;
   font-size: var(--player-font-size-small, var(--player-font-size-small-default));

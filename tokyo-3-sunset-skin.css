@@ -90,6 +90,30 @@
   background-position: 50% 33%;
 }
 
+#player-window {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+    var(--player-gradient, var(--gradient-primary));
+  background-origin: padding-box, border-box; 
+ 
+}
+
+#playlist-dock {
+  border: 2px solid transparent;
+  border-top: none;
+  background-image:
+  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+  var(--gradient-primary);
+}
+#eq-dock {
+  border: 2px solid transparent;
+  border-top: none;
+  background-image:
+  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+  var(--gradient-primary);
+
+}
 /* Skin-specific EQ slider styling */
 .eq-slider::-webkit-slider-runnable-track {
   width: 6px;
