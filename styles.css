@@ -5,7 +5,7 @@
   /* Defaults when a skin does not provide player font sizes */
   --player-font-size: 12px;
   --player-font-size-small: 10px;
-  --player-font-color: #fa73ab;
+
 
   /* Defaults for player background colors when skin is not loaded */
   --player-bg: #000b19;
@@ -14,7 +14,7 @@
 
   /* Default color for borders/sliders when skin is not loaded */
   --border-color:#fa73ab;
-  --color-slider-thumb:#e351b2;
+  --color-text-primary:#f26bc5;
 }
 
 html,
@@ -183,7 +183,7 @@ body {
   background: var(--player-bg);
   border: 2px solid transparent;
   border-top: none;
-  background-image:
+  /* background-image:
     linear-gradient(#000, #000),
     linear-gradient(
       90deg,
@@ -197,7 +197,7 @@ body {
       var(--color-accent-primary) 70%,
       #ffaa00 80%,
       var(--color-accent-light) 100%
-    );
+    ); */
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
   z-index: 2147483638; /* above playlist */
@@ -539,7 +539,7 @@ body {
   display: inline-flex;
   align-items: center;
   background: transparent;
-  color: var(--color-accent-light);
+  color: var(--color-text-primary);
   font-size: var(--player-font-size);
   height: 20px;
   white-space: nowrap;
@@ -557,10 +557,10 @@ body {
   width: 32px;
 }
 
-#khz.flash {
+/* #khz.flash {
   animation: khzFlash 320ms ease;
-}
-@keyframes khzFlash {
+} */
+/* @keyframes khzFlash {
   0% {
     filter: brightness(1);
     box-shadow:
@@ -579,7 +579,7 @@ body {
       inset 1px 1px 0 rgba(255, 246, 169, 0.22),
       inset -1px -1px 0 rgba(0, 0, 0, 0.65);
   }
-}
+} */
 
 .volume-controls-top {
   grid-area: sliders;
@@ -598,7 +598,7 @@ body {
   min-width: 28px;
   padding: 0 6px;
   background-color: var(--player-bg-soft);
-  color: var(--color-accent-light);
+  color: var(--color-text-primary);
   border: 0.5px solid var(--border-color);
   box-shadow:
     inset 1px 1px 0 rgba(255, 246, 169, 0.22),
@@ -752,7 +752,7 @@ body {
   -webkit-appearance: none;
   width: 13px;
   height: 8px;
-  background: var(--color-slider-thumb);
+  background: var(--color-text-primary);
   cursor: pointer;
   white-space: nowrap;
   border: 1px solid var(--color-pure-black);
@@ -774,7 +774,7 @@ body {
   width: 23px;
   text-align: center;
   background-color: var(--color-button-bg);
-  color: var(--color-accent-light);
+  color: var(--color-text-primary);
   border: 0.5px solid var(--border-color);
   box-shadow:
     inset 1px 1px 0 rgba(255, 246, 169, 0.22),
