@@ -80,6 +80,24 @@
   --player-bg-soft: var(--color-bg-soft);
   --player-bg-strong: var(--color-bg-strong);
   --player-gradient: var(--gradient-primary);
+
+  /* Dreamdesk Window UI - Sunset Theme */
+  --dd-window-body: #000;
+  --dd-window-text: #fff6a9;
+  --dd-window-border: 1px solid transparent;
+  --dd-border: 2px solid transparent;
+  --dd-header-bg: var(--gradient-primary);
+  --dd-header-color: #2d1b3d;
+  --dd-header-shadow: none;
+  --dd-header-height: 1.2rem;
+  --dd-body-padding: 0;
+  --dd-controls-bg: #1d1c1c;
+  --dd-controls-bg-hover: #121212;
+  --dd-controls-bg-active: #1e1e1e;
+  --dd-controls-border: 1px solid #ff8500;
+  --dd-controls-fg: #ff8500;
+  --dd-controls-shadow: 0 0 6px rgba(255,133,0,0.35);
+  --dd-controls-icon-size: 2rem;
 }
 
 /* Player background image */

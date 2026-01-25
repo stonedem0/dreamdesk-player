@@ -15,6 +15,24 @@
   /* Default color for borders/sliders when skin is not loaded */
   --border-color:#fa73ab;
   --color-text-primary:#f26bc5;
+
+  /* Dreamdesk Window UI defaults */
+  --dd-window-body: var(--player-bg);
+  --dd-window-text: #ffd0a9;
+  --dd-window-border: 1px solid transparent;
+  --dd-border: 2px solid transparent;
+  --dd-header-bg: var(--player-bg);
+  --dd-header-color: var(--border-color);  
+  --dd-header-shadow: none;
+  --dd-header-height: 1.2rem;
+  --dd-body-padding: 0;
+  --dd-controls-bg: var(--player-bg);   
+  --dd-controls-bg-hover: var(--player-bg-soft);
+  --dd-controls-bg-active: var(--player-bg-strong);
+  --dd-controls-border: 1px solid var(--border-color);  
+  --dd-controls-fg: var(--color-text-primary);
+  --dd-controls-shadow: 0 0 6px rgba(255,133,0,0.35);
+  --dd-controls-icon-size: 2rem;
 }
 
 html,
