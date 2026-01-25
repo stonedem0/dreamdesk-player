@@ -302,7 +302,7 @@ function processAudioData(data) {
       }
   
       const processedData = this.processor(this.dataArray);
-      const canvas = document.getElementById("visualizer");
+      const canvas = document.getElementById("histogram");
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -371,7 +371,7 @@ function processAudioData(data) {
     }
 
     resetVisualization() {
-      const canvas = document.getElementById("visualizer");
+      const canvas = document.getElementById("histogram");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       const silent = new Float32Array(this.bufferLength);
