@@ -1,5 +1,11 @@
 /* Import theme variables */
-@import url("tokyo-3-sunset-skin.css");
+/* @import url("tokyo-3-sunset-skin.css"); */
+
+:root {
+  /* Defaults when a skin does not provide player font sizes */
+  --player-font-size-base: 12px;
+  --player-font-size-small-base: 10px;
+}
 
 html,
 body {
@@ -82,7 +88,7 @@ body {
   background: var(--player-bg);
   border-bottom: 0.5px solid var(--color-border-main);
   color: var(--color-accent-primary);
-  font-size: var(--player-font-size-small);
+  font-size: var(--player-font-size-small, var(--player-font-size-small-base));
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -126,7 +132,7 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--color-text-primary);
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   position: relative;
 }
 #eq-dock .eq-header {
@@ -136,7 +142,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--player-font-size-small);
+  font-size: var(--player-font-size-small, var(--player-font-size-small-base));
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 1px;
@@ -182,7 +188,7 @@ body {
   min-width: auto;
   padding: 0 8px;
   height: 18px;
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   line-height: 18px;
 }
 #eq-dock .eq-side .presets-menu {
@@ -283,7 +289,7 @@ body {
   margin: 0;
   width: auto;
   text-align: right;
-  font-size: calc(var(--player-font-size) * 1.1);
+  font-size: calc(var(--player-font-size, var(--player-font-size-base)) * 1.1);
   pointer-events: none;
   color: var(--color-text-primary);
   z-index: 1;
@@ -333,7 +339,7 @@ body {
   background-color: var(--color-display-bg);
   height: 18px;
   width: 177px;
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   margin-top: 6px;
   overflow: hidden;
   white-space: nowrap;
@@ -388,7 +394,7 @@ body {
   color: var(--color-accent-primary);
   display: block;
   position: relative;
-  font-size: var(--player-font-size-small);
+  font-size: var(--player-font-size-small, var(--player-font-size-small-base));
   box-sizing: border-box;
 }
 
@@ -460,7 +466,7 @@ body {
   align-items: center;
   background: transparent;
   color: var(--color-accent-light);
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   height: 20px;
   white-space: nowrap;
 }
@@ -513,7 +519,7 @@ body {
 }
 
 .mini-btn {
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   height: 18px;
   min-width: 28px;
   padding: 0 6px;
@@ -689,7 +695,7 @@ body {
 }
 
 .player .display .player-controls button {
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
   height: 20px;
   width: 23px;
   text-align: center;
@@ -754,11 +760,11 @@ body {
 }
 
 .player .display .player-controls #play-button {
-  font-size: calc(var(--player-font-size) * 0.8);
+  font-size: calc(var(--player-font-size, var(--player-font-size-base)) * 0.8);
 }
 
 .player .display .player-controls span {
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size, var(--player-font-size-base));
 }
 
 .player .display .player-controls #rewind-button {
