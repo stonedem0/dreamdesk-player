@@ -13,10 +13,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/base.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/pastelcore.css" />
     <link rel="stylesheet" href="styles.css" />
+    <link id="skin-stylesheet" rel="stylesheet" href="">
     <script src="player.js" defer></script>
+    <script src="skin-switcher.js"></script>
 </head>
 
 <body>
+    <div class="skin-switcher">
+        <label for="skin-toggle">Skin:</label>
+        <button id="skin-toggle" class="skin-toggle-btn" title="Toggle between default and sunset skin">
+            <span class="skin-indicator">Default</span>
+        </button>
+    </div>
     <div class="container"><dreamdesk-window id="player-window" title="player" width="297px" height="145px"
             resizable="false" style="
     --dd-window-body: #000;

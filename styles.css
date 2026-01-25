@@ -26,6 +26,71 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Skin Switcher Styles */
+.skin-switcher {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10000;
+  background: rgba(0, 11, 25, 0.8);
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #fa73ab);
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
+}
+
+.skin-switcher label {
+  color: var(--color-accent-light, #ffb600);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.skin-toggle-btn {
+  padding: 6px 12px;
+  background-color: var(--color-button-bg, #000000b9);
+  color: var(--color-accent-light, #ffb600);
+  border: 0.5px solid var(--border-color, #fa73ab);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 80ms ease,
+    box-shadow 120ms ease,
+    filter 120ms ease;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 246, 169, 0.22),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.skin-toggle-btn:hover {
+  filter: brightness(1.15);
+}
+
+.skin-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset -1px -1px 0 rgba(255, 246, 169, 0.18),
+    inset 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.skin-toggle-btn:focus-visible {
+  outline: 1px solid var(--color-accent-primary, #ff9e00);
+  outline-offset: 1px;
+  filter: brightness(1.2);
+}
+
+.skin-indicator {
+  display: inline-block;
+  min-width: 50px;
+}
+
 /* Smooth dock open/close transitions */
 .dock-anim {
   opacity: 0;
