@@ -63,7 +63,7 @@ void main() {
   float vertexInRing = mod(a_vertexId, 800.0); // 0-799 within each ring
   float vertexRatio = vertexInRing / 800.0; // 0 to 1 position in ring
   v_vertexRatio = vertexRatio;
-  float vertexRadians = vertexRatio * 3.14159 * 2.0;
+  float vertexRadians = vertexRatio * 3.14159 * 2.0 + u_time * 0.5; // Add rotation based on time
   
   float aspect = u_resolution.x / u_resolution.y;
   
@@ -149,7 +149,7 @@ void main() {
     color = vec3(1.0, 0.6, 0.0);
   }
   
-  // Keep colors constant - no brightness on beat
+
   
   outColor = vec4(color, alpha * 0.6 + u_audio * 0.3);
 }
