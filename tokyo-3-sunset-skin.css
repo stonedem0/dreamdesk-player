@@ -227,31 +227,31 @@
 }
 
 .volume-slider {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .balance-slider {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .volume-slider::-webkit-slider-thumb {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
   color: var(--color-text-secondary) !important;
   background-color: var(--color-text-secondary) !important;
 }
 
 .balance-slider::-webkit-slider-thumb {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
   color: var(--color-texty) !important;
   background-color: var(--color-text-secondary) !important;
 }
 
 .volume-slider::-moz-range-track {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .seek-slider::-moz-range-track {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .seek-slider::-moz-range-thumb {
