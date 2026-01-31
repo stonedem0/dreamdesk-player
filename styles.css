@@ -803,6 +803,7 @@ body {
     justify-content: flex-start;
     align-items: stretch;
     padding: 6px;
+   padding-bottom: 11px;
     background-color: var(--player-bg);
 
     input.eq-slider {
@@ -829,7 +830,6 @@ body {
   .eq-sliders {
     flex: 1;
     display: flex;
-    gap: 8px;
     justify-content: space-between;
     align-items: flex-end;
     background: var(--player-bg);
