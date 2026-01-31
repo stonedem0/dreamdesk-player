@@ -798,9 +798,10 @@ body {
     position: relative;
     flex: 1;
     display: flex;
-    gap: 8px;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: stretch;
     padding: 6px;
     background-color: var(--player-bg);
 
@@ -811,7 +812,7 @@ body {
       writing-mode: vertical-lr;
       direction: rtl;
       width: 6px;
-      height: 112px;
+      height: 90px;
       background: transparent;
       border: 0;
 
@@ -832,17 +833,31 @@ body {
     justify-content: space-between;
     align-items: flex-end;
     background: var(--player-bg);
-    padding: 6px;
+    padding: 0;
     height: 120px;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      flex: 1;
+
+      span {
+        font-size: 10px;
+        order: -1;
+      }
+    }
   }
 
   .eq-side {
     position: relative;
-    margin-left: 8px;
+    margin-left: 0;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: end;
     padding: 0;
     background: transparent;
 
@@ -859,6 +874,7 @@ body {
       right: 0;
       top: 24px;
       min-width: 180px;
+      font-size: var(--player-font-size-small);
       max-height: 220px;
       overflow: auto;
       background: var(--player-bg);
