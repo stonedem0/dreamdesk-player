@@ -430,8 +430,7 @@ function processAudioData(data) {
   
 
   const histogram = (ctx, canvas, data, prevData) => {
-    ctx.fillStyle = "#001127bf";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   
     const bufferLength = data.length;
     if (prevData.length !== bufferLength) {
