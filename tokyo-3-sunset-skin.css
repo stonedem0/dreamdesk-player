@@ -123,6 +123,21 @@
   background-image:
   linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
   var(--gradient-primary);
+
+  .playlist-header {
+    padding: 1px 1px;
+  }
+
+  .track-list {
+    height: calc(100% - 15px);
+    max-height: calc(100% - 15px);
+    background: url('public/img/playlist-bg.png') center / cover no-repeat !important;
+  }
+
+  .track-items li {
+    color: var(--color-text-secondary);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
 }
 #eq-dock {
   border: 2px solid transparent;
