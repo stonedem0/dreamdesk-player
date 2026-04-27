@@ -48,6 +48,7 @@
 html,
 body {
   height: 100%;
+  overflow: hidden;
   background-image: url("public/img/bg2.jpg");
   background-size: cover;
   background-position: center;
@@ -105,11 +106,8 @@ body {
   position: fixed;
   width: 297px;
   height: 165px;
-  background: var(--player-bg);
   border: 1px solid var(--border-color);
   border-top: none;
-  background-origin: padding-box, border-box;
-  background-clip: padding-box, border-box;
   z-index: 2147483638; /* above playlist */
 }
 
@@ -654,8 +652,8 @@ body {
 #playlist-dock {
   .playlist-header {
     padding: 4px 6px;
-    background: var(--player-bg);
-    border-bottom: 0.5px solid var(--border-color);
+    background: rgba(0, 11, 25, 0.6);
+    border-bottom: 1px solid var(--border-color);
     color: var(--color-text-primary);
     font-size: var(--player-font-size-small);
     text-transform: uppercase;
@@ -740,11 +738,12 @@ body {
   position: fixed;
   width: 297px;
   height: 165px;
-  background: var(--player-bg);
+  background-color: var(--player-bg);
+  background-image: url("public/img/eq-bg.webp");
+  background-size: cover;
+  background-position: center;
   border: 1px solid var(--border-color);
   border-top: none;
-  background-origin: padding-box, border-box;
-  background-clip: padding-box, border-box;
   z-index: 2147483638;
 
   .eq-panel {
@@ -758,8 +757,8 @@ body {
 
   .eq-header {
     padding: 4px 6px;
-    background: var(--player-bg-soft);
-    border-bottom: 0.5px solid var(--border-color);
+    background-color: rgba(0, 11, 25, 0.6);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -768,7 +767,6 @@ body {
     font-weight: 600;
     letter-spacing: 1px;
     text-align: center;
-    background-color: var(--player-bg);
 
     span {
       flex: 1;
@@ -786,7 +784,7 @@ body {
     align-items: stretch;
     padding: 6px;
    padding-bottom: 11px;
-    background-color: var(--player-bg);
+    background-color: transparent;
 
     input.eq-slider {
       -webkit-appearance: none;
@@ -814,7 +812,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    background: var(--player-bg);
+    background: transparent;
     padding: 0;
     height: 120px;
 
@@ -858,8 +856,9 @@ body {
       min-width: 180px;
       font-size: var(--player-font-size-small);
       max-height: 220px;
-      overflow: auto;
-      background: var(--player-bg);
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: rgba(0, 11, 25, 0.55);
       border: 1px solid var(--border-color);
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
       z-index: 2147483640;
@@ -872,13 +871,14 @@ body {
       button {
         all: unset;
         display: block;
+        box-sizing: border-box;
         width: 100%;
         padding: 6px 10px;
         cursor: pointer;
         color: var(--color-text-primary);
 
         &:hover {
-          background: var(--player-bg);
+          background: rgba(0, 11, 25, 0.4);
           color: var(--color-text-primary);
         }
       }

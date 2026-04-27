@@ -120,18 +120,20 @@
 #playlist-dock {
   border: 2px solid transparent;
   border-top: none;
-  background-image:
-  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-  var(--gradient-primary);
+  background-image: url('public/img/playlist-bg.png'), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
 
   .playlist-header {
-    padding: 1px 1px;
+    padding: 4px 6px;
   }
 
   .track-list {
     height: calc(100% - 15px);
     max-height: calc(100% - 15px);
-    background: url('public/img/playlist-bg.png') center / cover no-repeat !important;
+    background: transparent !important;
   }
 
   .track-items li {
@@ -142,10 +144,11 @@
 #eq-dock {
   border: 2px solid transparent;
   border-top: none;
-  background-image:
-  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-  var(--gradient-primary);
-
+  background-image: url("public/img/eq-bg.webp"), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
 }
 /* Skin-specific EQ slider styling */
 .eq-slider::-webkit-slider-runnable-track {
