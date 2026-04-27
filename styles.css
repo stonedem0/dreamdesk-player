@@ -86,17 +86,6 @@ body {
 }
 
 /* Docks - Fixed positioning containers */
-#playlist-window {
-  position: fixed;
-  top: calc(var(--player-top) + 146px);
-  left: var(--player-left);
-  z-index: 9;
-
-  .win-body {
-    overflow: hidden;
-  }
-}
-
 #playlist-dock {
   position: fixed;
   top: calc(var(--player-top) + 146px);
@@ -469,10 +458,6 @@ body {
       font-size: var(--player-font-size);
     }
 
-    #rewind-button {
-      transform: scaleX(-1);
-    }
-
     #pause-button,
     #stop-button {
       padding-top: 0;
@@ -535,7 +520,6 @@ body {
     width: 13px;
     height: 8px;
     background: var(--color-slider-thumb);
-    border: 1px solid #000;
     cursor: pointer;
     border: 1px solid var(--border-color);
     box-shadow:
@@ -547,7 +531,7 @@ body {
     width: 12px;
     height: 12px;
     background: var(--color-slider-thumb);
-    border: 1px solid #000;
+    border: 1px solid var(--border-color);
     cursor: pointer;
   }
 
@@ -579,7 +563,6 @@ body {
     width: 13px;
     height: 8px;
     background: var(--color-slider-thumb);
-    border: 1px solid #000;
     cursor: pointer;
     border: 1px solid var(--border-color);
     box-shadow:
@@ -591,7 +574,7 @@ body {
     width: 12px;
     height: 12px;
     background: var(--color-slider-thumb);
-    border: 1px solid #000;
+    border: 1px solid var(--border-color);
     cursor: pointer;
   }
 
@@ -621,7 +604,6 @@ body {
     height: 8px;
     background: var(--color-text-primary);
     cursor: pointer;
-    white-space: nowrap;
     border: 1px solid var(--color-pure-black);
   }
 
@@ -903,13 +885,6 @@ body {
     }
   }
 
-  .nds label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--border-color);
-  }
 }
 
 /* =============================================================================
