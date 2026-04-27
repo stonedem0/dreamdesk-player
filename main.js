@@ -11,7 +11,6 @@ let timeLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let resolutionLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let fftLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let audioLoc = /** @type {WebGLUniformLocation|null} */ (null);
-let vertexCountLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let audioLevelSmoothed = 0;
 let fftTexture = /** @type {WebGLTexture|null} */ (null);
 let fftSize = 0;
@@ -47,7 +46,6 @@ canvas.addEventListener('webglcontextrestored', () => {
 // --- Shaders -----------------------------------------------------------------
 const vsSource = `#version 300 es
 in float a_vertexId;
-uniform float u_vertexCount;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform sampler2D u_fft;
@@ -337,9 +335,6 @@ function drawOnce(timeMs = 0) {
   if (resolutionLoc) {
     gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
   }
-  if (vertexCountLoc) {
-    gl.uniform1f(vertexCountLoc, vertexCount);
-  }
   updateFftTexture(); // SLOW - calls getFloatFrequencyData
   if (fftTexture && fftLoc) {
     gl.activeTexture(gl.TEXTURE0);
@@ -378,7 +373,6 @@ function start() {
   resolutionLoc = gl.getUniformLocation(program, 'u_resolution');
   fftLoc = gl.getUniformLocation(program, 'u_fft');
   audioLoc = gl.getUniformLocation(program, 'u_audio');
-  vertexCountLoc = gl.getUniformLocation(program, 'u_vertexCount');
   vao = createFullscreenTriangleVAO();
 
   fftSize = 0;

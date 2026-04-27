@@ -8,93 +8,6 @@ function processAudioData(data) {
     return result;
   }
   
-  // process audio data for radial visualization (for radial polygon in case I'll get theer))
-  function processAudioDataForRadial(data) {
-    const length = data.length;
-    if (length === 0) return [];
-  
-    let minVal = Infinity;
-    let maxVal = -Infinity;
-    for (let i = 0; i < length; i++) {
-      const v = data[i];
-      if (v < minVal) minVal = v;
-      if (v > maxVal) maxVal = v;
-    }
-  
-    const range = maxVal - minVal;
-    if (range === 0 || !isFinite(range)) {
-      return new Array(length).fill(0);
-    }
-  
-    const result = new Array(length);
-    for (let i = 0; i < length; i++) {
-      const x = data[i];
-      result[i] = ((x - minVal) / range) * 200.0 - 100.0;
-    }
-    return result;
-  }
-  
-  function processAndReduceAudioData(data) {
-    const total = data.length;
-    if (total === 0) return [];
-  
-    const targetSize = 800;
-    const third = Math.floor(targetSize / 3);
-  
-    let minVal = Infinity;
-    let maxVal = -Infinity;
-    for (let i = 0; i < total; i++) {
-      const v = data[i];
-      if (v < minVal) minVal = v;
-      if (v > maxVal) maxVal = v;
-    }
-    const range = maxVal - minVal;
-  
-    const normalize = (x) => {
-      if (range === 0 || !isFinite(range)) return 0;
-      return ((x - minVal) / range) * 200.0 - 100.0;
-    };
-  
-    const reduced = [];
-  
-    // First third (Bass)
-    const firstCount = Math.min(third, total);
-    for (let i = 0; i < firstCount; i++) {
-      reduced.push(normalize(data[i]));
-    }
-  
-    // Middle third (Midrange)
-    const middleStart = Math.max(0, Math.floor(total / 2) - Math.floor(third / 2));
-    const middleEnd = Math.min(total, middleStart + third);
-    for (let i = middleStart; i < middleEnd; i++) {
-      reduced.push(normalize(data[i]));
-    }
-  
-    // Last third (Treble)
-    const lastStart = Math.max(0, total - third);
-    for (let i = lastStart; i < total; i++) {
-      reduced.push(normalize(data[i]));
-    }
-  
-    return reduced;
-  }
-  
-
-  // FFT size options
-  const fftSizes = new Map([
-    [32, 32],
-    [64, 64],
-    [128, 128],
-    [256, 256],
-    [512, 512],
-    [1024, 1024],
-    [2048, 2048],
-    [4096, 4096],
-    [8192, 8192],
-    [16384, 16384],
-    [32768, 32768],
-  ]);
-  
   // Winamp-style EQ presets (10-band originals, downsampled to our 7-band UI)
   const WINAMP_10_BAND_PRESETS = {
     flat:      [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
@@ -162,7 +75,7 @@ function processAudioData(data) {
       this.audioContext = new (window.AudioContext ||
         window.webkitAudioContext)(ctxOptions);
       this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = fftSizes.get(2048);
+      this.analyser.fftSize = 2048;
       this.bufferLength = this.analyser.frequencyBinCount;
       this.dataArray = new Float32Array(this.bufferLength);
       this.prevData = new Array(this.bufferLength).fill(0);
@@ -294,15 +207,10 @@ function processAudioData(data) {
   
     animate = () => {
       this._rafId = requestAnimationFrame(this.animate);
-  
-      if (this.isBeatMode) {
-        this.simulateBeat(); // fake frequency data when using generated beats
-      } else {
-        this.analyser.getFloatFrequencyData(this.dataArray);
-      }
-  
+      this.analyser.getFloatFrequencyData(this.dataArray);
+
       const processedData = this.processor(this.dataArray);
-      const canvas = document.getElementById("visualizer");
+      const canvas = document.getElementById("histogram");
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -312,35 +220,6 @@ function processAudioData(data) {
     cancelAnimation() {
       if (this._rafId) cancelAnimationFrame(this._rafId);
       this._rafId = 0;
-    }
-  
-    getBassLevel() {
-      const bassRange = Math.floor(this.dataArray.length * 0.1);
-      let sum = 0;
-  
-      for (let i = 0; i < bassRange; i++) {
-        sum += this.dataArray[i];
-      }
-  
-      return sum / bassRange;
-    }
-  
-    detectBeat() {
-      const bassLevel = this.getBassLevel();
-  
-      if (this.beatThreshold === 0) {
-        this.beatThreshold = bassLevel * 1.05; 
-      }
-  
-      if (bassLevel > this.beatThreshold && !this.beatDetected) {
-        this.beatDetected = true;
-        this.beatThreshold = bassLevel * 1.2; 
-        setTimeout(() => (this.beatDetected = false), 300);
-        return true;
-      }
-  
-      this.beatThreshold *= 0.995; 
-      return false;
     }
   
     stop() {
@@ -371,7 +250,7 @@ function processAudioData(data) {
     }
 
     resetVisualization() {
-      const canvas = document.getElementById("visualizer");
+      const canvas = document.getElementById("histogram");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       const silent = new Float32Array(this.bufferLength);
@@ -430,8 +309,7 @@ function processAudioData(data) {
   
 
   const histogram = (ctx, canvas, data, prevData) => {
-    ctx.fillStyle = "#001127bf";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   
     const bufferLength = data.length;
     if (prevData.length !== bufferLength) {
@@ -466,42 +344,6 @@ function processAudioData(data) {
       ctx.fillRect(x, yTop, barWidth, barHeight / 2);
       x += barWidth + 1;
     }
-    ctx.shadowBlur = 0;
-  };
-  
-  
-  const radialPolygon = (ctx, canvas, data, prevData, visualizer) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    let radius = 10;
-  
-    if (visualizer.detectBeat()) {
-      radius = 20;
-    }
-  
-    const totalBars = Math.min(data.length, 100);
-    const angleStep = (2 * Math.PI) / totalBars;
-  
-    ctx.beginPath();
-    for (let i = 0; i < totalBars; i++) {
-      const angle = i * angleStep;
-      const barHeight = Math.max(data[i], 1);
-  
-      const x = centerX + (radius + barHeight) * Math.cos(angle);
-      const y = centerY + (radius + barHeight) * Math.sin(angle);
-  
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = "#ffa500";
-    ctx.lineWidth = 1;
-    ctx.shadowColor = "#ffa500";
-    ctx.shadowBlur = 6;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255, 141, 0, 0.25)";
-    ctx.fill();
     ctx.shadowBlur = 0;
   };
   
@@ -550,7 +392,7 @@ function processAudioData(data) {
   }
 
   function isVisible(el) {
-    return !!(el && !(el.style.display === 'none' || !el.style.display));
+    return !!(el && el.style.display && el.style.display !== 'none');
   }
 
   function startFollowingDock() {
@@ -1175,20 +1017,6 @@ window.DreamDeskAnimations = {
       }
 
       if (isFullscreen) {
-        try {
-          const win = document.getElementById('player-window');
-          if (win) {
-            const r = getPlayerRectCached();
-            window._playerPrevWindow = {
-              left: win.style.left,
-              top: win.style.top,
-              width: win.style.width,
-              height: win.style.height,
-              transform: win.style.transform,
-              rect: r
-            };
-          }
-        } catch(_) {}
         window._preFsPlaylistVisible = isVisible(playlistDock);
         window._preFsEqVisible = isVisible(eqDock);
         showDockAnimated(playlistDock);

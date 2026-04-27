@@ -120,17 +120,35 @@
 #playlist-dock {
   border: 2px solid transparent;
   border-top: none;
-  background-image:
-  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-  var(--gradient-primary);
+  background-image: url('public/img/playlist-bg.png'), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+
+  .playlist-header {
+    padding: 4px 6px;
+  }
+
+  .track-list {
+    height: calc(100% - 15px);
+    max-height: calc(100% - 15px);
+    background: transparent !important;
+  }
+
+  .track-items li {
+    color: var(--color-text-secondary);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
 }
 #eq-dock {
   border: 2px solid transparent;
   border-top: none;
-  background-image:
-  linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
-  var(--gradient-primary);
-
+  background-image: url("public/img/eq-bg.webp"), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
 }
 /* Skin-specific EQ slider styling */
 .eq-slider::-webkit-slider-runnable-track {
@@ -227,31 +245,31 @@
 }
 
 .volume-slider {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .balance-slider {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .volume-slider::-webkit-slider-thumb {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
   color: var(--color-text-secondary) !important;
   background-color: var(--color-text-secondary) !important;
 }
 
 .balance-slider::-webkit-slider-thumb {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
   color: var(--color-texty) !important;
   background-color: var(--color-text-secondary) !important;
 }
 
 .volume-slider::-moz-range-track {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .seek-slider::-moz-range-track {
-  border-color: var(--color-border-sunset) !important;
+  border:none;
 }
 
 .seek-slider::-moz-range-thumb {
