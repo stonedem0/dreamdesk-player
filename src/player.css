@@ -1,0 +1,507 @@
+/* ── Base structural styles — all colors via CSS vars set by skin ────────── */
+
+.dd-player {
+  font-family: monospace;
+  display: inline-flex;
+  flex-direction: column;
+  position: absolute;
+  z-index: 1000;
+  --player-font-size: 12px;
+  --player-font-size-small: 10px;
+}
+
+/* gradient border — same technique as vanilla tokyo-3-sunset-skin.css */
+.dd-player .dd-win {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(var(--player-bg), var(--player-bg)),
+    var(--player-gradient);
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  overflow: visible;
+}
+
+.dd-player .dd-win-body {
+  padding: 0;
+  overflow: visible;
+}
+
+/* ── Titlebar ────────────────────────────────────────────────────────────── */
+
+.dd-player__titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 1.4rem;
+  padding: 0 4px 0 6px;
+  background: var(--titlebar-bg, var(--player-bg));
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  cursor: move;
+  user-select: none;
+}
+
+.dd-player__title {
+  font-size: var(--player-font-size);
+  color: var(--titlebar-color, var(--border-color));
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+}
+
+.dd-player__win-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.dd-player__win-btn {
+  width: 18px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--win-controls-bg, var(--color-button-bg));
+  border: var(--win-controls-border, 0.5px solid var(--border-color));
+  cursor: pointer;
+  padding: 0;
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  &:hover { filter: brightness(1.3); }
+  &:active { transform: translateY(1px); }
+}
+
+/* ── Player body ─────────────────────────────────────────────────────────── */
+
+.dd-player__body {
+  background-color: var(--player-bg);
+  background-image: var(--player-body-bg, none);
+  background-size: 100%;
+  background-position: 50% 33%;
+  height: 116px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dd-player__display {
+  height: 105px;
+  display: grid;
+  grid-template-columns: 110px auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr auto;
+  grid-template-areas:
+    "viz title title title"
+    "viz kbps khz ."
+    "viz sliders sliders sliders"
+    "seek seek seek seek"
+    "controls controls controls controls";
+}
+
+/* ── Visualizer ──────────────────────────────────────────────────────────── */
+
+.dd-player__viz {
+  grid-area: viz;
+  margin-top: 6px;
+  margin-left: 5px;
+  display: flex;
+  background-color: var(--color-display-bg, transparent);
+  width: 100px;
+  height: 31px;
+  position: relative;
+  padding-top: 18px;
+  flex-direction: column;
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+}
+
+.dd-player__timer {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: calc(var(--player-font-size) * 1.1);
+  pointer-events: none;
+  color: var(--color-text-primary);
+  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+}
+
+/* ── Track title ─────────────────────────────────────────────────────────── */
+
+.dd-player__track {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-display-bg, transparent);
+  height: 18px;
+  width: 177px;
+  font-size: var(--player-font-size);
+  margin-top: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+}
+
+.dd-player__track p {
+  animation: dd-player-marquee 15s linear infinite;
+  display: inline-block;
+  margin: 4px;
+}
+
+.dd-player__neon {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-primary);
+  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+
+  &::before {
+    content: attr(data-text);
+    position: absolute; inset: 0;
+    color: var(--color-neon-primary);
+    filter: blur(10px); opacity: 0.9;
+    pointer-events: none;
+  }
+  &::after {
+    content: attr(data-text);
+    position: absolute; inset: 0;
+    color: var(--color-neon-red);
+    filter: blur(30px); opacity: 0.7;
+    pointer-events: none; z-index: -1;
+  }
+}
+
+/* ── kbps / kHz ──────────────────────────────────────────────────────────── */
+
+.dd-player__screen {
+  justify-self: start;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-primary);
+  font-size: var(--player-font-size);
+  height: 20px;
+  white-space: nowrap;
+}
+
+.dd-player__screen-value {
+  min-width: 22px;
+  padding: 1px 2px 0;
+  background-color: var(--player-bg-strong);
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+}
+
+.dd-player__screen-unit { margin-left: 2px; color: var(--color-text-primary); }
+
+.dd-player__kbps { grid-area: kbps; margin-top: 0; }
+.dd-player__khz  { grid-area: khz;  margin-top: 0; margin-left: 0; width: 32px; }
+
+/* ── Sliders row ─────────────────────────────────────────────────────────── */
+
+.dd-player__sliders {
+  grid-area: sliders;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-right: 6px;
+  gap: 2px;
+}
+
+.dd-player__seek {
+  grid-area: seek;
+}
+
+/* Volume & Balance */
+.dd-player__volume,
+.dd-player__balance {
+  appearance: none;
+  height: 6px;
+  background: var(--color-slider-bg);
+  border: none;
+  touch-action: none;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 13px; height: 8px;
+    background: var(--color-text-secondary, var(--color-text-primary));
+    cursor: pointer;
+    border: none;
+  }
+  &::-moz-range-thumb {
+    width: 12px; height: 12px;
+    background: var(--color-text-secondary, var(--color-text-primary));
+    border: none; cursor: pointer;
+  }
+  &::-moz-range-track { height: 6px; background: var(--color-slider-bg); border: none; }
+}
+
+.dd-player__volume  { width: 70px; }
+.dd-player__balance { width: 40px; }
+
+/* Seek */
+.dd-player__seek-slider {
+  appearance: none;
+  margin-left: 3px;
+  width: 286px;
+  height: 6px;
+  background: var(--player-gradient, var(--border-color));
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 13px; height: 8px;
+    background: black;
+    cursor: pointer;
+    border: none;
+  }
+  &::-moz-range-thumb {
+    width: 10px; height: 10px;
+    background: black;
+    border: none; cursor: pointer;
+  }
+  &::-moz-range-track { height: 3px; background: var(--player-gradient, var(--border-color)); border: 1px solid var(--border-color); }
+}
+
+/* ── Mini buttons (EQ, PL) ───────────────────────────────────────────────── */
+
+.dd-player__mini-btn {
+  font-size: var(--player-font-size);
+  height: 18px;
+  min-width: 28px;
+  padding: 0 6px;
+  background-color: var(--player-bg-soft);
+  color: var(--color-text-secondary, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  &:active { transform: translateY(1px); }
+}
+
+/* ── Transport controls ──────────────────────────────────────────────────── */
+
+.dd-player__controls {
+  grid-area: controls;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+  padding: 6px 3px;
+}
+
+.dd-player__controls button {
+  font-size: var(--player-font-size);
+  height: 20px;
+  width: 23px;
+  background-color: var(--color-button-bg);
+  color: var(--color-text-secondary, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1; padding: 0; cursor: pointer;
+  transition: transform 80ms ease, filter 120ms ease;
+
+  &:not(.dd-player__toggle) { width: 25px; min-width: 25px; }
+  &:hover { filter: brightness(1.15); }
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: 0.4; cursor: default; }
+}
+
+.dd-player__toggle[aria-pressed="true"] {
+  background-color: var(--color-button-press-bg);
+  outline: 1px solid var(--color-accent-primary);
+}
+
+.dd-player__upload-btn { margin-right: 6px !important; }
+
+.dd-player__shuffle { margin-left: 8px !important; }
+
+.dd-player__shuffle,
+.dd-player__repeat {
+  width: auto !important;
+  min-width: 45px !important;
+  padding: 0 4px !important;
+}
+
+/* ── Playlist dock ───────────────────────────────────────────────────────── */
+
+.dd-player__playlist {
+  width: 100%;
+  height: 145px;
+  max-height: 320px;
+  border-top: 1px solid var(--border-color);
+  background-image: var(--playlist-body-bg, none);
+  background-size: cover;
+  background-position: center;
+}
+
+.dd-player__playlist-header {
+  padding: 4px 6px;
+  background: rgba(0,11,25,0.6);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-secondary, var(--color-text-primary));
+  font-size: var(--player-font-size-small);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.dd-player__track-list {
+  height: calc(100% - 22px);
+  overflow-y: auto;
+  background: transparent;
+
+  &::-webkit-scrollbar { width: 1.4rem; }
+  &::-webkit-scrollbar-track { background: var(--color-slider-bg); }
+  &::-webkit-scrollbar-thumb { background: var(--player-bg); border: 1px solid var(--border-color); }
+  &::-webkit-scrollbar-button { height: 18px; background-color: var(--color-slider-bg); }
+  &::-webkit-scrollbar-button:vertical:increment:start,
+  &::-webkit-scrollbar-button:vertical:decrement:end { display: none; }
+}
+
+.dd-player__track-items {
+  margin: 0;
+  padding-left: 19px;
+  color: var(--color-text-secondary, var(--color-text-primary));
+  font-size: var(--player-font-size-small);
+}
+
+.dd-player__track-items li {
+  cursor: pointer;
+  padding: 2px 4px;
+  &:hover { opacity: 0.8; }
+  &.active { color: var(--color-accent-primary); font-weight: bold; }
+}
+
+/* ── EQ dock ─────────────────────────────────────────────────────────────── */
+
+.dd-player__eq {
+  width: 100%;
+  height: 165px;
+  border-top: 1px solid var(--border-color);
+  background-image: var(--eq-body-bg, none);
+  background-size: cover;
+  background-position: center;
+}
+
+.dd-player__eq-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text-primary);
+  font-size: var(--player-font-size);
+}
+
+.dd-player__eq-header {
+  padding: 4px 6px;
+  background-color: rgba(0,11,25,0.6);
+  border-bottom: 1px solid var(--border-color);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--player-font-size-small);
+  text-transform: uppercase; font-weight: 600; letter-spacing: 1px;
+  color: var(--color-text-secondary, var(--color-text-primary));
+  span { flex: 1; text-align: center; }
+}
+
+.dd-player__eq-presets {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 10px 11px;
+}
+
+.dd-player__eq-side {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.dd-player__presets-menu {
+  position: absolute;
+  right: 0; top: 24px;
+  min-width: 180px;
+  font-size: var(--player-font-size-small);
+  max-height: 220px;
+  overflow-y: auto;
+  background: rgba(0,11,25,0.9);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  z-index: 10;
+  display: none;
+
+  &.open { display: block; }
+
+  button {
+    all: unset;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    &:hover { background: rgba(0,11,25,0.4); }
+  }
+}
+
+.dd-player__eq-sliders {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 120px;
+}
+
+.dd-player__eq-sliders label {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+  flex: 1;
+  span { font-size: 10px; order: -1; color: var(--border-color); }
+}
+
+/* ── EQ slider ───────────────────────────────────────────────────────────── */
+
+.dd-player__eq-slider {
+  appearance: none;
+  margin: 0;
+  width: 6px;
+  height: 90px;
+  background: transparent;
+  -moz-orient: vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+
+  &::-webkit-slider-runnable-track {
+    width: 6px; height: 90px;
+    background: var(--eq-gradient, var(--border-color));
+    border: 1px solid var(--border-color);
+    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  }
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 8px;
+    background: var(--color-slider-thumb);
+    border: 1px solid var(--border-color);
+    border-radius: 0; cursor: pointer;
+    margin-left: -3.5px; transform: translateX(-0.5px);
+  }
+  &::-moz-range-track {
+    width: 6px; height: 90px;
+    background: var(--eq-gradient, var(--border-color));
+    border: 1px solid var(--border-color);
+    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  }
+  &::-moz-range-thumb {
+    width: 13px; height: 8px;
+    background: var(--color-slider-thumb);
+    border: 1px solid var(--border-color);
+    border-radius: 0; margin-left: -3.5px; transform: translateX(-0.5px);
+  }
+}
+
+/* ── Animation ───────────────────────────────────────────────────────────── */
+
+@keyframes dd-player-marquee {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(-100%); }
+}
