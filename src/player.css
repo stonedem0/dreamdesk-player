@@ -10,6 +10,22 @@
   --player-font-size-small: 10px;
 }
 
+/* gradient border — same technique as vanilla tokyo-3-sunset-skin.css */
+.dd-player .dd-win {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(var(--player-bg), var(--player-bg)),
+    var(--player-gradient);
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  overflow: visible;
+}
+
+.dd-player .dd-win-body {
+  padding: 0;
+  overflow: visible;
+}
+
 /* ── Titlebar ────────────────────────────────────────────────────────────── */
 
 .dd-player__titlebar {
@@ -61,8 +77,7 @@
   background-size: 100%;
   background-position: 50% 33%;
   height: 116px;
-  border: 1px solid var(--border-color);
-  border-top: none;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dd-player__display {
@@ -200,24 +215,22 @@
   appearance: none;
   height: 6px;
   background: var(--color-slider-bg);
-  border: 1px solid var(--border-color);
+  border: none;
   touch-action: none;
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 
   &::-webkit-slider-thumb {
     appearance: none;
     width: 13px; height: 8px;
-    background: var(--color-slider-thumb);
+    background: var(--color-text-secondary, var(--color-text-primary));
     cursor: pointer;
-    border: 1px solid var(--border-color);
-    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+    border: none;
   }
   &::-moz-range-thumb {
     width: 12px; height: 12px;
-    background: var(--color-slider-thumb);
-    border: 1px solid var(--border-color); cursor: pointer;
+    background: var(--color-text-secondary, var(--color-text-primary));
+    border: none; cursor: pointer;
   }
-  &::-moz-range-track { height: 6px; background: var(--color-slider-bg); border: 1px solid var(--border-color); }
+  &::-moz-range-track { height: 6px; background: var(--color-slider-bg); border: none; }
 }
 
 .dd-player__volume  { width: 70px; }
@@ -235,14 +248,14 @@
   &::-webkit-slider-thumb {
     appearance: none;
     width: 13px; height: 8px;
-    background: var(--color-text-primary);
+    background: black;
     cursor: pointer;
-    border: 1px solid var(--color-pure-black);
+    border: none;
   }
   &::-moz-range-thumb {
     width: 10px; height: 10px;
-    background: var(--color-slider-thumb);
-    border: 1px solid #000; cursor: pointer;
+    background: black;
+    border: none; cursor: pointer;
   }
   &::-moz-range-track { height: 3px; background: var(--player-gradient, var(--border-color)); border: 1px solid var(--border-color); }
 }
@@ -255,7 +268,7 @@
   min-width: 28px;
   padding: 0 6px;
   background-color: var(--player-bg-soft);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: inline-flex; align-items: center; justify-content: center;
@@ -279,7 +292,7 @@
   height: 20px;
   width: 23px;
   background-color: var(--color-button-bg);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: flex; align-items: center; justify-content: center;
@@ -311,21 +324,20 @@
 /* ── Playlist dock ───────────────────────────────────────────────────────── */
 
 .dd-player__playlist {
-  width: 297px;
+  width: 100%;
   height: 145px;
   max-height: 320px;
-  background-color: var(--player-bg);
+  border-top: 1px solid var(--border-color);
   background-image: var(--playlist-body-bg, none);
   background-size: cover;
-  border: 1px solid var(--border-color);
-  border-top: none;
+  background-position: center;
 }
 
 .dd-player__playlist-header {
   padding: 4px 6px;
   background: rgba(0,11,25,0.6);
   border-bottom: 1px solid var(--border-color);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
   text-transform: uppercase;
   font-weight: 600;
@@ -349,7 +361,7 @@
 .dd-player__track-items {
   margin: 0;
   padding-left: 19px;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
 }
 
@@ -363,13 +375,12 @@
 /* ── EQ dock ─────────────────────────────────────────────────────────────── */
 
 .dd-player__eq {
-  width: 297px;
+  width: 100%;
   height: 165px;
-  background-color: var(--player-bg);
+  border-top: 1px solid var(--border-color);
   background-image: var(--eq-body-bg, none);
   background-size: cover;
-  border: 1px solid var(--border-color);
-  border-top: none;
+  background-position: center;
 }
 
 .dd-player__eq-panel {
@@ -387,6 +398,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: var(--player-font-size-small);
   text-transform: uppercase; font-weight: 600; letter-spacing: 1px;
+  color: var(--color-text-secondary, var(--color-text-primary));
   span { flex: 1; text-align: center; }
 }
 
@@ -395,7 +407,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 6px 6px 11px;
+  padding: 6px 10px 11px;
 }
 
 .dd-player__eq-side {
@@ -444,7 +456,7 @@
   display: flex; flex-direction: column;
   align-items: center; gap: 2px;
   flex: 1;
-  span { font-size: 10px; order: -1; color: var(--color-text-primary); }
+  span { font-size: 10px; order: -1; color: var(--border-color); }
 }
 
 /* ── EQ slider ───────────────────────────────────────────────────────────── */
@@ -453,14 +465,14 @@
   appearance: none;
   margin: 0;
   width: 6px;
-  height: 112px;
+  height: 90px;
   background: transparent;
   -moz-orient: vertical;
   writing-mode: vertical-lr;
   direction: rtl;
 
   &::-webkit-slider-runnable-track {
-    width: 6px; height: 112px;
+    width: 6px; height: 90px;
     background: var(--eq-gradient, var(--border-color));
     border: 1px solid var(--border-color);
     box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
@@ -474,7 +486,7 @@
     margin-left: -3.5px; transform: translateX(-0.5px);
   }
   &::-moz-range-track {
-    width: 6px; height: 112px;
+    width: 6px; height: 90px;
     background: var(--eq-gradient, var(--border-color));
     border: 1px solid var(--border-color);
     box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);

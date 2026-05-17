@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Window as DdWindow } from '@dreamdesk/react';
+import '@dreamdesk/react/dist/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 
@@ -108,20 +110,6 @@ export function Player({
 }: PlayerProps) {
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
 
-  // ── Dragging ──────────────────────────────────────────────────────────────
-  const [pos, setPos] = useState({ x: initialX, y: initialY });
-  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
-
-  const onTitleDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as Element).closest('.dd-player__win-btn')) return;
-    dragRef.current = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-  const onTitleMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current) return;
-    setPos({ x: dragRef.current.ox + e.clientX - dragRef.current.sx, y: dragRef.current.oy + e.clientY - dragRef.current.sy });
-  };
-  const onTitleUp = () => { dragRef.current = null; };
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [isPlaying, setIsPlaying]       = useState(false);
@@ -157,11 +145,19 @@ export function Player({
   const playlistRef   = useRef(playlist);
   const currentIdxRef = useRef(currentIdx);
   const isSeekingRef  = useRef(false);
+  const showPlaylistRef  = useRef(showPlaylist);
+  const showEqRef        = useRef(showEq);
+  const preFsPlaylistRef = useRef(false);
+  const preFsEqRef       = useRef(false);
+  const playlistDomRef   = useRef<HTMLDivElement>(null);
+  const eqDomRef         = useRef<HTMLDivElement>(null);
 
   useEffect(() => { shuffleRef.current = shuffle; },  [shuffle]);
   useEffect(() => { repeatRef.current = repeat; },    [repeat]);
   useEffect(() => { playlistRef.current = playlist; },[playlist]);
   useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
+  useEffect(() => { showPlaylistRef.current = showPlaylist; }, [showPlaylist]);
+  useEffect(() => { showEqRef.current = showEq; }, [showEq]);
 
   // ── Audio graph (imperative to survive StrictMode double-invoke) ──────────
   useEffect(() => {
@@ -378,32 +374,69 @@ export function Player({
     setShowPresets(false);
   }, []);
 
+  // ── Fullscreen animation: show/hide playlist + EQ docks ──────────────────
+  const slideIn = (el: HTMLDivElement | null) => el?.animate(
+    [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'translateY(0)' }],
+    { duration: 220, easing: 'ease' }
+  );
+  const slideOut = (el: HTMLDivElement | null): Promise<void> =>
+    el?.animate(
+      [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-6px)' }],
+      { duration: 220, easing: 'ease', fill: 'forwards' }
+    ).finished ?? Promise.resolve();
+
+  const pendingFsSlideInRef = useRef(false);
+
+  // Runs after React commits the newly-mounted panels to the DOM
+  useEffect(() => {
+    if (pendingFsSlideInRef.current && showPlaylist && showEq) {
+      pendingFsSlideInRef.current = false;
+      slideIn(playlistDomRef.current);
+      slideIn(eqDomRef.current);
+    }
+  }, [showPlaylist, showEq]);
+
+  const fullscreenAnimation = useCallback((_el: HTMLElement, { isFullscreen }: { isFullscreen: boolean; defaultFn: () => void }) => {
+    if (isFullscreen) {
+      preFsPlaylistRef.current = showPlaylistRef.current;
+      preFsEqRef.current = showEqRef.current;
+      pendingFsSlideInRef.current = true;
+      setShowPlaylist(true);
+      setShowEq(true);
+    } else {
+      Promise.all([
+        slideOut(playlistDomRef.current),
+        slideOut(eqDomRef.current),
+      ]).then(() => {
+        setShowPlaylist(preFsPlaylistRef.current);
+        setShowEq(preFsEqRef.current);
+      });
+    }
+  }, []);
+
   // ── Render ────────────────────────────────────────────────────────────────
+  const c = skin.accentColor;
+  const minimizeIcon  = `<svg viewBox="0 0 24 24" width="10" height="10"><line x1="4" y1="12" x2="20" y2="12" stroke="${c}" stroke-width="3" stroke-linecap="butt"/></svg>`;
+  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="10" height="10"><rect x="4" y="4" width="16" height="16" fill="none" stroke="${c}" stroke-width="2.5"/></svg>`;
+  const closeIcon     = `<svg viewBox="0 0 24 24" width="10" height="10"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3" stroke-linecap="butt"/></svg>`;
+
   const remaining = Math.max(0, duration - currentTime);
   const timer = `-${fmtTime(remaining)}`;
 
   return (
-    <div
+    <DdWindow
+      title="player"
+      movable
+      resizable={false}
+      width="297px"
+      minimizeIcon={minimizeIcon}
+      fullscreenIcon={fullscreenIcon}
+      closeIcon={closeIcon}
+      onClose={onClose}
+      fullscreenAnimation={fullscreenAnimation}
+      style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as React.CSSProperties }}
       className="dd-player"
-      style={{ left: pos.x, top: pos.y, ...skin.vars as React.CSSProperties }}
     >
-      {/* Titlebar */}
-      <div
-        className="dd-player__titlebar"
-        onPointerDown={onTitleDown}
-        onPointerMove={onTitleMove}
-        onPointerUp={onTitleUp}
-      >
-        <span className="dd-player__title">player</span>
-        <div className="dd-player__win-controls">
-          <button className="dd-player__win-btn dd-player__win-btn--close" onClick={onClose} title="Close">
-            <svg viewBox="0 0 24 24" width="10" height="10">
-              <path d="M5 5l14 14M19 5L5 19" stroke={skin.accentColor} strokeWidth="3" strokeLinecap="butt"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
       {/* Player body */}
       <div className="dd-player__body">
         <div className="dd-player__display">
@@ -471,7 +504,7 @@ export function Player({
 
       {/* Playlist */}
       {showPlaylist && (
-        <div className="dd-player__playlist">
+        <div className="dd-player__playlist" ref={playlistDomRef}>
           <div className="dd-player__playlist-header">playlist</div>
           <div className="dd-player__track-list">
             <ol className="dd-player__track-items">
@@ -489,7 +522,7 @@ export function Player({
 
       {/* EQ */}
       {showEq && (
-        <div className="dd-player__eq">
+        <div className="dd-player__eq" ref={eqDomRef}>
           <div className="dd-player__eq-panel">
             <div className="dd-player__eq-header"><span>equalizer</span></div>
             <div className="dd-player__eq-presets">
@@ -520,6 +553,6 @@ export function Player({
           </div>
         </div>
       )}
-    </div>
+    </DdWindow>
   );
 }
