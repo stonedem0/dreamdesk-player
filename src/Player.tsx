@@ -428,6 +428,7 @@ export function Player({
       title="player"
       movable
       resizable={false}
+      fullscreenMode="expand"
       width="297px"
       minimizeIcon={minimizeIcon}
       fullscreenIcon={fullscreenIcon}
