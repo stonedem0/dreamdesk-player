@@ -129,15 +129,7 @@ function toggleSkin() {
 }
 
 function initializeSkinSwitcher() {
-  // Set up the toggle button
-  const toggleBtn = document.getElementById('skin-toggle');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', toggleSkin);
-  }
-
-  // Load saved skin preference or default
-  const savedSkin = getCurrentSkin();
-  setSkin(savedSkin);
+  setSkin('sunset');
 }
 
 // Initialize when DOM is ready
