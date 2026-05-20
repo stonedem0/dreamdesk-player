@@ -75,6 +75,10 @@
   /* Utility Colors */
   --color-pure-black: #000000;
 
+  /* Override default pink border/text colors from styles.css */
+  --border-color: #d0774a;
+  --color-text-primary: #fff6a9;
+
   /* Deprecated legacy vars for backward compatibility */
   --player-bg: var(--color-bg-primary);
   --player-bg-soft: var(--color-bg-soft);
