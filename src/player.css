@@ -54,9 +54,20 @@
   gap: 2px;
 }
 
-/* Reset browser default button padding so icons aren't flex-squished */
-.dd-win-controls button {
+/* Reset browser default button padding; lock bg so pastelcore #fff doesn't bleed */
+.dd-player .dd-win-controls button {
   padding: 0;
+  background-color: var(--dd-controls-bg, #1d1c1c);
+}
+
+/* Higher specificity (3 classes) to beat pastelcore's .dd-win-controls .dd-btn--fullscreen */
+.dd-player .dd-win-controls .dd-btn--fullscreen {
+  background-color: var(--dd-controls-bg, #1d1c1c);
+}
+
+.dd-player .dd-btn--minimize {
+  align-items: flex-end;
+  padding-bottom: 3px;
 }
 
 .dd-player__win-btn {
@@ -354,13 +365,9 @@
   height: calc(100% - 22px);
   overflow-y: auto;
   background: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--player-bg) var(--color-slider-bg);
 
-  &::-webkit-scrollbar { width: 1.4rem; }
-  &::-webkit-scrollbar-track { background: var(--color-slider-bg); }
-  &::-webkit-scrollbar-thumb { background: var(--player-bg); border: 1px solid var(--border-color); }
-  &::-webkit-scrollbar-button { height: 18px; background-color: var(--color-slider-bg); }
-  &::-webkit-scrollbar-button:vertical:increment:start,
-  &::-webkit-scrollbar-button:vertical:decrement:end { display: none; }
 }
 
 .dd-player__track-items {
@@ -510,3 +517,13 @@
   from { transform: translateX(100%); }
   to   { transform: translateX(-100%); }
 }
+
+/* ── Scrollbar overrides — two-class specificity beats global bare ::-webkit rules ── */
+.dd-player .dd-player__track-list::-webkit-scrollbar,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar { width: 8px; }
+.dd-player .dd-player__track-list::-webkit-scrollbar-track,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
+.dd-player .dd-player__track-list::-webkit-scrollbar-thumb,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-thumb { background: var(--border-color); border: none; box-shadow: none; background-image: none; }
+.dd-player .dd-player__track-list::-webkit-scrollbar-button,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-button { display: none; }

@@ -420,9 +420,9 @@ export function Player({
 
   // ── Render ────────────────────────────────────────────────────────────────
   const c = skin.accentColor;
-  const minimizeIcon  = `<svg viewBox="0 0 24 24" width="10" height="10"><line x1="4" y1="12" x2="20" y2="12" stroke="${c}" stroke-width="3" stroke-linecap="butt"/></svg>`;
-  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="10" height="10"><rect x="4" y="4" width="16" height="16" fill="none" stroke="${c}" stroke-width="2.5"/></svg>`;
-  const closeIcon     = `<svg viewBox="0 0 24 24" width="10" height="10"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3" stroke-linecap="butt"/></svg>`;
+  const minimizeIcon   = `<svg viewBox="0 0 24 24" width="14" height="14"><line x1="3" y1="17" x2="21" y2="17" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
+  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="18" height="18" fill="none" stroke="${c}" stroke-width="3.5"/></svg>`;
+  const closeIcon      = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
 
   const remaining = Math.max(0, duration - currentTime);
   const timer = `-${fmtTime(remaining)}`;
