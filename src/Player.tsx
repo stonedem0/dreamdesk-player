@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Window as DdWindow } from '@dreamdesk/react';
-import '@dreamdesk/react/dist/style.css';
+import { Window as DdWindow } from 'dreamdesk-ui';
+import 'dreamdesk-ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 
@@ -97,6 +97,8 @@ export interface PlayerProps {
   onClose?: () => void;
   initialX?: number;
   initialY?: number;
+  disableSnap?: boolean;
+  icon?: string;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -107,6 +109,8 @@ export function Player({
   onClose,
   initialX = 200,
   initialY = 100,
+  disableSnap = false,
+  icon,
 }: PlayerProps) {
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
 
@@ -428,6 +432,8 @@ export function Player({
       title="player"
       movable
       resizable={false}
+      disableSnap={disableSnap}
+      icon={icon}
       fullscreenMode="expand"
       width="297px"
       minimizeIcon={minimizeIcon}

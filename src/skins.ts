@@ -1,3 +1,7 @@
+import playerBodyBg from './img/image-asset.jpeg';
+import playlistBodyBg from './img/playlist-bg.png';
+import eqBodyBg from './img/eq-bg.webp';
+
 export interface Skin {
   id: string;
   label: string;
@@ -28,9 +32,9 @@ export const SKINS: Record<string, Skin> = {
       '--color-pure-black':    '#000',
       '--player-gradient':     'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--eq-gradient':         'linear-gradient(180deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
-      '--player-body-bg':      'url(/img/image-asset.jpeg)',
-      '--playlist-body-bg':    'url(/img/playlist-bg.png)',
-      '--eq-body-bg':          'url(/img/eq-bg.webp)',
+      '--player-body-bg':      `url(${playerBodyBg})`,
+      '--playlist-body-bg':    `url(${playlistBodyBg})`,
+      '--eq-body-bg':          `url(${eqBodyBg})`,
       '--titlebar-bg':         'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--titlebar-color':      '#2d1b3d',
       '--win-controls-bg':     '#1d1c1c',
@@ -41,14 +45,17 @@ export const SKINS: Record<string, Skin> = {
       '--dd-header-bg':        'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--dd-header-color':     '#2d1b3d',
       '--dd-header-shadow':    'none',
-      '--dd-header-height':    '1.4rem',
+      '--dd-header-height':    '1.2rem',
       '--dd-header-font-size': '0.75rem',
       '--dd-header-padding':   '0 4px 0 6px',
       '--dd-body-padding':     '0',
-      '--dd-controls-bg':      '#1d1c1c',
-      '--dd-controls-border':  '1px solid #ff8500',
-      '--dd-controls-fg':      '#ff8500',
-      '--dd-controls-shadow':  '0 0 6px rgba(255,133,0,0.35)',
+      '--dd-controls-bg':        '#1d1c1c',
+      '--dd-controls-border':    '1px solid #ff8500',
+      '--dd-controls-fg':        '#ff8500',
+      '--dd-controls-shadow':    '0 0 6px rgba(255,133,0,0.35)',
+      '--dd-controls-button-w':  '18px',
+      '--dd-controls-button-h':  '14px',
+      '--dd-controls-icon-size': '10px',
       '--dd-header-border-bottom': '1px solid #d0774a',
     },
     histogramGradient: [

@@ -54,6 +54,11 @@
   gap: 2px;
 }
 
+/* Reset browser default button padding so icons aren't flex-squished */
+.dd-win-controls button {
+  padding: 0;
+}
+
 .dd-player__win-btn {
   width: 18px;
   height: 14px;
