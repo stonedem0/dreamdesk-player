@@ -118,12 +118,14 @@
   display: flex;
   background-color: var(--color-display-bg, transparent);
   width: 100px;
-  height: 31px;
+  height: 35px;
   position: relative;
   padding-top: 18px;
   flex-direction: column;
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  box-sizing: content-box;
+  overflow: hidden;
 }
 
 .dd-player__timer {
@@ -233,6 +235,7 @@
   background: var(--color-slider-bg);
   border: none;
   touch-action: none;
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 
   &::-webkit-slider-thumb {
     appearance: none;
@@ -281,8 +284,9 @@
 .dd-player__mini-btn {
   font-size: var(--player-font-size);
   height: 18px;
-  min-width: 28px;
-  padding: 0 6px;
+  width: 28px;
+  padding: 0;
+  box-sizing: border-box;
   background-color: var(--player-bg-soft);
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
@@ -514,7 +518,7 @@
 /* ── Animation ───────────────────────────────────────────────────────────── */
 
 @keyframes dd-player-marquee {
-  from { transform: translateX(100%); }
+  from { transform: translateX(177px); }
   to   { transform: translateX(-100%); }
 }
 
@@ -527,3 +531,7 @@
 .dd-player .dd-player__presets-menu::-webkit-scrollbar-thumb { background: var(--border-color); border: none; box-shadow: none; background-image: none; }
 .dd-player .dd-player__track-list::-webkit-scrollbar-button,
 .dd-player .dd-player__presets-menu::-webkit-scrollbar-button { display: none; }
+
+.dd-player .dd-win-controls .dd-btn--fullscreen svg,
+.dd-player .dd-win-controls .dd-btn--minimize svg,
+.dd-player .dd-win-controls .dd-btn--close svg { width: 10px; height: 10px; }

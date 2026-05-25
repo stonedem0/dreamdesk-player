@@ -123,7 +123,8 @@ export function Player({
   const [balance, setBalance]           = useState(0);
   const [shuffle, setShuffle]           = useState(false);
   const [repeat, setRepeat]             = useState(false);
-  const [trackLabel, setTrackLabel]     = useState('');
+  const trackLabel0 = initialTracks.length ? (initialTracks[0].artist ? `${initialTracks[0].title} — ${initialTracks[0].artist}` : initialTracks[0].title) : '';
+  const [trackLabel, setTrackLabel]     = useState(trackLabel0);
   const [kbps, setKbps]                 = useState('');
   const [khz, setKhz]                   = useState('');
   const [showPlaylist, setShowPlaylist] = useState(false);
@@ -220,7 +221,11 @@ export function Player({
           }
           return [];
         }).filter(t => /\.(mp3|wav|ogg|m4a)$/i.test(t.src));
-        if (tracks.length) { setPlaylist(tracks); playlistRef.current = tracks; }
+        if (tracks.length) {
+          setPlaylist(tracks);
+          playlistRef.current = tracks;
+          setTrackLabel(tracks[0].artist ? `${tracks[0].title} — ${tracks[0].artist}` : tracks[0].title);
+        }
       })
       .catch(() => {});
   }, [initialTracks.length]);
@@ -421,7 +426,7 @@ export function Player({
   // ── Render ────────────────────────────────────────────────────────────────
   const c = skin.accentColor;
   const minimizeIcon   = `<svg viewBox="0 0 24 24" width="14" height="14"><line x1="3" y1="17" x2="21" y2="17" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
-  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="14" height="14"><rect x="3" y="3" width="18" height="18" fill="none" stroke="${c}" stroke-width="3.5"/></svg>`;
+  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="10" height="10"><rect x="3" y="3" width="18" height="18" fill="none" stroke="${c}" stroke-width="2.5"/><line x1="3" y1="8" x2="21" y2="8" stroke="${c}" stroke-width="3.5"/></svg>`;
   const closeIcon      = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
 
   const remaining = Math.max(0, duration - currentTime);

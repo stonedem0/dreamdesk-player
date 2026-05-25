@@ -49,6 +49,9 @@ export const SKINS: Record<string, Skin> = {
       '--dd-header-font-size': '0.75rem',
       '--dd-header-padding':   '0 4px 0 6px',
       '--dd-body-padding':     '0',
+      '--btn-minimize-icon':                    'none',
+      '--btn-fullscreen-icon':                 'none',
+      '--btn-close-icon':                      'none',
       '--dd-controls-bg':                      '#1d1c1c',
       '--color-window-control-bg':             '#1d1c1c',
       '--color-window-control-fullscreen-bg':  '#1d1c1c',
@@ -57,7 +60,7 @@ export const SKINS: Record<string, Skin> = {
       '--dd-controls-shadow':                  '0 0 6px rgba(255,133,0,0.35)',
       '--dd-controls-button-w':                '18px',
       '--dd-controls-button-h':                '18px',
-      '--dd-controls-icon-size':               '9px',
+      '--dd-controls-icon-size':               '14px',
       '--dd-header-border-bottom': '1px solid #d0774a',
     },
     histogramGradient: [
