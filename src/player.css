@@ -11,6 +11,11 @@
 }
 
 /* gradient border — same technique as vanilla tokyo-3-sunset-skin.css */
+.dd-player .dd-win-header {
+  border: 1px solid #190201;
+  border-bottom: none;
+}
+
 .dd-player .dd-win {
   border: 2px solid transparent;
   background-image:
@@ -54,6 +59,22 @@
   gap: 2px;
 }
 
+/* Reset browser default button padding; lock bg so pastelcore #fff doesn't bleed */
+.dd-player .dd-win-controls button {
+  padding: 0;
+  background-color: var(--dd-controls-bg, #1d1c1c);
+}
+
+/* Higher specificity (3 classes) to beat pastelcore's .dd-win-controls .dd-btn--fullscreen */
+.dd-player .dd-win-controls .dd-btn--fullscreen {
+  background-color: var(--dd-controls-bg, #1d1c1c);
+}
+
+.dd-player .dd-btn--minimize {
+  align-items: flex-end;
+  padding-bottom: 3px;
+}
+
 .dd-player__win-btn {
   width: 18px;
   height: 14px;
@@ -72,6 +93,7 @@
 /* ── Player body ─────────────────────────────────────────────────────────── */
 
 .dd-player__body {
+  border: 1px solid #190201;
   background-color: var(--player-bg);
   background-image: var(--player-body-bg, none);
   background-size: 100%;
@@ -102,12 +124,14 @@
   display: flex;
   background-color: var(--color-display-bg, transparent);
   width: 100px;
-  height: 31px;
+  height: 35px;
   position: relative;
   padding-top: 18px;
   flex-direction: column;
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  box-sizing: content-box;
+  overflow: hidden;
 }
 
 .dd-player__timer {
@@ -217,6 +241,7 @@
   background: var(--color-slider-bg);
   border: none;
   touch-action: none;
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 
   &::-webkit-slider-thumb {
     appearance: none;
@@ -265,8 +290,9 @@
 .dd-player__mini-btn {
   font-size: var(--player-font-size);
   height: 18px;
-  min-width: 28px;
-  padding: 0 6px;
+  width: 60px;
+  padding: 0;
+  box-sizing: border-box;
   background-color: var(--player-bg-soft);
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
@@ -288,7 +314,7 @@
 }
 
 .dd-player__controls button {
-  font-size: var(--player-font-size);
+  font-size: var(--player-font-size-small);
   height: 20px;
   width: 23px;
   background-color: var(--color-button-bg);
@@ -304,6 +330,8 @@
   &:active { transform: translateY(1px); }
   &:disabled { opacity: 0.4; cursor: default; }
 }
+
+.dd-player__controls button:nth-child(3) { font-size: 8px; padding-top: 2px; }
 
 .dd-player__toggle[aria-pressed="true"] {
   background-color: var(--color-button-press-bg);
@@ -327,7 +355,6 @@
   width: 100%;
   height: 145px;
   max-height: 320px;
-  border-top: 1px solid var(--border-color);
   background-image: var(--playlist-body-bg, none);
   background-size: cover;
   background-position: center;
@@ -343,19 +370,16 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
 }
 
 .dd-player__track-list {
   height: calc(100% - 22px);
   overflow-y: auto;
   background: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--player-bg) var(--color-slider-bg);
 
-  &::-webkit-scrollbar { width: 1.4rem; }
-  &::-webkit-scrollbar-track { background: var(--color-slider-bg); }
-  &::-webkit-scrollbar-thumb { background: var(--player-bg); border: 1px solid var(--border-color); }
-  &::-webkit-scrollbar-button { height: 18px; background-color: var(--color-slider-bg); }
-  &::-webkit-scrollbar-button:vertical:increment:start,
-  &::-webkit-scrollbar-button:vertical:decrement:end { display: none; }
 }
 
 .dd-player__track-items {
@@ -363,6 +387,7 @@
   padding-left: 19px;
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
 }
 
 .dd-player__track-items li {
@@ -502,6 +527,20 @@
 /* ── Animation ───────────────────────────────────────────────────────────── */
 
 @keyframes dd-player-marquee {
-  from { transform: translateX(100%); }
+  from { transform: translateX(177px); }
   to   { transform: translateX(-100%); }
 }
+
+/* ── Scrollbar overrides — two-class specificity beats global bare ::-webkit rules ── */
+.dd-player .dd-player__track-list::-webkit-scrollbar,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar { width: 8px; }
+.dd-player .dd-player__track-list::-webkit-scrollbar-track,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
+.dd-player .dd-player__track-list::-webkit-scrollbar-thumb,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-thumb { background: var(--player-gradient, var(--border-color)); border: none; box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65); }
+.dd-player .dd-player__track-list::-webkit-scrollbar-button,
+.dd-player .dd-player__presets-menu::-webkit-scrollbar-button { display: none; }
+
+.dd-player .dd-win-controls .dd-btn--fullscreen svg,
+.dd-player .dd-win-controls .dd-btn--minimize svg,
+.dd-player .dd-win-controls .dd-btn--close svg { width: 10px; height: 10px; }
