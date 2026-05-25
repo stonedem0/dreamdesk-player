@@ -430,7 +430,7 @@ export function Player({
   const closeIcon      = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
 
   const remaining = Math.max(0, duration - currentTime);
-  const timer = `-${fmtTime(remaining)}`;
+  const timer = fmtTime(remaining);
 
   return (
     <DdWindow

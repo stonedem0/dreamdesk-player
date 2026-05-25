@@ -18,7 +18,7 @@ export const SKINS: Record<string, Skin> = {
       '--player-bg':           '#000b19',
       '--player-bg-soft':      'rgba(0,11,25,0.73)',
       '--player-bg-strong':    'rgba(0,11,25,0.86)',
-      '--border-color':        '#d0774a',
+      '--border-color':        '#120602',
       '--color-text-primary':  '#fff6a9',
       '--color-text-secondary':'#ffb600',
       '--color-display-bg':    '#001127c9',
