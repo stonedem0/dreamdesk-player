@@ -358,6 +358,8 @@
   background-image: var(--playlist-body-bg, none);
   background-size: cover;
   background-position: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .dd-player__playlist-header {
@@ -374,12 +376,54 @@
 }
 
 .dd-player__track-list {
-  height: calc(100% - 22px);
+  flex: 1;
   overflow-y: auto;
   background: transparent;
   scrollbar-width: thin;
   scrollbar-color: var(--player-bg) var(--color-slider-bg);
 
+}
+
+.dd-player__playlist-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 20px;
+  padding: 0 4px;
+  background: rgba(0,11,25,0.6);
+  border-top: 1px solid var(--border-color);
+}
+
+.dd-player__playlist-statusbar-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.dd-player__statusbar-btn {
+  font-size: 9px;
+  height: 16px;
+  width: 30px;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--player-bg-soft);
+  color: var(--color-text-secondary, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  &:active { transform: translateY(1px); }
+}
+
+.dd-player__settings-btn {
+  width: 18px;
+  font-size: 11px;
+}
+
+.dd-player__skin-side {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .dd-player__track-items {
@@ -442,7 +486,7 @@
   justify-content: flex-end;
 }
 
-.dd-player__presets-menu {
+.dd-player__dropdown-menu {
   position: absolute;
   right: 0; top: 24px;
   min-width: 180px;
@@ -456,6 +500,11 @@
   display: none;
 
   &.open { display: block; }
+
+  &.dd-player__dropdown-menu--up {
+    top: auto;
+    bottom: 22px;
+  }
 
   button {
     all: unset;
@@ -533,13 +582,13 @@
 
 /* ── Scrollbar overrides — two-class specificity beats global bare ::-webkit rules ── */
 .dd-player .dd-player__track-list::-webkit-scrollbar,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar { width: 8px; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar { width: 8px; }
 .dd-player .dd-player__track-list::-webkit-scrollbar-track,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
 .dd-player .dd-player__track-list::-webkit-scrollbar-thumb,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-thumb { background: var(--player-gradient, var(--border-color)); border: none; box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65); }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-thumb { background: var(--player-gradient, var(--border-color)); border: none; box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65); }
 .dd-player .dd-player__track-list::-webkit-scrollbar-button,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-button { display: none; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-button { display: none; }
 
 .dd-player .dd-win-controls .dd-btn--fullscreen svg,
 .dd-player .dd-win-controls .dd-btn--minimize svg,

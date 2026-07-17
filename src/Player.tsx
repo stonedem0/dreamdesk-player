@@ -104,7 +104,7 @@ export interface PlayerProps {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function Player({
-  skin: skinId = DEFAULT_SKIN,
+  skin: initialSkinId = DEFAULT_SKIN,
   initialTracks = [],
   onClose,
   initialX = 200,
@@ -112,6 +112,7 @@ export function Player({
   disableSnap = false,
   icon,
 }: PlayerProps) {
+  const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
 
 
@@ -130,6 +131,7 @@ export function Player({
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showEq, setShowEq]             = useState(false);
   const [showPresets, setShowPresets]   = useState(false);
+  const [showSkinMenu, setShowSkinMenu] = useState(false);
   const [playlist, setPlaylist]         = useState<Track[]>(initialTracks);
   const [currentIdx, setCurrentIdx]     = useState(0);
   const [eqBands, setEqBands]           = useState<number[]>(Array(7).fill(0));
@@ -529,6 +531,25 @@ export function Player({
               ))}
             </ol>
           </div>
+          <div className="dd-player__playlist-statusbar">
+            <div className="dd-player__playlist-statusbar-btns">
+              <button className="dd-player__statusbar-btn" title="Add" onClick={() => uploadRef.current?.click()}>ADD</button>
+              <button className="dd-player__statusbar-btn" title="Remove">REM</button>
+              <button className="dd-player__statusbar-btn" title="Select">SEL</button>
+              <button className="dd-player__statusbar-btn" title="Misc">MISC</button>
+            </div>
+            <div className="dd-player__skin-side">
+              <button className="dd-player__statusbar-btn dd-player__settings-btn" title="Settings"
+                onClick={() => setShowSkinMenu(v => !v)}>⚙</button>
+              <div className={`dd-player__dropdown-menu dd-player__dropdown-menu--up${showSkinMenu ? ' open' : ''}`}>
+                {Object.values(SKINS).map(s => (
+                  <button key={s.id} role="menuitem" onClick={() => { setSkinId(s.id); setShowSkinMenu(false); }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -540,7 +561,7 @@ export function Player({
             <div className="dd-player__eq-presets">
               <div className="dd-player__eq-side">
                 <button className="dd-player__mini-btn" onClick={() => setShowPresets(v => !v)}>presets ▾</button>
-                <div className={`dd-player__presets-menu${showPresets ? ' open' : ''}`}>
+                <div className={`dd-player__dropdown-menu${showPresets ? ' open' : ''}`}>
                   {EQ_PRESET_ORDER.map(key => (
                     <button key={key} role="menuitem" onClick={() => applyPreset(key)}>
                       {key.replace(/\b\w/g, m => m.toUpperCase())}
