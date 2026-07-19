@@ -140,8 +140,8 @@
   right: 4px;
   font-size: calc(var(--player-font-size) * 1.1);
   pointer-events: none;
-  color: var(--color-text-primary);
-  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+  color: var(--color-screen-text, var(--color-text-primary));
+  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px var(--screen-glow-2, rgba(255,165,0,0.85)), 0 0 7px var(--screen-glow-3, rgba(255,69,0,0.7));
 }
 
 /* ── Track title ─────────────────────────────────────────────────────────── */
@@ -173,8 +173,8 @@
   display: block;
   width: 100%;
   text-align: center;
-  color: var(--color-text-primary);
-  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+  color: var(--color-screen-text, var(--color-text-primary));
+  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px var(--screen-glow-2, rgba(255,165,0,0.85)), 0 0 7px var(--screen-glow-3, rgba(255,69,0,0.7));
 
   &::before {
     content: attr(data-text);
@@ -199,21 +199,24 @@
   align-self: center;
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-primary);
+  color: var(--color-screen-text, var(--color-text-primary));
   font-size: var(--player-font-size);
   height: 20px;
   white-space: nowrap;
 }
 
 .dd-player__screen-value {
+  display: inline-block;
   min-width: 22px;
+  height: 14px;
+  line-height: 14px;
   padding: 1px 2px 0;
   background-color: var(--player-bg-strong);
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 }
 
-.dd-player__screen-unit { margin-left: 2px; color: var(--color-text-primary); }
+.dd-player__screen-unit { margin-left: 2px; color: var(--color-screen-text, var(--color-text-primary)); }
 
 .dd-player__kbps { grid-area: kbps; margin-top: 0; }
 .dd-player__khz  { grid-area: khz;  margin-top: 0; margin-left: 0; width: 32px; }
@@ -372,7 +375,7 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
 }
 
 .dd-player__track-list {
@@ -431,7 +434,7 @@
   padding-left: 19px;
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
 }
 
 .dd-player__track-items li {

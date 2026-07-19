@@ -158,6 +158,7 @@ export function Player({
   const preFsEqRef       = useRef(false);
   const playlistDomRef   = useRef<HTMLDivElement>(null);
   const eqDomRef         = useRef<HTMLDivElement>(null);
+  const bytesCacheRef    = useRef<Map<string, Promise<number>>>(new Map());
 
   useEffect(() => { shuffleRef.current = shuffle; },  [shuffle]);
   useEffect(() => { repeatRef.current = repeat; },    [repeat]);
@@ -227,10 +228,19 @@ export function Player({
           setPlaylist(tracks);
           playlistRef.current = tracks;
           setTrackLabel(tracks[0].artist ? `${tracks[0].title} — ${tracks[0].artist}` : tracks[0].title);
+          // Prefetch sizes now, before playback starts — once a track is
+          // actually streaming, its own range requests saturate the
+          // connection pool and starve a same-URL HEAD fetch for a long time.
+          tracks.forEach(t => fetchBytes(t.src));
         }
       })
       .catch(() => {});
   }, [initialTracks.length]);
+
+  useEffect(() => {
+    initialTracks.forEach(t => fetchBytes(t.src));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Animation ─────────────────────────────────────────────────────────────
   const startAnimation = useCallback(() => {
@@ -264,6 +274,7 @@ export function Player({
     const i = ((index % tracks.length) + tracks.length) % tracks.length;
     audio.pause();
     audio.src = tracks[i].src;
+    fetchBytes(tracks[i].src);
     setCurrentIdx(i);
     currentIdxRef.current = i;
     setTrackLabel(tracks[i].artist ? `${tracks[i].title} — ${tracks[i].artist}` : tracks[i].title);
@@ -335,10 +346,29 @@ export function Player({
     eqBands.forEach((gain, i) => { if (filtersRef.current[i]) filtersRef.current[i].gain.value = gain; });
   }, [eqBands]);
 
+  function fetchBytes(rawSrc: string): Promise<number> {
+    // Normalize: audio.src always reads back as an absolute URL, while
+    // playlist entries store relative paths — without this, prefetch and
+    // the loadedmetadata-triggered lookup use different cache keys and
+    // the prefetch never gets hit.
+    const src = new URL(rawSrc, window.location.href).href;
+    let p = bytesCacheRef.current.get(src);
+    if (!p) {
+      p = (async () => {
+        try {
+          const h = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
+          const n = parseInt(h.headers.get('content-length') ?? '0', 10) || 0;
+          if (n) return n;
+        } catch (_) {}
+        try { return (await (await fetch(src, { cache: 'force-cache' })).blob()).size; } catch (_) { return 0; }
+      })();
+      bytesCacheRef.current.set(src, p);
+    }
+    return p;
+  }
+
   async function computeKbps(src: string, dur: number) {
-    let bytes = 0;
-    try { const h = await fetch(src, { method: 'HEAD', cache: 'force-cache' }); bytes = parseInt(h.headers.get('content-length') ?? '0', 10) || 0; } catch (_) {}
-    if (!bytes) { try { bytes = (await (await fetch(src, { cache: 'force-cache' })).blob()).size; } catch (_) { return; } }
+    const bytes = await fetchBytes(src);
     if (!bytes) return;
     setKbps(String(Math.max(1, Math.round((bytes * 8) / 1000 / Math.max(1, dur)))));
   }
@@ -348,7 +378,10 @@ export function Player({
     const audio = audioRef.current;
     const ctx = audioCtxRef.current;
     if (!audio) return;
-    if (!audio.src && playlistRef.current.length) audio.src = playlistRef.current[0].src;
+    if (!audio.src && playlistRef.current.length) {
+      audio.src = playlistRef.current[0].src;
+      fetchBytes(playlistRef.current[0].src);
+    }
     if (ctx?.state === 'suspended') await ctx.resume();
     await audio.play().catch(() => {});
     startAnimation();
