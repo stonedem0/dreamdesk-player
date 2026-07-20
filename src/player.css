@@ -63,6 +63,7 @@
 .dd-player .dd-win-controls button {
   padding: 0;
   background-color: var(--dd-controls-bg, #1d1c1c);
+  border: var(--dd-controls-border, none);
 }
 
 /* Higher specificity (3 classes) to beat pastelcore's .dd-win-controls .dd-btn--fullscreen */
@@ -140,8 +141,8 @@
   right: 4px;
   font-size: calc(var(--player-font-size) * 1.1);
   pointer-events: none;
-  color: var(--color-text-primary);
-  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+  color: var(--color-screen-text, var(--color-text-primary));
+  text-shadow: var(--screen-text-shadow, 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7));
 }
 
 /* ── Track title ─────────────────────────────────────────────────────────── */
@@ -173,8 +174,8 @@
   display: block;
   width: 100%;
   text-align: center;
-  color: var(--color-text-primary);
-  text-shadow: 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7);
+  color: var(--color-screen-text, var(--color-text-primary));
+  text-shadow: var(--screen-text-shadow, 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7));
 
   &::before {
     content: attr(data-text);
@@ -199,21 +200,24 @@
   align-self: center;
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-primary);
+  color: var(--color-screen-text, var(--color-text-primary));
   font-size: var(--player-font-size);
   height: 20px;
   white-space: nowrap;
 }
 
 .dd-player__screen-value {
+  display: inline-block;
   min-width: 22px;
+  height: 14px;
+  line-height: 14px;
   padding: 1px 2px 0;
   background-color: var(--player-bg-strong);
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 }
 
-.dd-player__screen-unit { margin-left: 2px; color: var(--color-text-primary); }
+.dd-player__screen-unit { margin-left: 2px; color: var(--color-text-secondary, var(--color-text-primary)); }
 
 .dd-player__kbps { grid-area: kbps; margin-top: 0; }
 .dd-player__khz  { grid-area: khz;  margin-top: 0; margin-left: 0; width: 32px; }
@@ -239,21 +243,22 @@
   appearance: none;
   height: 6px;
   background: var(--color-slider-bg);
-  border: none;
+  border: 1px solid var(--border-color);
   touch-action: none;
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 
   &::-webkit-slider-thumb {
     appearance: none;
     width: 13px; height: 8px;
-    background: var(--color-text-secondary, var(--color-text-primary));
+    background: var(--color-slider-thumb, var(--color-text-secondary));
     cursor: pointer;
-    border: none;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   }
   &::-moz-range-thumb {
     width: 12px; height: 12px;
-    background: var(--color-text-secondary, var(--color-text-primary));
-    border: none; cursor: pointer;
+    background: var(--color-slider-thumb, var(--color-text-secondary));
+    border: 1px solid var(--border-color); cursor: pointer;
   }
   &::-moz-range-track { height: 6px; background: var(--color-slider-bg); border: none; }
 }
@@ -268,19 +273,21 @@
   width: 286px;
   height: 6px;
   background: var(--player-gradient, var(--border-color));
+  border: 1px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 
   &::-webkit-slider-thumb {
     appearance: none;
     width: 13px; height: 8px;
-    background: black;
+    background: var(--color-slider-thumb, black);
     cursor: pointer;
-    border: none;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   }
   &::-moz-range-thumb {
     width: 10px; height: 10px;
-    background: black;
-    border: none; cursor: pointer;
+    background: var(--color-slider-thumb, black);
+    border: 1px solid var(--border-color); cursor: pointer;
   }
   &::-moz-range-track { height: 3px; background: var(--player-gradient, var(--border-color)); border: 1px solid var(--border-color); }
 }
@@ -293,7 +300,7 @@
   width: 60px;
   padding: 0;
   box-sizing: border-box;
-  background-color: var(--player-bg-soft);
+  background-color: var(--color-button-bg, var(--player-bg-soft));
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
@@ -352,17 +359,20 @@
 /* ── Playlist dock ───────────────────────────────────────────────────────── */
 
 .dd-player__playlist {
-  width: 100%;
   height: 145px;
   max-height: 320px;
+  border: 1px solid #190201;
+  border-top: none;
   background-image: var(--playlist-body-bg, none);
   background-size: cover;
   background-position: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .dd-player__playlist-header {
   padding: 4px 6px;
-  background: rgba(0,11,25,0.6);
+  background: var(--panel-header-bg, rgba(0,11,25,0.6));
   border-bottom: 1px solid var(--border-color);
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
@@ -370,11 +380,12 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
 }
 
 .dd-player__track-list {
-  height: calc(100% - 22px);
+  flex: 1;
+  padding: 8px;
   overflow-y: auto;
   background: transparent;
   scrollbar-width: thin;
@@ -382,12 +393,54 @@
 
 }
 
+.dd-player__playlist-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 20px;
+  padding: 0 4px;
+  background: var(--panel-header-bg, rgba(0,11,25,0.6));
+  border-top: 1px solid var(--border-color);
+}
+
+.dd-player__playlist-statusbar-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.dd-player__statusbar-btn {
+  font-size: 9px;
+  height: 16px;
+  width: 30px;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--color-button-bg, var(--player-bg-soft));
+  color: var(--color-text-secondary, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  &:active { transform: translateY(1px); }
+}
+
+.dd-player__settings-btn {
+  width: 20px;
+  height: 17px;
+}
+
+.dd-player__skin-side {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .dd-player__track-items {
   margin: 0;
   padding-left: 19px;
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
 }
 
 .dd-player__track-items li {
@@ -400,8 +453,8 @@
 /* ── EQ dock ─────────────────────────────────────────────────────────────── */
 
 .dd-player__eq {
-  width: 100%;
   height: 165px;
+  border: 1px solid #190201;
   border-top: 1px solid var(--border-color);
   background-image: var(--eq-body-bg, none);
   background-size: cover;
@@ -418,7 +471,7 @@
 
 .dd-player__eq-header {
   padding: 4px 6px;
-  background-color: rgba(0,11,25,0.6);
+  background-color: var(--panel-header-bg, rgba(0,11,25,0.6));
   border-bottom: 1px solid var(--border-color);
   display: flex; align-items: center; justify-content: center;
   font-size: var(--player-font-size-small);
@@ -442,20 +495,25 @@
   justify-content: flex-end;
 }
 
-.dd-player__presets-menu {
+.dd-player__dropdown-menu {
   position: absolute;
   right: 0; top: 24px;
   min-width: 180px;
   font-size: var(--player-font-size-small);
   max-height: 220px;
   overflow-y: auto;
-  background: rgba(0,11,25,0.9);
+  background: var(--dropdown-menu-bg, rgba(0,11,25,0.9));
   border: 1px solid var(--border-color);
   box-shadow: 0 6px 18px rgba(0,0,0,0.45);
   z-index: 10;
   display: none;
 
   &.open { display: block; }
+
+  &.dd-player__dropdown-menu--up {
+    top: auto;
+    bottom: 22px;
+  }
 
   button {
     all: unset;
@@ -464,8 +522,8 @@
     width: 100%;
     padding: 6px 10px;
     cursor: pointer;
-    color: var(--color-text-primary);
-    &:hover { background: rgba(0,11,25,0.4); }
+    color: var(--dropdown-menu-text, var(--color-text-primary));
+    &:hover { background: var(--dropdown-menu-hover, rgba(0,11,25,0.4)); }
   }
 }
 
@@ -507,6 +565,7 @@
     width: 13px; height: 8px;
     background: var(--color-slider-thumb);
     border: 1px solid var(--border-color);
+    box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
     border-radius: 0; cursor: pointer;
     margin-left: -3.5px; transform: translateX(-0.5px);
   }
@@ -533,13 +592,13 @@
 
 /* ── Scrollbar overrides — two-class specificity beats global bare ::-webkit rules ── */
 .dd-player .dd-player__track-list::-webkit-scrollbar,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar { width: 8px; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar { width: 8px; }
 .dd-player .dd-player__track-list::-webkit-scrollbar-track,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-track { background: var(--color-slider-bg); border: none; box-shadow: none; }
 .dd-player .dd-player__track-list::-webkit-scrollbar-thumb,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-thumb { background: var(--player-gradient, var(--border-color)); border: none; box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65); }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-thumb { background: var(--player-gradient, var(--border-color)); border: none; box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65); }
 .dd-player .dd-player__track-list::-webkit-scrollbar-button,
-.dd-player .dd-player__presets-menu::-webkit-scrollbar-button { display: none; }
+.dd-player .dd-player__dropdown-menu::-webkit-scrollbar-button { display: none; }
 
 .dd-player .dd-win-controls .dd-btn--fullscreen svg,
 .dd-player .dd-win-controls .dd-btn--minimize svg,

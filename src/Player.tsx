@@ -104,7 +104,7 @@ export interface PlayerProps {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export function Player({
-  skin: skinId = DEFAULT_SKIN,
+  skin: initialSkinId = DEFAULT_SKIN,
   initialTracks = [],
   onClose,
   initialX = 200,
@@ -112,6 +112,7 @@ export function Player({
   disableSnap = false,
   icon,
 }: PlayerProps) {
+  const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
 
 
@@ -130,6 +131,7 @@ export function Player({
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showEq, setShowEq]             = useState(false);
   const [showPresets, setShowPresets]   = useState(false);
+  const [showSkinMenu, setShowSkinMenu] = useState(false);
   const [playlist, setPlaylist]         = useState<Track[]>(initialTracks);
   const [currentIdx, setCurrentIdx]     = useState(0);
   const [eqBands, setEqBands]           = useState<number[]>(Array(7).fill(0));
@@ -156,6 +158,7 @@ export function Player({
   const preFsEqRef       = useRef(false);
   const playlistDomRef   = useRef<HTMLDivElement>(null);
   const eqDomRef         = useRef<HTMLDivElement>(null);
+  const bytesCacheRef    = useRef<Map<string, Promise<number>>>(new Map());
 
   useEffect(() => { shuffleRef.current = shuffle; },  [shuffle]);
   useEffect(() => { repeatRef.current = repeat; },    [repeat]);
@@ -225,10 +228,19 @@ export function Player({
           setPlaylist(tracks);
           playlistRef.current = tracks;
           setTrackLabel(tracks[0].artist ? `${tracks[0].title} — ${tracks[0].artist}` : tracks[0].title);
+          // Prefetch sizes now, before playback starts — once a track is
+          // actually streaming, its own range requests saturate the
+          // connection pool and starve a same-URL HEAD fetch for a long time.
+          tracks.forEach(t => fetchBytes(t.src));
         }
       })
       .catch(() => {});
   }, [initialTracks.length]);
+
+  useEffect(() => {
+    initialTracks.forEach(t => fetchBytes(t.src));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Animation ─────────────────────────────────────────────────────────────
   const startAnimation = useCallback(() => {
@@ -262,6 +274,7 @@ export function Player({
     const i = ((index % tracks.length) + tracks.length) % tracks.length;
     audio.pause();
     audio.src = tracks[i].src;
+    fetchBytes(tracks[i].src);
     setCurrentIdx(i);
     currentIdxRef.current = i;
     setTrackLabel(tracks[i].artist ? `${tracks[i].title} — ${tracks[i].artist}` : tracks[i].title);
@@ -333,10 +346,29 @@ export function Player({
     eqBands.forEach((gain, i) => { if (filtersRef.current[i]) filtersRef.current[i].gain.value = gain; });
   }, [eqBands]);
 
+  function fetchBytes(rawSrc: string): Promise<number> {
+    // Normalize: audio.src always reads back as an absolute URL, while
+    // playlist entries store relative paths — without this, prefetch and
+    // the loadedmetadata-triggered lookup use different cache keys and
+    // the prefetch never gets hit.
+    const src = new URL(rawSrc, window.location.href).href;
+    let p = bytesCacheRef.current.get(src);
+    if (!p) {
+      p = (async () => {
+        try {
+          const h = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
+          const n = parseInt(h.headers.get('content-length') ?? '0', 10) || 0;
+          if (n) return n;
+        } catch (_) {}
+        try { return (await (await fetch(src, { cache: 'force-cache' })).blob()).size; } catch (_) { return 0; }
+      })();
+      bytesCacheRef.current.set(src, p);
+    }
+    return p;
+  }
+
   async function computeKbps(src: string, dur: number) {
-    let bytes = 0;
-    try { const h = await fetch(src, { method: 'HEAD', cache: 'force-cache' }); bytes = parseInt(h.headers.get('content-length') ?? '0', 10) || 0; } catch (_) {}
-    if (!bytes) { try { bytes = (await (await fetch(src, { cache: 'force-cache' })).blob()).size; } catch (_) { return; } }
+    const bytes = await fetchBytes(src);
     if (!bytes) return;
     setKbps(String(Math.max(1, Math.round((bytes * 8) / 1000 / Math.max(1, dur)))));
   }
@@ -346,7 +378,10 @@ export function Player({
     const audio = audioRef.current;
     const ctx = audioCtxRef.current;
     if (!audio) return;
-    if (!audio.src && playlistRef.current.length) audio.src = playlistRef.current[0].src;
+    if (!audio.src && playlistRef.current.length) {
+      audio.src = playlistRef.current[0].src;
+      fetchBytes(playlistRef.current[0].src);
+    }
     if (ctx?.state === 'suspended') await ctx.resume();
     await audio.play().catch(() => {});
     startAnimation();
@@ -529,6 +564,30 @@ export function Player({
               ))}
             </ol>
           </div>
+          <div className="dd-player__playlist-statusbar">
+            <div className="dd-player__playlist-statusbar-btns">
+              <button className="dd-player__statusbar-btn" title="Add" onClick={() => uploadRef.current?.click()}>ADD</button>
+              <button className="dd-player__statusbar-btn" title="Remove">REM</button>
+              <button className="dd-player__statusbar-btn" title="Select">SEL</button>
+              <button className="dd-player__statusbar-btn" title="Misc">MISC</button>
+            </div>
+            <div className="dd-player__skin-side">
+              <button className="dd-player__statusbar-btn dd-player__settings-btn" title="Settings"
+                onClick={() => setShowSkinMenu(v => !v)}>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+              <div className={`dd-player__dropdown-menu dd-player__dropdown-menu--up${showSkinMenu ? ' open' : ''}`}>
+                {Object.values(SKINS).map(s => (
+                  <button key={s.id} role="menuitem" onClick={() => { setSkinId(s.id); setShowSkinMenu(false); }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -540,7 +599,7 @@ export function Player({
             <div className="dd-player__eq-presets">
               <div className="dd-player__eq-side">
                 <button className="dd-player__mini-btn" onClick={() => setShowPresets(v => !v)}>presets ▾</button>
-                <div className={`dd-player__presets-menu${showPresets ? ' open' : ''}`}>
+                <div className={`dd-player__dropdown-menu${showPresets ? ' open' : ''}`}>
                   {EQ_PRESET_ORDER.map(key => (
                     <button key={key} role="menuitem" onClick={() => applyPreset(key)}>
                       {key.replace(/\b\w/g, m => m.toUpperCase())}

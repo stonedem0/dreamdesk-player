@@ -4,6 +4,6 @@ import { Player } from './Player';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Player />
+    <Player skin="pastelcore" />
   </StrictMode>
 );
