@@ -20,6 +20,16 @@ let fftSize = 0;
 let fftData8 = /** @type {Uint8Array|null} */ (null);
 let fftUpdateCounter = 0; // only update FFT every 2 frames
 
+// player.js implements stop() as pause() + currentTime = 0, so a stopped
+// transport is distinguishable from a paused one by the playhead sitting at the
+// start. Nothing loaded yet counts as stopped too.
+function isAudioStopped() {
+  const v = window.visualizer;
+  const a = v && v.audio;
+  if (!a) return true;
+  return !!(a.ended || (a.paused && !a.currentTime));
+}
+
 function isAudioActive() {
   const v = window.visualizer;
   const a = v && v.audio;
@@ -380,6 +390,14 @@ function drawOnce(timeMs = 0) {
 
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // Stopped means an empty screen, not a frozen figure. Zero the retained FFT
+  // frame as well, so starting playback again doesn't flash the old shape.
+  if (isAudioStopped()) {
+    if (fftData8) fftData8.fill(0);
+    audioLevelSmoothed = 0;
+    return;
+  }
   
   // Enable alpha blending for smooth layered effect
   gl.enable(gl.BLEND);
