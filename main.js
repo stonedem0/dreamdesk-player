@@ -6,7 +6,9 @@ if (!canvas) throw new Error('Missing <canvas id="glcanvas"> in index.html');
 let gl = /** @type {WebGL2RenderingContext|null} */ (null);
 let program = /** @type {WebGLProgram|null} */ (null);
 let vao = /** @type {WebGLVertexArrayObject|null} */ (null);
-let vertexCount = 7200; // 9 rings × 800 vertices each
+const ringCount = 9;
+const verticesPerRing = 800;
+let vertexCount = ringCount * verticesPerRing;
 let timeLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let resolutionLoc = /** @type {WebGLUniformLocation|null} */ (null);
 let fftLoc = /** @type {WebGLUniformLocation|null} */ (null);
@@ -34,6 +36,19 @@ canvas.addEventListener('webglcontextlost', (e) => {
   isRunning = false;
   if (rafId) cancelAnimationFrame(rafId);
   rafId = 0;
+  // Every GL object died with the context. Drop the handles so start() rebuilds
+  // them; otherwise ensureFftTexture() sees a truthy fftTexture and binds a
+  // dead texture.
+  program = null;
+  vao = null;
+  fftTexture = null;
+  fftData8 = null;
+  fftSize = 0;
+  timeLoc = null;
+  resolutionLoc = null;
+  fftLoc = null;
+  audioLoc = null;
+  vertexCountLoc = null;
   console.warn('WebGL context lost');
 });
 
@@ -55,6 +70,32 @@ uniform float u_audio;
 
 out float v_vertexRatio;
 out float v_ringId;
+out float v_glow;
+
+#define TAU 6.28318530718
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 4; i++) {
+    v += a * valueNoise(p);
+    p *= 2.0;
+    a *= 0.5;
+  }
+  return v;
+}
 
 void main() {
   // Divide 7200 vertices into 9 rings of 800 each
@@ -101,21 +142,26 @@ void main() {
   // Expand radius based on FFT energy - large spikes for crown effect
   float expandAmount = fftVal * 1.8 + u_audio * 3.5;
   
-  // Add jagged crown effect with sine wave spikes
-  float spikeFreq = 40.0; // Number of spikes around the circle
-  float spike = sin(vertexRatio * spikeFreq * 3.14159 * 1.0) * 0.3 + 0.3;
-  expandAmount *= spike; // Modulate expansion by spike pattern
-  
-  float radius = baseRadius + expandAmount;
+  // Organic contour. Sampling the noise on the unit circle rather than on
+  // vertexRatio keeps it seamless across the 0/1 wrap - a 1D sample would show
+  // a visible seam where the loop closes. Time translates the sample point so
+  // the filament drifts; ringId decorrelates the rings from each other.
+  float ang = vertexRatio * TAU;
+  vec2 dir = vec2(cos(ang), sin(ang));
+  float n = fbm(dir * 2.5 + vec2(u_time * 0.15, ringId * 3.7));
+  v_glow = n;
+
+  // Same 0-0.6 envelope the old sine spike had, so loud passages stay in frame.
+  expandAmount *= n * 0.6 + 0.05;
+
+  // Wobble the resting radius too, so the rings are never perfect circles even
+  // with no audio playing.
+  float radius = baseRadius * (1.0 + (n - 0.5) * 0.25) + expandAmount;
   
   float x = cos(vertexRadians) * radius / aspect;
   float y = sin(vertexRadians) * radius;
   
   gl_Position = vec4(x, y, 0.0, 1.0);
-  
-  // Point size - responds dramatically to bass
-  float pointSize = 3.0 + fftVal * fftVal * 10.0 + u_audio * 20.0;
-  gl_PointSize = max(3.0, pointSize);
 }
 `;
 
@@ -125,18 +171,10 @@ uniform sampler2D u_fft;
 uniform float u_audio;
 in float v_vertexRatio;
 in float v_ringId;
+in float v_glow;
 out vec4 outColor;
 
 void main() {
-  // Draw circle point with soft edges
-  vec2 coord = gl_PointCoord - vec2(0.5);
-  float dist = length(coord);
-  
-  if (dist > 0.5) discard;
-  
-  // Soft circle
-  float alpha = 1.0 - dist * 2.0;
-  
   // Color based on which ring (cycle through 3 colors)
   vec3 color;
   float colorRing = mod(v_ringId, 3.0);
@@ -153,7 +191,15 @@ void main() {
   
 
   
-  outColor = vec4(color, alpha * 0.6 + u_audio * 0.3);
+  // Low base alpha: additive blending means overlapping strands accumulate into
+  // the bright cores on their own, so a faint per-line alpha reads as fine
+  // filaments instead of the solid mass a high one produced with points.
+  // A 1px line deposits far less light than the old point sprites did (which
+  // were 3-20px of soft falloff), and on a HiDPI buffer it covers half a CSS
+  // pixel, so this sits high. Additive blending still builds the bright cores
+  // where strands cross.
+  float alpha = (0.80 + u_audio * 0.20) * (0.60 + 0.40 * v_glow);
+  outColor = vec4(color, alpha);
 }
 `;
 
@@ -227,6 +273,22 @@ function createFullscreenTriangleVAO() {
   return localVao;
 }
 
+// Match the drawing buffer to the CSS box times the device pixel ratio, so a
+// HiDPI screen gets a 1:1 buffer instead of an upscaled one. Cheap enough to
+// call per frame, which also covers resizes and DPR changes between monitors.
+function resizeCanvasToDisplaySize() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width * dpr));
+  const h = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+    gl.viewport(0, 0, w, h);
+  }
+  return dpr;
+}
+
 function ensureFftTexture(size) {
   if (!gl) return;
   if (!fftTexture) {
@@ -267,12 +329,8 @@ function updateFftTexture() {
   if (fftUpdateCounter < 2) return;
   fftUpdateCounter = 0;
   
-  if (!audioPaused && v && v.analyser && v.dataArray) {
-    v.analyser.getFloatFrequencyData(v.dataArray);
-  }
-
-  const src = v && v.dataArray;
-  if (!src || !src.length) {
+  const analyser = v && v.analyser;
+  if (!analyser || !analyser.frequencyBinCount) {
     ensureFftTexture(1);
     if (fftData8) fftData8[0] = 0;
     audioLevelSmoothed = audioLevelSmoothed * 0.9;
@@ -281,25 +339,21 @@ function updateFftTexture() {
     return;
   }
 
-  ensureFftTexture(src.length);
+  ensureFftTexture(analyser.frequencyBinCount);
   if (!fftData8) return;
 
-  for (let i = 0; i < src.length; i++) {
-    const db = src[i];
-    const norm = Math.min(1, Math.max(0, (db + 100) / 100));
-    fftData8[i] = Math.floor(norm * 255);
-  }
+  // getByteFrequencyData already normalizes dB to 0-255 against the analyser's
+  // own minDecibels/maxDecibels, so it fills the upload buffer directly. While
+  // paused we leave the last frame in place - u_time is frozen too, so the
+  // figure holds its shape rather than collapsing.
+  if (!audioPaused) analyser.getByteFrequencyData(fftData8);
 
   let bassAvg = 0;
   if (!audioPaused) {
-    const bassCount = Math.max(1, Math.floor(src.length * 0.1));
+    const bassCount = Math.max(1, Math.floor(fftData8.length * 0.1));
     let bassSum = 0;
-    for (let i = 0; i < bassCount; i++) {
-      const db = src[i];
-      const norm = Math.min(1, Math.max(0, (db + 100) / 100));
-      bassSum += norm;
-    }
-    bassAvg = bassSum / bassCount;
+    for (let i = 0; i < bassCount; i++) bassSum += fftData8[i];
+    bassAvg = bassSum / (bassCount * 255);
   }
   audioLevelSmoothed = audioLevelSmoothed * 0.88 + bassAvg * 0.12;
   if (audioPaused && audioLevelSmoothed < 0.01) audioLevelSmoothed = 0;
@@ -322,6 +376,8 @@ function updateFftTexture() {
 function drawOnce(timeMs = 0) {
   if (isContextLost) return;
 
+  resizeCanvasToDisplaySize();
+
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
   
@@ -340,7 +396,7 @@ function drawOnce(timeMs = 0) {
   if (vertexCountLoc) {
     gl.uniform1f(vertexCountLoc, vertexCount);
   }
-  updateFftTexture(); // SLOW - calls getFloatFrequencyData
+  updateFftTexture();
   if (fftTexture && fftLoc) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fftTexture);
@@ -350,7 +406,12 @@ function drawOnce(timeMs = 0) {
     gl.uniform1f(audioLoc, audioLevelSmoothed);
   }
   gl.bindVertexArray(vao);
-  gl.drawArrays(gl.POINTS, 0, vertexCount);
+  // LINE_LOOP closes each ring back to its first vertex; a single strip across
+  // the whole buffer would instead stitch ring N's end to ring N+1's start.
+  // Nine draw calls is negligible next to one draw of 7200 points.
+  for (let ring = 0; ring < ringCount; ring++) {
+    gl.drawArrays(gl.LINE_LOOP, ring * verticesPerRing, verticesPerRing);
+  }
   gl.bindVertexArray(null);
 }
 
@@ -380,6 +441,14 @@ function start() {
   audioLoc = gl.getUniformLocation(program, 'u_audio');
   vertexCountLoc = gl.getUniformLocation(program, 'u_vertexCount');
   vao = createFullscreenTriangleVAO();
+
+  // The canvas has no CSS size of its own, so its layout size would otherwise
+  // follow the width/height attributes and feed back into the resize check.
+  // Pin it to the parent box first.
+  canvas.style.display = 'block';
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  resizeCanvasToDisplaySize();
 
   fftSize = 0;
   ensureFftTexture(1);
