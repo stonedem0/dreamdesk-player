@@ -384,6 +384,17 @@ function processAudioData(data) {
     dockEl.style.top  = `${Math.round(r.bottom + DOCK_GAP_PX)}px`;
   }
 
+  // The visualizer docks to the player's right edge, top-aligned, the way the
+  // Milkdrop window sat in Winamp - rather than stacking underneath like the
+  // playlist and EQ do.
+  function positionDockRight(dockEl) {
+    if (!dockEl || dockEl.style.display === 'none') return;
+    const r = getPlayerRectCached();
+    if (!r) return;
+    dockEl.style.left = `${Math.round(r.right + DOCK_GAP_PX)}px`;
+    dockEl.style.top  = `${Math.round(r.top)}px`;
+  }
+
   function positionDockBelow(anchorEl, dockEl) {
     if (!anchorEl || !dockEl || dockEl.style.display === 'none') return;
     const r = anchorEl.getBoundingClientRect();
@@ -410,6 +421,8 @@ function processAudioData(data) {
       } else if (eqVisible) {
         positionDock(eq);
       }
+      const viz = document.getElementById('webgl-viz');
+      if (isVisible(viz)) positionDockRight(viz);
       // avoid layout thrash by updating cache once per RAF
       updatePlayerRectCache();
       _dockFollowRaf = window.requestAnimationFrame(tick);
@@ -418,6 +431,11 @@ function processAudioData(data) {
   }
 
   function stopFollowingDock() {
+    // The PL/EQ handlers call this whenever their own dock closes, so check that
+    // no other dock still needs to track the player window before stopping.
+    const stillDocked = ['playlist-dock', 'eq-dock', 'webgl-viz']
+      .some((id) => isVisible(document.getElementById(id)));
+    if (stillDocked) return;
     if (_dockFollowRaf) cancelAnimationFrame(_dockFollowRaf);
     _dockFollowRaf = 0;
   }
@@ -506,6 +524,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
   const uploadInput = document.getElementById('upload-input');
   const plButton = document.getElementById('pl-button');
   const eqButton = document.getElementById('eq-button');
+  const vizButton = document.getElementById('viz-button');
 
   if ((!seekSlider && !volumeSlider) || !visualizer || !visualizer.audio) return;
 
@@ -685,6 +704,20 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       } else {
         stopFollowingDock();
       }
+    }
+  });
+
+  vizButton?.addEventListener('click', () => {
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock) return;
+    if (isVisible(vizDock)) {
+      hideDockAnimated(vizDock);
+      stopFollowingDock();
+    } else {
+      updatePlayerRectCache();
+      showDockAnimated(vizDock);
+      positionDockRight(vizDock);
+      startFollowingDock();
     }
   });
 
@@ -978,6 +1011,7 @@ if (document.readyState === 'loading') {
 window.addEventListener('resize', () => {
   positionDock(document.getElementById('playlist-dock'));
   positionDock(document.getElementById('eq-dock'));
+  positionDockRight(document.getElementById('webgl-viz'));
 });
   
 

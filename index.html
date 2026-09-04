@@ -60,6 +60,8 @@
                             aria-label="Equalizer">EQ</button>
                         <button type="button" id="pl-button" class="mini-btn" title="Playlist"
                             aria-label="Playlist">PL</button>
+                        <button type="button" id="viz-button" class="mini-btn" title="Visualizer"
+                            aria-label="Visualizer">VIZ</button>
                     </div>
                     <div class="seek-controls">
                         <input type="range" min="0" max="100" value="0" step="1" class="seek-slider" id="seek-slider">
@@ -67,8 +69,7 @@
                 </div>
             </div>
         </dreamdesk-window>
-        <div id="webgl-viz"
-            style="width: 420px; height: 320px; background: #000; border: 2px solid #ff8500; margin-left: 10px;">
+        <div id="webgl-viz" style="display:none;">
             <canvas id="glcanvas" width="420" height="320"></canvas>
         </div>
         <div id="playlist-dock" style="display:none;">
