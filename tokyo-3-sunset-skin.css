@@ -1,0 +1,327 @@
+/**
+ * Tokyo-3 Sunset Theme
+ * A dark, neon-inspired theme with warm orange/amber gradient accents
+ */
+
+:root {
+  /* Typography */
+  --player-font-size-sunset: 12px;
+  --player-font-size-small-sunset: 10px;
+
+  /* Primary Background Colors */
+  --color-bg-primary: #000b19;
+  --color-bg-soft: #000b19ba;
+  --color-bg-strong: #000b19db;
+
+  /* Border & Accent Colors */
+  --color-border-sunset: #d0774a;
+  --color-border-subtle-sunset: #d0694a;
+  --color-border-subtle: var(--color-border-subtle-sunset);
+
+  /* Primary Accent Colors */
+  --color-accent-primary: #ff9e00;
+  --color-accent-light: #ffb600;
+  --color-accent-mid: #ff8500;
+
+  /* Gradient - Main visual element */
+  --gradient-primary: linear-gradient(
+    90deg,
+    #ff4800 0%,
+    #ff5400 10%,
+    #ff6000 20%,
+    #ff6d00 30%,
+    #ff7900 40%,
+    #ff8500 50%,
+    #ff9100 60%,
+    #ff9e00 70%,
+    #ffaa00 80%,
+    #ffb600 100%
+  );
+
+  /* Gradient - Vertical for EQ sliders */
+  --gradient-eq-vertical: linear-gradient(
+    180deg,
+    #ff4800 0%,
+    #ff5400 10%,
+    #ff6000 20%,
+    #ff6d00 30%,
+    #ff7900 40%,
+    var(--color-accent-mid) 50%,
+    #ff9100 60%,
+    var(--color-accent-primary) 70%,
+    #ffaa00 80%,
+    var(--color-accent-light) 100%
+  );
+
+  /* Text Colors */
+  --color-text-primary: #fff6a9;
+  --color-text-secondary: #ffb600;
+  --color-text-accent: #ff9e00;
+
+  /* UI Control Elements */
+  --color-slider-bg: #0d1624;
+  --color-slider-thumb: #080808;
+  --color-button-bg: #000000b9;
+  --color-button-inactive-bg: #1d1c1c;
+  --color-button-press-bg: #1b1b1b;
+  --color-button-thumb-inactive: #1e1d1d;
+  --color-display-bg: #001127c9;
+
+  /* Neon/Glow Effects */
+  --color-neon-primary: #ffa500;
+  --color-neon-glow: rgba(255, 165, 0, 0.85);
+  --color-neon-red: #ff0000;
+
+  /* Utility Colors */
+  --color-pure-black: #000000;
+
+  /* Override default pink border/text colors from styles.css */
+  --border-color: #d0774a;
+  --color-text-primary: #fff6a9;
+
+  /* Deprecated legacy vars for backward compatibility */
+  --player-bg: var(--color-bg-primary);
+  --player-bg-soft: var(--color-bg-soft);
+  --player-bg-strong: var(--color-bg-strong);
+  --player-gradient: var(--gradient-primary);
+
+  /* Dreamdesk Window UI - Sunset Theme */
+  --dd-window-body: #000;
+  --dd-window-text: #fff6a9;
+  --dd-window-border: 1px solid transparent;
+  --dd-border: 2px solid transparent;
+  --dd-header-bg: var(--gradient-primary);
+  --dd-header-color: #2d1b3d;
+  --dd-header-shadow: none;
+  --dd-header-height: 1.2rem;
+  --dd-body-padding: 0;
+  --dd-controls-bg: #1d1c1c;
+  --dd-controls-bg-hover: #121212;
+  --dd-controls-bg-active: #1e1e1e;
+  --dd-controls-border: 1px solid #ff8500;
+  --dd-controls-fg: #ff8500;
+  --dd-controls-shadow: 0 0 6px rgba(255,133,0,0.35);
+  --dd-controls-icon-size: 2rem;
+}
+
+/* Player background image */
+.player {
+  background-image: url("public/img/image-asset.jpeg");
+  background-size: 100%;
+  background-position: center;
+  background-position: 50% 33%;
+}
+
+#player-window {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+    var(--player-gradient, var(--gradient-primary));
+  background-origin: padding-box, border-box; 
+ 
+}
+
+#playlist-dock {
+  border: 2px solid transparent;
+  border-top: none;
+  background-image: url('public/img/playlist-bg.png'), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+
+  .playlist-header {
+    padding: 4px 6px;
+  }
+
+  .track-list {
+    height: calc(100% - 15px);
+    max-height: calc(100% - 15px);
+    background: transparent !important;
+  }
+
+  .track-items li {
+    color: var(--color-text-secondary);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+}
+#eq-dock {
+  border: 2px solid transparent;
+  border-top: none;
+  background-image: url("public/img/eq-bg.webp"), var(--gradient-primary);
+  background-size: cover, auto;
+  background-position: center, center;
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+}
+/* Skin-specific EQ slider styling */
+.eq-slider::-webkit-slider-runnable-track {
+  width: 6px;
+  height: 112px;
+  background: var(--gradient-eq-vertical);
+  border: 1px solid var(--color-border-sunset);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 246, 169, 0.22),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.65);
+}
+.eq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 8px;
+  background: var(--color-slider-thumb);
+  border: 1px solid var(--color-border-sunset);
+  border-radius: 0;
+  cursor: pointer;
+  margin-left: -3.5px;
+  transform: translateX(-0.5px);
+}
+
+/* Firefox */
+.eq-slider::-moz-range-track {
+  width: 6px;
+  height: 112px;
+  background: var(--gradient-eq-vertical);
+  border: 1px solid var(--color-border-sunset);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 246, 169, 0.22),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.65);
+}
+.eq-slider::-moz-range-thumb {
+  width: 13px;
+  height: 8px;
+  background: var(--color-slider-thumb);
+  border: 1px solid var(--color-border-sunset);
+  border-radius: 0;
+  margin-left: -3.5px;
+  transform: translateX(-0.5px);
+}
+
+/* Override all --color-border usages with sunset colors */
+#playlist-dock .playlist-header {
+  color: var(--color-text-secondary);
+  border-bottom-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-header {
+  color: var(--color-text-secondary);
+  border-bottom-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-side .presets-menu {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .nds label {
+  color: var(--color-border-sunset) !important;
+}
+
+#eq-dock .eq-presets input.eq-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.display .audiowave {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .display .current-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#track-list {
+  color: var(--color-text-secondary);
+}
+
+#track-list::-webkit-scrollbar-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+#track-list::-webkit-scrollbar-button:vertical:decrement {
+  background-color: var(--color-border-sunset) !important;
+}
+
+#track-list::-webkit-scrollbar-button:vertical:increment {
+  background-color: var(--color-border-sunset) !important;
+}
+
+.mini-btn {
+  border-color: var(--color-border-sunset) !important;
+  color: var(--color-text-secondary);
+}
+
+.volume-slider {
+  border:none;
+}
+
+.balance-slider {
+  border:none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  border:none;
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-text-secondary) !important;
+}
+
+.balance-slider::-webkit-slider-thumb {
+  border:none;
+  color: var(--color-texty) !important;
+  background-color: var(--color-text-secondary) !important;
+}
+
+.volume-slider::-moz-range-track {
+  border:none;
+}
+
+.seek-slider::-moz-range-track {
+  border:none;
+}
+
+.seek-slider::-moz-range-thumb {
+  color: var(--color-text-accent);
+  background-color: black
+}
+
+.seek-slider::-webkit-slider-thumb {
+  color: var(--color-text-secondary);
+  background-color: black;
+}
+
+
+
+.balance-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .screen .value {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.seek-slider {
+  color: var(--color-border-sunset) !important;
+  border-color: var(--color-border-sunset) !important;
+}
+
+.player .display .player-controls button {
+  border-color: var(--color-border-sunset) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+#eq-dock .eq-presets label {
+  color: var(--color-border-sunset) !important;
+}
+
+.eq-slider {
+  color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-webkit-slider-runnable-track {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-webkit-slider-thumb {
+  border-color: var(--color-border-sunset) !important;
+}
+
+.eq-slider::-moz-range-track {
+  border-color: var(--color-border-sunset) !important;
+}
