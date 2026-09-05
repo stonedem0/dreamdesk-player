@@ -116,12 +116,10 @@ body {
   position: fixed;
   top: var(--player-top);
   left: calc(var(--player-left) + 297px);
-  /* Fixed at the height of the full player + playlist + EQ stack, regardless of
-     which of those are currently open. 455 + 2px of border = 457, the measured
-     span from the player's top to the EQ's bottom - the stacked docks overlap
-     by a few px each where border-top: none meets the one above, so this is
-     less than the nominal 145 + 145 + 165. Width leaves the canvas square
-     (435 wide, 455 - 20px header tall). */
+  /* Height is a starting value only - applyVizStackHeight() in player.js
+     overwrites it inline with the measured height of the full player +
+     playlist + EQ stack, since the player window's rendered height varies by
+     platform. Width leaves the canvas roughly square. */
   width: 435px;
   height: 455px;
   background: #000;
