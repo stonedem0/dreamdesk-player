@@ -716,6 +716,11 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     } else {
       updatePlayerRectCache();
       showDockAnimated(vizDock);
+      // showDockAnimated sets display:block inline, which would beat the
+      // stylesheet's display:flex and leave the canvas sizing itself from its
+      // intrinsic aspect instead of filling what the header leaves. isVisible()
+      // and positionDockRight() only test against 'none', so flex is fine here.
+      vizDock.style.display = 'flex';
       positionDockRight(vizDock);
       startFollowingDock();
     }

@@ -116,14 +116,46 @@ body {
   position: fixed;
   top: var(--player-top);
   left: calc(var(--player-left) + 297px);
-  /* Fixed at the height of the full player + playlist + EQ stack (145 + 145 +
-     165), regardless of which of those are currently open. */
-  width: 540px;
-  height: 465px;
+  /* Fixed at the height of the full player + playlist + EQ stack, regardless of
+     which of those are currently open. 455 + 2px of border = 457, the measured
+     span from the player's top to the EQ's bottom - the stacked docks overlap
+     by a few px each where border-top: none meets the one above, so this is
+     less than the nominal 145 + 145 + 165. Width leaves the canvas square
+     (435 wide, 455 - 20px header tall). */
+  width: 435px;
+  height: 455px;
   background: #000;
   border: 1px solid var(--border-color);
   border-left: none;
   z-index: 2147483636; /* below the playlist */
+  display: flex;
+  flex-direction: column;
+
+  .viz-header {
+    flex: 0 0 auto;
+    padding: 4px 6px;
+    background: rgba(0, 11, 25, 0.6);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--color-text-primary);
+    font-size: var(--player-font-size-small);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  /* Sized here rather than inline from main.js. Flex gives the canvas whatever
+     the header leaves, so there is no header height to hardcode and keep in
+     sync - .track-list's own calc(100% - 22px) is already 2px out. */
+  #glcanvas {
+    display: block;
+    width: 100%;
+    /* basis 0, not auto: with auto the canvas falls back to its intrinsic size
+       from the width/height attributes, which main.js then rewrites from the
+       measured box - a feedback loop that settles on a square. */
+    flex: 1 1 0;
+    min-height: 0;
+  }
 }
 
 /* =============================================================================

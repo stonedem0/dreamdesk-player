@@ -460,12 +460,9 @@ function start() {
   vertexCountLoc = gl.getUniformLocation(program, 'u_vertexCount');
   vao = createFullscreenTriangleVAO();
 
-  // The canvas has no CSS size of its own, so its layout size would otherwise
-  // follow the width/height attributes and feed back into the resize check.
-  // Pin it to the parent box first.
-  canvas.style.display = 'block';
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  // The canvas must have a CSS size of its own, or its layout size follows the
+  // width/height attributes and feeds back into the resize check. styles.css
+  // sizes #glcanvas against the dock minus the header.
   resizeCanvasToDisplaySize();
 
   fftSize = 0;
