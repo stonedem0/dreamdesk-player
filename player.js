@@ -475,6 +475,32 @@ function processAudioData(data) {
     _dockFollowRaf = 0;
   }
 
+  // Opening the visualizer is a two-step affair the playlist and EQ don't need,
+  // so it lives here rather than being repeated in the button handler and in
+  // each branch of customFullscreen.
+  function showVizDock() {
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock) return;
+    showDockAnimated(vizDock);
+    // showDockAnimated writes display:block inline, which would beat the
+    // stylesheet's display:flex and leave the canvas sizing itself from its
+    // intrinsic aspect instead of filling what the header leaves. isVisible()
+    // and positionDockRight() only test against 'none', so flex is fine here.
+    vizDock.style.display = 'flex';
+  }
+
+  function layoutVizDock() {
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock || vizDock.style.display === 'none') return;
+    applyVizStackHeight(vizDock);
+    positionDockRight(vizDock);
+  }
+
+  function hideVizDock() {
+    const vizDock = document.getElementById('webgl-viz');
+    if (vizDock) hideDockAnimated(vizDock);
+  }
+
   // Smooth show/hide helpers for docks
   function showDockAnimated(el) {
     if (!el) return;
@@ -746,18 +772,12 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     const vizDock = document.getElementById('webgl-viz');
     if (!vizDock) return;
     if (isVisible(vizDock)) {
-      hideDockAnimated(vizDock);
+      hideVizDock();
       stopFollowingDock();
     } else {
       updatePlayerRectCache();
-      showDockAnimated(vizDock);
-      // showDockAnimated sets display:block inline, which would beat the
-      // stylesheet's display:flex and leave the canvas sizing itself from its
-      // intrinsic aspect instead of filling what the header leaves. isVisible()
-      // and positionDockRight() only test against 'none', so flex is fine here.
-      vizDock.style.display = 'flex';
-      applyVizStackHeight(vizDock);
-      positionDockRight(vizDock);
+      showVizDock();
+      layoutVizDock();
       startFollowingDock();
     }
   });
@@ -1068,12 +1088,14 @@ window.DreamDeskAnimations = {
         
         showDockAnimated(playlistDock);
         showDockAnimated(eqDock);
+        showVizDock();
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
           updatePlayerRectCache();
           positionDock(playlistDock);
           positionDockBelow(playlistDock, eqDock);
+          layoutVizDock();
           startFollowingDock();
         });
         window._fsBootstrapDone = true;
@@ -1084,6 +1106,7 @@ window.DreamDeskAnimations = {
       if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
         hideDockAnimated(playlistDock);
         hideDockAnimated(eqDock);
+        hideVizDock();
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
@@ -1098,6 +1121,7 @@ window.DreamDeskAnimations = {
         window._preFsEqVisible = isVisible(eqDock);
         showDockAnimated(playlistDock);
         showDockAnimated(eqDock);
+        showVizDock();
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
 
@@ -1105,12 +1129,14 @@ window.DreamDeskAnimations = {
           updatePlayerRectCache();
           positionDock(playlistDock);
           positionDockBelow(playlistDock, eqDock);
+          layoutVizDock();
           startFollowingDock();
           window._isFullscreenActive = true;
         });
       } else {
         hideDockAnimated(playlistDock);
         hideDockAnimated(eqDock);
+        hideVizDock();
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
