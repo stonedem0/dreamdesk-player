@@ -5,9 +5,12 @@
 // this script may well run before the graph exists.
 import { createVisualizer } from './main.js';
 
-const canvas = document.getElementById('glcanvas');
+const enabled = !!(window.FEATURES && window.FEATURES.visualizer);
+const canvas = enabled ? document.getElementById('glcanvas') : null;
 
-if (!canvas) {
+if (!enabled) {
+  // Flag off: never touch WebGL at all, so a disabled visualizer costs nothing.
+} else if (!canvas) {
   console.warn('Missing <canvas id="glcanvas"> - visualizer not started');
 } else {
   const viz = createVisualizer({

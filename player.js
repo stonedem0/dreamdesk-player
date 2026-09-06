@@ -478,7 +478,12 @@ function processAudioData(data) {
   // Opening the visualizer is a two-step affair the playlist and EQ don't need,
   // so it lives here rather than being repeated in the button handler and in
   // each branch of customFullscreen.
+  function vizEnabled() {
+    return !!(window.FEATURES && window.FEATURES.visualizer);
+  }
+
   function showVizDock() {
+    if (!vizEnabled()) return;
     const vizDock = document.getElementById('webgl-viz');
     if (!vizDock) return;
     showDockAnimated(vizDock);
@@ -586,6 +591,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
   const plButton = document.getElementById('pl-button');
   const eqButton = document.getElementById('eq-button');
   const vizButton = document.getElementById('viz-button');
+  if (vizButton && !vizEnabled()) vizButton.style.display = 'none';
 
   if ((!seekSlider && !volumeSlider) || !visualizer || !visualizer.audio) return;
 
