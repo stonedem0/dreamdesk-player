@@ -384,6 +384,52 @@ function processAudioData(data) {
     dockEl.style.top  = `${Math.round(r.bottom + DOCK_GAP_PX)}px`;
   }
 
+  // Height of a dock that may be closed. A closed one has no layout box, so it
+  // is briefly given display:block behind visibility:hidden - that yields the
+  // real rendered height without ever showing it.
+  function measuredDockHeight(el) {
+    if (!el) return 0;
+    if (el.style.display && el.style.display !== 'none') {
+      return el.getBoundingClientRect().height;
+    }
+    const prevDisplay = el.style.display;
+    const prevVisibility = el.style.visibility;
+    el.style.visibility = 'hidden';
+    el.style.display = 'block';
+    const h = el.getBoundingClientRect().height;
+    el.style.display = prevDisplay;
+    el.style.visibility = prevVisibility;
+    return h;
+  }
+
+  // Match the visualizer to the full player + playlist + EQ stack, open or not.
+  // Derived rather than hardcoded: the player window's rendered height varies
+  // with platform and font, so a fixed number is only ever right on one machine.
+  // Because the closed docks are measured too, this does not change as they are
+  // toggled - it only moves if the window itself changes size.
+  function applyVizStackHeight(dockEl) {
+    if (!dockEl) return;
+    const r = getPlayerRectCached();
+    let total = r ? r.height : 0;
+    total += measuredDockHeight(document.getElementById('playlist-dock'));
+    total += measuredDockHeight(document.getElementById('eq-dock'));
+    const cs = getComputedStyle(dockEl);
+    const ownBorders = (parseFloat(cs.borderTopWidth) || 0)
+                     + (parseFloat(cs.borderBottomWidth) || 0);
+    dockEl.style.height = `${Math.round(total - ownBorders)}px`;
+  }
+
+  // The visualizer docks to the player's right edge, top-aligned, the way the
+  // Milkdrop window sat in Winamp - rather than stacking underneath like the
+  // playlist and EQ do.
+  function positionDockRight(dockEl) {
+    if (!dockEl || dockEl.style.display === 'none') return;
+    const r = getPlayerRectCached();
+    if (!r) return;
+    dockEl.style.left = `${Math.round(r.right + DOCK_GAP_PX)}px`;
+    dockEl.style.top  = `${Math.round(r.top)}px`;
+  }
+
   function positionDockBelow(anchorEl, dockEl) {
     if (!anchorEl || !dockEl || dockEl.style.display === 'none') return;
     const r = anchorEl.getBoundingClientRect();
@@ -410,6 +456,8 @@ function processAudioData(data) {
       } else if (eqVisible) {
         positionDock(eq);
       }
+      const viz = document.getElementById('webgl-viz');
+      if (isVisible(viz)) positionDockRight(viz);
       // avoid layout thrash by updating cache once per RAF
       updatePlayerRectCache();
       _dockFollowRaf = window.requestAnimationFrame(tick);
@@ -418,8 +466,44 @@ function processAudioData(data) {
   }
 
   function stopFollowingDock() {
+    // The PL/EQ handlers call this whenever their own dock closes, so check that
+    // no other dock still needs to track the player window before stopping.
+    const stillDocked = ['playlist-dock', 'eq-dock', 'webgl-viz']
+      .some((id) => isVisible(document.getElementById(id)));
+    if (stillDocked) return;
     if (_dockFollowRaf) cancelAnimationFrame(_dockFollowRaf);
     _dockFollowRaf = 0;
+  }
+
+  // Opening the visualizer is a two-step affair the playlist and EQ don't need,
+  // so it lives here rather than being repeated in the button handler and in
+  // each branch of customFullscreen.
+  function vizEnabled() {
+    return !!(window.FEATURES && window.FEATURES.visualizer);
+  }
+
+  function showVizDock() {
+    if (!vizEnabled()) return;
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock) return;
+    showDockAnimated(vizDock);
+    // showDockAnimated writes display:block inline, which would beat the
+    // stylesheet's display:flex and leave the canvas sizing itself from its
+    // intrinsic aspect instead of filling what the header leaves. isVisible()
+    // and positionDockRight() only test against 'none', so flex is fine here.
+    vizDock.style.display = 'flex';
+  }
+
+  function layoutVizDock() {
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock || vizDock.style.display === 'none') return;
+    applyVizStackHeight(vizDock);
+    positionDockRight(vizDock);
+  }
+
+  function hideVizDock() {
+    const vizDock = document.getElementById('webgl-viz');
+    if (vizDock) hideDockAnimated(vizDock);
   }
 
   // Smooth show/hide helpers for docks
@@ -506,6 +590,8 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
   const uploadInput = document.getElementById('upload-input');
   const plButton = document.getElementById('pl-button');
   const eqButton = document.getElementById('eq-button');
+  const vizButton = document.getElementById('viz-button');
+  if (vizButton && !vizEnabled()) vizButton.style.display = 'none';
 
   if ((!seekSlider && !volumeSlider) || !visualizer || !visualizer.audio) return;
 
@@ -685,6 +771,20 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
       } else {
         stopFollowingDock();
       }
+    }
+  });
+
+  vizButton?.addEventListener('click', () => {
+    const vizDock = document.getElementById('webgl-viz');
+    if (!vizDock) return;
+    if (isVisible(vizDock)) {
+      hideVizDock();
+      stopFollowingDock();
+    } else {
+      updatePlayerRectCache();
+      showVizDock();
+      layoutVizDock();
+      startFollowingDock();
     }
   });
 
@@ -978,6 +1078,9 @@ if (document.readyState === 'loading') {
 window.addEventListener('resize', () => {
   positionDock(document.getElementById('playlist-dock'));
   positionDock(document.getElementById('eq-dock'));
+  const vizDock = document.getElementById('webgl-viz');
+  if (vizDock && vizDock.style.display !== 'none') applyVizStackHeight(vizDock);
+  positionDockRight(vizDock);
 });
   
 
@@ -991,12 +1094,14 @@ window.DreamDeskAnimations = {
         
         showDockAnimated(playlistDock);
         showDockAnimated(eqDock);
+        showVizDock();
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
         window.requestAnimationFrame(() => {
           updatePlayerRectCache();
           positionDock(playlistDock);
           positionDockBelow(playlistDock, eqDock);
+          layoutVizDock();
           startFollowingDock();
         });
         window._fsBootstrapDone = true;
@@ -1007,6 +1112,7 @@ window.DreamDeskAnimations = {
       if (window._isFullscreenActive && isFullscreen === true && window._fsBootstrapDone) {
         hideDockAnimated(playlistDock);
         hideDockAnimated(eqDock);
+        hideVizDock();
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again
@@ -1021,6 +1127,7 @@ window.DreamDeskAnimations = {
         window._preFsEqVisible = isVisible(eqDock);
         showDockAnimated(playlistDock);
         showDockAnimated(eqDock);
+        showVizDock();
         if ((window.visualizer || visualizer)?.buildTrackList) (window.visualizer || visualizer).buildTrackList();
         if (typeof wireEq === 'function') wireEq();
 
@@ -1028,12 +1135,14 @@ window.DreamDeskAnimations = {
           updatePlayerRectCache();
           positionDock(playlistDock);
           positionDockBelow(playlistDock, eqDock);
+          layoutVizDock();
           startFollowingDock();
           window._isFullscreenActive = true;
         });
       } else {
         hideDockAnimated(playlistDock);
         hideDockAnimated(eqDock);
+        hideVizDock();
         stopFollowingDock();
         window._isFullscreenActive = false;
         // reset bootstrap and previous-state markers so next enter can bootstrap again

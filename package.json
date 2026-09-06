@@ -6,7 +6,8 @@
   "module": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./css": "./src/player.css"
+    "./css": "./src/player.css",
+    "./visualizer": "./visualizer.js"
   },
   "scripts": {
     "dev": "vite",

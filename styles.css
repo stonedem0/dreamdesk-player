@@ -111,6 +111,55 @@ body {
   z-index: 2147483638; /* above playlist */
 }
 
+/* Visualizer dock - sits to the right of the player, Milkdrop style */
+#webgl-viz {
+  position: fixed;
+  top: var(--player-top);
+  left: calc(var(--player-left) + 297px);
+  /* Canvas clear colour and panel fill both come from this - visualizer-boot.js
+     reads it and passes it to createVisualizer, so they cannot drift apart. */
+  --viz-bg: #0d0a09;
+
+  /* Height is a starting value only - applyVizStackHeight() in player.js
+     overwrites it inline with the measured height of the full player +
+     playlist + EQ stack, since the player window's rendered height varies by
+     platform. Width leaves the canvas roughly square. */
+  width: 435px;
+  height: 455px;
+  background: var(--viz-bg);
+  border: 1px solid var(--border-color);
+  border-left: none;
+  z-index: 2147483636; /* below the playlist */
+  display: flex;
+  flex-direction: column;
+
+  .viz-header {
+    flex: 0 0 auto;
+    padding: 4px 6px;
+    background: rgba(0, 11, 25, 0.6);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--color-text-primary);
+    font-size: var(--player-font-size-small);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  /* Sized here rather than inline from main.js. Flex gives the canvas whatever
+     the header leaves, so there is no header height to hardcode and keep in
+     sync - .track-list's own calc(100% - 22px) is already 2px out. */
+  #glcanvas {
+    display: block;
+    width: 100%;
+    /* basis 0, not auto: with auto the canvas falls back to its intrinsic size
+       from the width/height attributes, which main.js then rewrites from the
+       measured box - a feedback loop that settles on a square. */
+    flex: 1 1 0;
+    min-height: 0;
+  }
+}
+
 /* =============================================================================
    SKIN SWITCHER
    ============================================================================= */
@@ -500,7 +549,7 @@ body {
 /* Volume Slider */
 .volume-slider {
   appearance: none;
-  width: 70px;
+  width: 54px;
   height: 6px;
   margin-top: 0px;
   margin-left: 0;
@@ -543,7 +592,7 @@ body {
 /* Balance Slider */
 .balance-slider {
   appearance: none;
-  width: 40px;
+  width: 32px;
   height: 6px;
   margin-top: 0px;
   margin-left: 0;
@@ -627,8 +676,8 @@ body {
 .mini-btn {
   font-size: var(--player-font-size);
   height: 18px;
-  min-width: 28px;
-  padding: 0 6px;
+  min-width: 24px;
+  padding: 0 4px;
   background-color: var(--player-bg-soft);
   color: var(--color-text-primary);
   border: 0.5px solid var(--border-color);

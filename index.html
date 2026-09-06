@@ -14,7 +14,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/pastelcore.css" />
     <link rel="stylesheet" href="styles.css" />
     <link id="skin-stylesheet" rel="stylesheet" href="">
+    <script src="features.js"></script>
     <script src="player.js" defer></script>
+    <script type="module" src="visualizer-boot.js"></script>
     <script src="skin-switcher.js"></script>
 </head>
 
@@ -59,6 +61,8 @@
                             aria-label="Equalizer">EQ</button>
                         <button type="button" id="pl-button" class="mini-btn" title="Playlist"
                             aria-label="Playlist">PL</button>
+                        <button type="button" id="viz-button" class="mini-btn" title="Visualizer"
+                            aria-label="Visualizer">VIZ</button>
                     </div>
                     <div class="seek-controls">
                         <input type="range" min="0" max="100" value="0" step="1" class="seek-slider" id="seek-slider">
@@ -66,6 +70,10 @@
                 </div>
             </div>
         </dreamdesk-window>
+        <div id="webgl-viz" style="display:none;">
+            <div class="viz-header">visualizer</div>
+            <canvas id="glcanvas" width="420" height="320"></canvas>
+        </div>
         <div id="playlist-dock" style="display:none;">
             <div class="playlist-header">playlist</div>
             <div class="track-list scrollable" id="track-list">
