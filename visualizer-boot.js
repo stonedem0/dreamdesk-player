@@ -3,7 +3,7 @@
 // player.js owns the audio graph and publishes it as window.visualizer, so the
 // getters read from there per frame rather than capturing it at load time -
 // this script may well run before the graph exists.
-import { createVisualizer } from './main.js';
+import { createVisualizer } from './visualizer.js';
 
 const enabled = !!(window.FEATURES && window.FEATURES.visualizer);
 const canvas = enabled ? document.getElementById('glcanvas') : null;

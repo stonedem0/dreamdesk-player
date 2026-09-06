@@ -40,5 +40,17 @@
     } catch (_) { /* private mode - the flag just won't persist */ }
   }
 
+  // Say so when a flag is not at its default. Without this an enabled flag is
+  // invisible - the VIZ button simply appears - and it is easy to forget you
+  // are not seeing what everyone else sees on the published site.
+  const overridden = Object.keys(DEFAULTS).filter((k) => flags[k] !== DEFAULTS[k]);
+  if (overridden.length) {
+    console.info(
+      '[features] non-default: ' +
+        overridden.map((k) => k + '=' + flags[k]).join(', ') +
+        ' (reset with ?' + overridden[0] + '=' + (DEFAULTS[overridden[0]] ? 1 : 0) + ')'
+    );
+  }
+
   window.FEATURES = flags;
 })();
