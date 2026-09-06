@@ -179,6 +179,11 @@ void main() {
  *        Used only to tell playing from paused from stopped.
  * @param {(err: Error) => void} [options.onError]
  *        Called instead of throwing when WebGL2 is unavailable.
+ * @param {[number, number, number]} [options.background]
+ *        Clear colour, as 0-1 per channel (so 0.07 lands near #12). The canvas
+ *        is opaque, so this covers whatever the element sits on; the default is
+ *        a near-black warm tone rather than pure black, which reads as a hole
+ *        next to the sunset skin.
  * @returns {{ start: () => void, stop: () => void, destroy: () => void }}
  */
 export function createVisualizer(options = {}) {
@@ -187,6 +192,7 @@ export function createVisualizer(options = {}) {
     getAnalyser = () => null,
     getAudio = () => null,
     onError = null,
+    background = [0.07, 0.035, 0.023],
   } = options;
 
   if (!canvas) throw new Error('createVisualizer: options.canvas is required');
@@ -440,7 +446,7 @@ export function createVisualizer(options = {}) {
 
     const dpr = resizeCanvasToDisplaySize();
 
-    gl.clearColor(0, 0, 0, 1);
+    gl.clearColor(background[0], background[1], background[2], 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Stopped means an empty screen, not a frozen figure. Zero the retained FFT

@@ -116,13 +116,17 @@ body {
   position: fixed;
   top: var(--player-top);
   left: calc(var(--player-left) + 297px);
+  /* Canvas clear colour and panel fill both come from this - visualizer-boot.js
+     reads it and passes it to createVisualizer, so they cannot drift apart. */
+  --viz-bg: #0d0a09;
+
   /* Height is a starting value only - applyVizStackHeight() in player.js
      overwrites it inline with the measured height of the full player +
      playlist + EQ stack, since the player window's rendered height varies by
      platform. Width leaves the canvas roughly square. */
   width: 435px;
   height: 455px;
-  background: #000;
+  background: var(--viz-bg);
   border: 1px solid var(--border-color);
   border-left: none;
   z-index: 2147483636; /* below the playlist */

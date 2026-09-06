@@ -164,7 +164,7 @@
   border: 2px solid transparent;
   border-left: none;
   background-image:
-    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+    linear-gradient(var(--viz-bg), var(--viz-bg)),
     var(--gradient-primary);
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
@@ -225,6 +225,8 @@
 #webgl-viz .viz-header {
   color: var(--color-text-secondary);
   border-bottom-color: var(--color-border-sunset) !important;
+  /* Same colour as the panel; the border-bottom is what separates them. */
+  background: var(--viz-bg);
 }
 
 #eq-dock .eq-side .presets-menu {

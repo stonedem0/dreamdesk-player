@@ -13,8 +13,21 @@ if (!enabled) {
 } else if (!canvas) {
   console.warn('Missing <canvas id="glcanvas"> - visualizer not started');
 } else {
+  // Keep the clear colour in step with the panel behind it: styles.css owns
+  // --viz-bg, so a skin can restyle both by setting one property.
+  const cssBg = getComputedStyle(canvas).getPropertyValue('--viz-bg').trim();
+  const hex = /^#([0-9a-f]{6})$/i.exec(cssBg);
+  const background = hex
+    ? [
+        parseInt(hex[1].slice(0, 2), 16) / 255,
+        parseInt(hex[1].slice(2, 4), 16) / 255,
+        parseInt(hex[1].slice(4, 6), 16) / 255,
+      ]
+    : undefined;
+
   const viz = createVisualizer({
     canvas,
+    background,
     getAnalyser: () => window.visualizer && window.visualizer.analyser,
     getAudio: () => window.visualizer && window.visualizer.audio,
     onError: (err) => console.warn('Visualizer unavailable:', err.message),
