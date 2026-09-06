@@ -112,7 +112,13 @@ void main() {
 
   // Only meaningful when drawing POINTS. Scales with the backing store so the
   // halo keeps the same visual size on a HiDPI canvas.
-  gl_PointSize = (10.0 + fftVal * 26.0 + u_audio * 22.0) * u_pixelRatio;
+  //
+  // Sized as a compromise: this is 7200 points of mostly-transparent fill every
+  // frame and the cost grows with the square of the radius, but the spread is
+  // also what reads as glow - halving it washed the effect out. 40px (80 at
+  // dpr 2) keeps the halo while shading about half the fragments of the 58px
+  // this started at.
+  gl_PointSize = (8.0 + fftVal * 18.0 + u_audio * 14.0) * u_pixelRatio;
 }
 `;
 
@@ -152,7 +158,7 @@ void main() {
     float r = length(d) * 2.0;
     if (r > 1.0) discard;
     float falloff = 1.0 - r;
-    alpha = falloff * falloff * (0.05 + u_audio * 0.09);
+    alpha = falloff * falloff * (0.06 + u_audio * 0.10);
   } else {
     // A 1px line deposits far less light than a point sprite, and on a HiDPI
     // buffer it covers half a CSS pixel, so this sits high. Additive blending
