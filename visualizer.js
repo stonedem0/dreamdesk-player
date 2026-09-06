@@ -6,6 +6,10 @@
 const vsSource = `#version 300 es
 in float a_vertexId;
 uniform float u_vertexCount;
+// 0 = crisp line pass, 1 = soft glow pass. A uniform, so the branch in the
+// fragment shader is uniform control flow and gl_PointCoord stays legal.
+uniform float u_mode;
+uniform float u_pixelRatio;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform sampler2D u_fft;
@@ -105,6 +109,10 @@ void main() {
   float y = sin(vertexRadians) * radius;
   
   gl_Position = vec4(x, y, 0.0, 1.0);
+
+  // Only meaningful when drawing POINTS. Scales with the backing store so the
+  // halo keeps the same visual size on a HiDPI canvas.
+  gl_PointSize = (10.0 + fftVal * 26.0 + u_audio * 22.0) * u_pixelRatio;
 }
 `;
 
@@ -115,6 +123,7 @@ uniform float u_audio;
 in float v_vertexRatio;
 in float v_ringId;
 in float v_glow;
+uniform float u_mode;
 out vec4 outColor;
 
 void main() {
@@ -134,14 +143,22 @@ void main() {
   
 
   
-  // Low base alpha: additive blending means overlapping strands accumulate into
-  // the bright cores on their own, so a faint per-line alpha reads as fine
-  // filaments instead of the solid mass a high one produced with points.
-  // A 1px line deposits far less light than the old point sprites did (which
-  // were 3-20px of soft falloff), and on a HiDPI buffer it covers half a CSS
-  // pixel, so this sits high. Additive blending still builds the bright cores
-  // where strands cross.
-  float alpha = (0.80 + u_audio * 0.20) * (0.60 + 0.40 * v_glow);
+  float alpha;
+  if (u_mode > 0.5) {
+    // Glow pass: a fat point with a soft radial falloff and a very low alpha.
+    // Additive blending stacks thousands of these into a halo beneath the
+    // lines - a bloom without the cost of a second framebuffer.
+    vec2 d = gl_PointCoord - vec2(0.5);
+    float r = length(d) * 2.0;
+    if (r > 1.0) discard;
+    float falloff = 1.0 - r;
+    alpha = falloff * falloff * (0.05 + u_audio * 0.09);
+  } else {
+    // A 1px line deposits far less light than a point sprite, and on a HiDPI
+    // buffer it covers half a CSS pixel, so this sits high. Additive blending
+    // still builds the bright cores where strands cross.
+    alpha = (0.80 + u_audio * 0.20) * (0.60 + 0.40 * v_glow);
+  }
   outColor = vec4(color, alpha);
 }
 `;
@@ -180,6 +197,8 @@ export function createVisualizer(options = {}) {
   let fftLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let audioLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let vertexCountLoc = /** @type {WebGLUniformLocation|null} */ (null);
+  let modeLoc = /** @type {WebGLUniformLocation|null} */ (null);
+  let pixelRatioLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let audioLevelSmoothed = 0;
   let fftTexture = /** @type {WebGLTexture|null} */ (null);
   let fftSize = 0;
@@ -223,6 +242,8 @@ export function createVisualizer(options = {}) {
     fftLoc = null;
     audioLoc = null;
     vertexCountLoc = null;
+    modeLoc = null;
+    pixelRatioLoc = null;
     // Also drop the context itself, so start() knows to rebuild rather than
     // reuse a dead one.
     gl = null;
@@ -411,7 +432,7 @@ export function createVisualizer(options = {}) {
   function drawOnce(timeMs = 0) {
     if (isContextLost) return;
 
-    resizeCanvasToDisplaySize();
+    const dpr = resizeCanvasToDisplaySize();
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -449,9 +470,19 @@ export function createVisualizer(options = {}) {
       gl.uniform1f(audioLoc, audioLevelSmoothed);
     }
     gl.bindVertexArray(vao);
+    if (pixelRatioLoc) {
+      gl.uniform1f(pixelRatioLoc, dpr);
+    }
+
+    // Glow pass first: the same vertices as fat soft points, laid down under
+    // the lines so additive blending builds a halo around them.
+    if (modeLoc) gl.uniform1f(modeLoc, 1.0);
+    gl.drawArrays(gl.POINTS, 0, vertexCount);
+
     // LINE_LOOP closes each ring back to its first vertex; a single strip across
     // the whole buffer would instead stitch ring N's end to ring N+1's start.
     // Nine draw calls is negligible next to one draw of 7200 points.
+    if (modeLoc) gl.uniform1f(modeLoc, 0.0);
     for (let ring = 0; ring < ringCount; ring++) {
       gl.drawArrays(gl.LINE_LOOP, ring * verticesPerRing, verticesPerRing);
     }
@@ -491,6 +522,8 @@ export function createVisualizer(options = {}) {
     fftLoc = gl.getUniformLocation(program, 'u_fft');
     audioLoc = gl.getUniformLocation(program, 'u_audio');
     vertexCountLoc = gl.getUniformLocation(program, 'u_vertexCount');
+    modeLoc = gl.getUniformLocation(program, 'u_mode');
+    pixelRatioLoc = gl.getUniformLocation(program, 'u_pixelRatio');
     vao = createFullscreenTriangleVAO();
 
     // The canvas must have a CSS size of its own, or its layout size follows the
