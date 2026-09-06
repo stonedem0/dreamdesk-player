@@ -154,6 +154,21 @@
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
 }
+
+/* Same two-layer trick as the docks above: the first layer clips to the
+   padding box and fills the panel, the second clips to the border box and
+   shows through the transparent border as the gradient. border-left is
+   dropped rather than border-top, since this dock butts against the player's
+   right edge rather than stacking underneath. */
+#webgl-viz {
+  border: 2px solid transparent;
+  border-left: none;
+  background-image:
+    linear-gradient(var(--color-bg-primary), var(--color-bg-primary)),
+    var(--gradient-primary);
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+}
 /* Skin-specific EQ slider styling */
 .eq-slider::-webkit-slider-runnable-track {
   width: 6px;
@@ -203,6 +218,11 @@
 }
 
 #eq-dock .eq-header {
+  color: var(--color-text-secondary);
+  border-bottom-color: var(--color-border-sunset) !important;
+}
+
+#webgl-viz .viz-header {
   color: var(--color-text-secondary);
   border-bottom-color: var(--color-border-sunset) !important;
 }
