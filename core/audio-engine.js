@@ -33,6 +33,11 @@ import { processAudioData } from './audio-data.js';
  * @property {(data: Float32Array) => number[]} [processor]
  *   Overrides the default scaling; the vanilla player let callers pass their
  *   own, so the seam is kept.
+ * @property {boolean} [loop]
+ *   Defaults true, as the vanilla player has always done. A host with its own
+ *   repeat and next-track logic wants false, or the track never ends.
+ * @property {string|null} [crossOrigin]
+ *   Set on the audio element; null leaves it alone.
  */
 
 export class AudioEngine {
@@ -47,6 +52,8 @@ export class AudioEngine {
       onMeta = null,
       onTime = null,
       processor = processAudioData,
+      loop = true,
+      crossOrigin = 'anonymous',
     } = options;
 
     this.onFrame = onFrame;
@@ -85,21 +92,29 @@ export class AudioEngine {
     /** @type {MediaElementAudioSourceNode|null} */
     this.source = null;
 
-    if (audioSrc) {
-      this.audio = new Audio(audioSrc);
-      this.audio.crossOrigin = 'anonymous';
-      this.audio.loop = true;
-      this.source = this.audioContext.createMediaElementSource(this.audio);
-      this.buildPannerChain();
-      this.audio.addEventListener('loadedmetadata', () => {
-        const d =
-          this.audio && isFinite(this.audio.duration)
-            ? Math.floor(this.audio.duration)
-            : 0;
-        this.emitMeta({ duration: d, khz: this.sampleRateKhz() });
-        this.computeAndEmitKbps(d);
-      });
-    }
+    // The element and the graph are built even with no src, so a host can wire
+    // the chain once at mount and assign src per track. createMediaElementSource
+    // may only be called once per element, which is why this cannot wait.
+    this.audio = new Audio();
+    if (crossOrigin !== null) this.audio.crossOrigin = crossOrigin;
+    this.audio.loop = loop;
+    if (audioSrc) this.audio.src = audioSrc;
+
+    this.source = this.audioContext.createMediaElementSource(this.audio);
+    this.buildPannerChain();
+
+    this.audio.addEventListener('loadedmetadata', () => {
+      // Nobody listening means nobody wants the bitrate either, and finding it
+      // can cost a full fetch. Hosts that track their own metadata pass no
+      // onMeta and pay nothing here.
+      if (!this.onMeta) return;
+      const d =
+        this.audio && isFinite(this.audio.duration)
+          ? Math.floor(this.audio.duration)
+          : 0;
+      this.emitMeta({ duration: d, khz: this.sampleRateKhz() });
+      this.computeAndEmitKbps(d);
+    });
 
     /** @type {((data: number[], prevData: number[]) => void)|null} */
     this.currentEffect = null;
@@ -218,7 +233,9 @@ export class AudioEngine {
       await this.audioContext.resume();
     }
     if (this.audio) {
-      this.audio.play();
+      // Autoplay policy rejects until there has been a gesture; that is not an
+      // error worth surfacing, but an unhandled rejection is noise.
+      await this.audio.play().catch(() => {});
     }
 
     this.cancelAnimation();
@@ -278,6 +295,24 @@ export class AudioEngine {
 
     const data = this.processor ? this.processor(silent) : Array.from(silent);
     if (this.currentEffect) this.currentEffect(data, this.prevData);
+  }
+
+  /**
+   * Release the audio context and stop everything. Needed by hosts that
+   * unmount - a page that never tears down, like the vanilla player, never
+   * called this. Safe to call twice, which React's StrictMode will do.
+   */
+  dispose() {
+    this.cancelAnimation();
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+    }
+    this.currentEffect = null;
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      // close() rejects on an already-closing context; nothing to do about it.
+      void this.audioContext.close().catch(() => {});
+    }
   }
 
   /** Hand the host the current transport position, in whole seconds. */
