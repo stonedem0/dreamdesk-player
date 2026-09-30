@@ -51,6 +51,11 @@ const SKINS = {
 
 const SKIN_STORAGE_KEY = 'winamp-current-skin';
 
+// Sunset is what a first-time visitor gets, so it is the skin index.html ships
+// in its markup. The inline boot script there assumes this same fallback: keep
+// the two in step or the first paint and the first frame disagree.
+const DEFAULT_SKIN = 'sunset';
+
 function getSkinStylesheet() {
   const link = document.getElementById('skin-stylesheet');
   if (!link) {
@@ -65,8 +70,11 @@ function getPlayerWindow() {
 }
 
 function getCurrentSkin() {
-  const stored = localStorage.getItem(SKIN_STORAGE_KEY);
-  return stored || 'default';
+  let stored = null;
+  try {
+    stored = localStorage.getItem(SKIN_STORAGE_KEY);
+  } catch (_) { /* private mode - fall back to the shipped skin */ }
+  return SKINS[stored] ? stored : DEFAULT_SKIN;
 }
 
 function getCurrentHistogramGradient() {
@@ -87,6 +95,26 @@ function updatePlayerWindowIcons(skinName) {
   playerWindow.setAttribute('close-icon', skin.icons.close);
 }
 
+function applyStylesheet(skin) {
+  const stylesheet = getSkinStylesheet();
+  if (!stylesheet) return;
+
+  // Compare the attribute, not .href, which the browser hands back resolved to
+  // an absolute URL. A sheet that already matches is left alone: the markup
+  // ships with the stored skin applied, and reassigning the same href drops
+  // the sheet and refetches it - the flash this is here to avoid.
+  if ((stylesheet.getAttribute('href') || '') === skin.path) return;
+
+  if (skin.path) {
+    stylesheet.href = skin.path;
+  } else {
+    // An empty href resolves to the document itself, so the browser would
+    // fetch index.html only to discard it as CSS. Dropping the attribute
+    // disables the sheet outright.
+    stylesheet.removeAttribute('href');
+  }
+}
+
 function setSkin(skinName) {
   const skin = SKINS[skinName];
   if (!skin) {
@@ -94,17 +122,15 @@ function setSkin(skinName) {
     return;
   }
 
-  const stylesheet = getSkinStylesheet();
-  if (!stylesheet) return;
-
-  // Update the stylesheet href
-  stylesheet.href = skin.path;
+  applyStylesheet(skin);
 
   // Update player window icons
   updatePlayerWindowIcons(skinName);
 
   // Store preference
-  localStorage.setItem(SKIN_STORAGE_KEY, skinName);
+  try {
+    localStorage.setItem(SKIN_STORAGE_KEY, skinName);
+  } catch (_) { /* private mode - the choice just won't persist */ }
 
   // Update button text
   updateSkinIndicator(skinName);
@@ -129,7 +155,11 @@ function toggleSkin() {
 }
 
 function initializeSkinSwitcher() {
-  setSkin('sunset');
+  // Honour the stored choice rather than forcing sunset. The stylesheet itself
+  // is already in place from the inline boot script in index.html, so this only
+  // catches up the rest of the skin: icons, the indicator and the histogram
+  // gradient player.js reads.
+  setSkin(getCurrentSkin());
 }
 
 // Initialize when DOM is ready

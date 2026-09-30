@@ -13,7 +13,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/base.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dreamdesk-ui@0.1.9/css/pastelcore.css" />
     <link rel="stylesheet" href="styles.css" />
-    <link id="skin-stylesheet" rel="stylesheet" href="">
+    <link id="skin-stylesheet" rel="stylesheet" href="tokyo-3-sunset-skin.css">
+    <script>
+        // Inline and blocking on purpose: the stored skin has to be resolved
+        // before the first paint. The link above ships with the sunset skin so
+        // the preload scanner fetches it alongside styles.css; if the visitor
+        // last chose the default skin we drop it here, which costs no request.
+        // Setting the href from skin-switcher.js instead left the fetch until
+        // after that script ran, so the default skin painted first.
+        try {
+            if (localStorage.getItem('winamp-current-skin') === 'default') {
+                document.getElementById('skin-stylesheet').removeAttribute('href');
+            }
+        } catch (e) { /* private mode - keep the skin that shipped in the markup */ }
+    </script>
     <script src="features.js"></script>
     <script src="player.js" defer></script>
     <script type="module" src="visualizer-boot.js"></script>
