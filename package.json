@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./css": "./src/player.css",
-    "./visualizer": "./visualizer.js"
+    "./visualizer": "./visualizer.js",
+    "./core": "./core/index.js"
   },
   "scripts": {
     "dev": "vite",

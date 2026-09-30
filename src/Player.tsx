@@ -3,83 +3,14 @@ import { Window as DdWindow } from 'dreamdesk-ui';
 import 'dreamdesk-ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
-
-// ── EQ Presets ─────────────────────────────────────────────────────────────
-
-const WINAMP_10_BAND_PRESETS: Record<string, number[]> = {
-  flat:                    [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
-  classical:               [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-  club:                    [ 0,  0,  3,  4,  4,  4,  3,  0,  0,  0],
-  dance:                   [ 5,  4,  1, -2, -1,  1,  3,  4,  5,  5],
-  'laptop speakers/headphones': [ 3,  6,  4, -2, -1,  1,  3,  5,  7,  8],
-  'large hall':            [ 7,  7,  5,  5,  3,  1,  0,  0,  0,  0],
-  party:                   [ 4,  4,  1,  0,  0,  0,  1,  3,  4,  4],
-  pop:                     [-1,  2,  4,  5,  5,  4,  2,  0, -1, -1],
-  reggae:                  [ 0,  0,  0, -2,  0,  2,  2,  0,  0,  0],
-  rock:                    [ 5,  3, -2, -4, -2,  2,  6,  8,  8,  7],
-  soft:                    [ 2,  1,  0, -1, -1, -1,  0,  1,  2,  3],
-  ska:                     [-2,  0,  3,  3,  2,  1,  0,  0,  0,  0],
-  'full bass':             [10,  9,  7,  4,  0, -4, -6, -8, -8, -8],
-  'soft rock':             [ 4,  2, -1, -2, -1,  1,  3,  4,  6,  8],
-  'full treble':           [-8, -8, -8, -6, -4,  0,  4,  8,  9, 10],
-  'full bass & treble':    [10,  8,  6,  2, -2, -4, -2,  6,  8, 10],
-  live:                    [-4, -2,  0,  4,  4,  4,  2,  0, -2, -4],
-  techno:                  [ 4,  3,  2,  0, -2, -1,  1,  3,  4,  4],
-};
-
-const EQ_PRESET_ORDER = [
-  'flat','classical','club','dance','laptop speakers/headphones','large hall',
-  'party','pop','reggae','rock','soft','ska','full bass','soft rock',
-  'full treble','full bass & treble','live','techno',
-];
-
-function map10to7(v: number[]): number[] {
-  const s = (i: number) => (Number.isFinite(v[i]) ? v[i] : 0);
-  const avg = (a: number, b: number) => (s(a) + s(b)) / 2;
-  return [s(0), s(1), avg(2,3), s(4), s(5), avg(6,7), avg(8,9)];
-}
-
-const EQ_PRESETS: Record<string, number[]> = Object.fromEntries(
-  EQ_PRESET_ORDER.map(k => [k, map10to7(WINAMP_10_BAND_PRESETS[k])])
-);
-
-const EQ_FREQS  = [60, 170, 350, 1000, 3000, 10000, 16000];
-const EQ_LABELS = ['60', '170', '350', '1k', '3k', '10k', '16k'];
-
-// ── Audio helpers ──────────────────────────────────────────────────────────
-
-function processAudioData(data: Float32Array): number[] {
-  const out = new Array(data.length);
-  for (let i = 0; i < data.length; i++) {
-    const x = data[i];
-    out[i] = x < -100 ? -100 : x * 1.5;
-  }
-  return out;
-}
-
-function drawHistogram(
-  ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  data: number[],
-  prevData: number[],
-  stops: [number, string][],
-) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const len = data.length;
-  if (prevData.length !== len) { prevData.length = len; prevData.fill(0); }
-  const barW = (canvas.width / len) * 10;
-  let x = 0;
-  for (let i = 0; i < len; i++) {
-    prevData[i] = prevData[i] * 0.8 + data[i] * 0.2;
-    const barH = Math.max((prevData[i] + 100) * 2, 10);
-    const yTop = canvas.height - barH / 2;
-    const grad = ctx.createLinearGradient(0, canvas.height, 0, yTop);
-    for (const [p, c] of stops) grad.addColorStop(p, c);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, yTop, barW, barH / 2);
-    x += barW + 1;
-  }
-}
+import {
+  EQ_PRESETS,
+  EQ_PRESET_ORDER,
+  EQ_FREQS,
+  EQ_LABELS,
+  processAudioData,
+  drawHistogram,
+} from '../core/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
