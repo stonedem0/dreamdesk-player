@@ -28,7 +28,9 @@
         } catch (e) { /* private mode - keep the skin that shipped in the markup */ }
     </script>
     <script src="features.js"></script>
-    <script src="player.js" defer></script>
+    <!-- A module so it can import core/. Modules defer by default, so this
+         keeps the execution order the defer attribute gave it. -->
+    <script type="module" src="player.js"></script>
     <script type="module" src="visualizer-boot.js"></script>
     <script src="skin-switcher.js"></script>
 </head>

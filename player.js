@@ -1,75 +1,12 @@
-function processAudioData(data) {
-    const length = data.length;
-    const result = new Array(length);
-    for (let i = 0; i < length; i++) {
-      const x = data[i];
-      result[i] = x < -100.0 ? -100.0 : x * 1.5;
-    }
-    return result;
-  }
-  
-  // Winamp-style EQ presets (10-band originals, downsampled to our 7-band UI)
-  const WINAMP_10_BAND_PRESETS = {
-    flat:      [ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
-    classical: [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0],
-    club:      [ 0.0,  0.0,  3.0,  4.0,  4.0,  4.0,  3.0,  0.0,  0.0,  0.0],
-    dance:     [ 5.0,  4.0,  1.0, -2.0, -1.0,  1.0,  3.0,  4.0,  5.0,  5.0],
-    'laptop speakers/headphones': [ 3.0,  6.0,  4.0, -2.0, -1.0,  1.0,  3.0,  5.0,  7.0,  8.0],
-    'large hall':[ 7.0,  7.0,  5.0,  5.0,  3.0,  1.0,  0.0,  0.0,  0.0,  0.0],
-    party:     [ 4.0,  4.0,  1.0,  0.0,  0.0,  0.0,  1.0,  3.0,  4.0,  4.0],
-    pop:       [-1.0,  2.0,  4.0,  5.0,  5.0,  4.0,  2.0,  0.0, -1.0, -1.0],
-    reggae:    [ 0.0,  0.0,  0.0, -2.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
-    rock:      [ 5.0,  3.0, -2.0, -4.0, -2.0,  2.0,  6.0,  8.0,  8.0,  7.0],
-    soft:      [ 2.0,  1.0,  0.0, -1.0, -1.0, -1.0,  0.0,  1.0,  2.0,  3.0],
-    ska:       [-2.0,  0.0,  3.0,  3.0,  2.0,  1.0,  0.0,  0.0,  0.0,  0.0],
-    'full bass':[10.0,  9.0,  7.0,  4.0,  0.0, -4.0, -6.0, -8.0, -8.0, -8.0],
-    'soft rock':[ 4.0,  2.0, -1.0, -2.0, -1.0,  1.0,  3.0,  4.0,  6.0,  8.0],
-    'full treble':[-8.0, -8.0, -8.0, -6.0, -4.0,  0.0,  4.0,  8.0,  9.0, 10.0],
-    'full bass & treble':[10.0,  8.0,  6.0,  2.0, -2.0, -4.0, -2.0,  6.0,  8.0, 10.0],
-    live:      [-4.0, -2.0,  0.0,  4.0,  4.0,  4.0,  2.0,  0.0, -2.0, -4.0],
-    techno:    [ 4.0,  3.0,  2.0,  0.0, -2.0, -1.0,  1.0,  3.0,  4.0,  4.0],
-  };
+import {
+  EQ_PRESETS,
+  EQ_PRESET_ORDER,
+  EQ_FREQS,
+  processAudioData,
+  drawHistogram,
+  DEFAULT_HISTOGRAM_STOPS,
+} from './core/index.js';
 
-  function map10BandTo7(values10) {
-    const v = Array.isArray(values10) ? values10 : [];
-    const safe = (idx) => Number.isFinite(v[idx]) ? v[idx] : 0;
-    const avg = (a, b) => (safe(a) + safe(b)) / 2;
-    return [
-      safe(0),                // 60 Hz
-      safe(1),                // 170 Hz
-      avg(2, 3),              // ~350 Hz from 310/600
-      safe(4),                // 1 kHz
-      safe(5),                // 3 kHz
-      avg(6, 7),              // ~10 kHz from 6k/12k
-      avg(8, 9),              // 16 kHz from 14k/16k
-    ];
-  }
-
-  const EQ_PRESET_ORDER = [
-    'flat',
-    'classical',
-    'club',
-    'dance',
-    'laptop speakers/headphones',
-    'large hall',
-    'party',
-    'pop',
-    'reggae',
-    'rock',
-    'soft',
-    'ska',
-    'full bass',
-    'soft rock',
-    'full treble',
-    'full bass & treble',
-    'live',
-    'techno',
-  ];
-
-  const EQ_PRESETS = Object.fromEntries(
-    EQ_PRESET_ORDER.map((key) => [key, map10BandTo7(WINAMP_10_BAND_PRESETS[key])])
-  );
-  
   class AudioVisualizer {
     constructor(audioSrc = null, ctxOptions = {}) {
       this.audioContext = new (window.AudioContext ||
@@ -120,7 +57,7 @@ function processAudioData(data) {
         });
       }
       this.eqFilters = [];
-      const freqs = [60, 170, 350, 1000, 3000, 10000, 16000];
+      const freqs = EQ_FREQS;
       for (let i = 0; i < freqs.length; i++) {
         const f = this.audioContext.createBiquadFilter();
         if (i === 0) f.type = 'lowshelf';
@@ -308,45 +245,16 @@ function processAudioData(data) {
   }
   
 
+  // The engine passes itself as a fifth argument, so this wraps core's
+  // drawHistogram rather than being it. Looking the ramp up per frame is what
+  // lets a skin switch take effect without restarting playback.
   const histogram = (ctx, canvas, data, prevData) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-    const bufferLength = data.length;
-    if (prevData.length !== bufferLength) {
-      prevData.length = bufferLength;
-      prevData.fill(0);
-    }
-  
-    const barWidth = (canvas.width / bufferLength) * 10;
-    let x = 0;
-    // Get histogram gradient from skin switcher or use default
-    const gradientStops = (window.getCurrentHistogramGradient && window.getCurrentHistogramGradient()) || [
-      [0.0, "#fa73ab"],
-      [0.1, "#f26bc5"],
-      [0.2, "#ea63dd"],
-      [0.3, "#e25bf5"],
-      [0.4, "#da53ff"],
-      [0.5, "#d24bff"],
-      [0.6, "#ca43ff"],
-      [0.7, "#c23bff"],
-      [0.8, "#ba33ff"],
-      [1.0, "#b22bff"],
-    ];
-  
-    for (let i = 0; i < bufferLength; i++) {
-      prevData[i] = prevData[i] * 0.8 + data[i] * 0.2;
-      const barHeight = Math.max((prevData[i] + 100) * 2, 10);
-      const yTop = canvas.height - barHeight / 2;
-      const yBottom = canvas.height;
-      const grad = ctx.createLinearGradient(0, yBottom, 0, yTop);
-      for (const [p, c] of gradientStops) grad.addColorStop(p, c);
-      ctx.fillStyle = grad;
-      ctx.fillRect(x, yTop, barWidth, barHeight / 2);
-      x += barWidth + 1;
-    }
-    ctx.shadowBlur = 0;
+    const stops =
+      (window.getCurrentHistogramGradient && window.getCurrentHistogramGradient()) ||
+      DEFAULT_HISTOGRAM_STOPS;
+    drawHistogram(ctx, canvas, data, prevData, stops);
   };
-  
+
   let visualizer = new AudioVisualizer('public/tracks/moonlight.mp3');
   window.visualizer = visualizer;
   let _dockFollowRaf = 0;
