@@ -5,4 +5,5 @@
 # node dependencies
 node_modules/
 
-
+# local working notes
+PLAN.md
