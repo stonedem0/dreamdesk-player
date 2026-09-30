@@ -24,5 +24,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "core", "visualizer.js"]
+  "include": ["src", "core", "visualizer.js"],
+  "exclude": ["core/__checks__"]
 }

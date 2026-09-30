@@ -12,7 +12,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build"
+    "build": "tsc -b && vite build",
+    "check:core": "node core/__checks__/equivalence.mjs"
   },
   "peerDependencies": {
     "react": "^18.0.0",
