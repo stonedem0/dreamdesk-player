@@ -429,7 +429,7 @@ export function Player({
     el?.animate(
       [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-6px)' }],
       { duration: 220, easing: 'ease', fill: 'forwards' }
-    ).finished ?? Promise.resolve();
+    ).finished.then(() => {}) ?? Promise.resolve();
 
   const pendingFsSlideInRef = useRef(false);
 
