@@ -18,3 +18,5 @@ export {
 export { processAudioData } from './audio-data.js';
 
 export { drawHistogram, DEFAULT_HISTOGRAM_STOPS } from './histogram.js';
+
+export { AudioEngine } from './audio-engine.js';

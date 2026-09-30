@@ -1,261 +1,61 @@
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
-  EQ_FREQS,
-  processAudioData,
   drawHistogram,
   DEFAULT_HISTOGRAM_STOPS,
+  AudioEngine,
 } from './core/index.js';
 
-  class AudioVisualizer {
-    constructor(audioSrc = null, ctxOptions = {}) {
-      this.audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)(ctxOptions);
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 2048;
-      this.bufferLength = this.analyser.frequencyBinCount;
-      this.dataArray = new Float32Array(this.bufferLength);
-      this.prevData = new Array(this.bufferLength).fill(0);
-      // equalizer filters (start with 60 Hz low-shelf)
-      this.eqFilters = [];
-      this.initEQ();
-      this.panner = (this.audioContext.createStereoPanner ? this.audioContext.createStereoPanner() : null);
-      if (!this.panner) {
-        this.splitter = this.audioContext.createChannelSplitter(2);
-        this.leftGain = this.audioContext.createGain();
-        this.rightGain = this.audioContext.createGain();
-        this.merger = this.audioContext.createChannelMerger(2);
-      }
-      
+  // The engine holds no DOM; these three are where it lands. Each body is the
+  // painting the engine used to do itself, moved out unchanged.
 
-      if (audioSrc) {
-        this.audio = new Audio(audioSrc);
-        this.audio.crossOrigin = "anonymous";
-        this.audio.loop = true;
-        this.source = this.audioContext.createMediaElementSource(this.audio);
-        this.buildPannerChain();
-        this.audio.addEventListener('loadedmetadata', () => {
-          const d = this.audio && isFinite(this.audio.duration) ? Math.floor(this.audio.duration) : 0;
-          document.dispatchEvent(new CustomEvent('player:trackMeta', { detail: { duration: d } }));
-          this.updateKhzLabel();
-          this.computeAndUpdateKbps(d);
-        });
-      } else {
-        this.audio = null;
-      }
-
-      this.currentEffect = null;
-      this.processor = processAudioData;
-      this._rafId = 0;
-    }
-
-    // initialize EQ nodes: 7 bands matching UI (60, 170, 350, 1k, 3k, 10k, 16k)
-    initEQ() {
-      if (Array.isArray(this.eqFilters) && this.eqFilters.length) {
-        this.eqFilters.forEach(f => {
-          if (f && typeof f.disconnect === 'function') f.disconnect();
-        });
-      }
-      this.eqFilters = [];
-      const freqs = EQ_FREQS;
-      for (let i = 0; i < freqs.length; i++) {
-        const f = this.audioContext.createBiquadFilter();
-        if (i === 0) f.type = 'lowshelf';
-        else if (i === freqs.length - 1) f.type = 'highshelf';
-        else { f.type = 'peaking'; f.Q.value = 1.0; }
-        f.frequency.value = freqs[i];
-        f.gain.value = 0;
-        this.eqFilters.push(f);
-      }
-    }
-
-    // connect the chain from the given input node -> EQ filters -> analyser -> destination
-    connectToAnalyser(inputNode) {
-      if (!inputNode || !this.analyser) return;
-      if (typeof inputNode.disconnect === 'function') inputNode.disconnect();
-      if (this.analyser && typeof this.analyser.disconnect === 'function') this.analyser.disconnect();
-      let node = inputNode;
-      if (Array.isArray(this.eqFilters) && this.eqFilters.length) {
-        for (const filter of this.eqFilters) {
-          if (filter && typeof filter.disconnect === 'function') filter.disconnect();
-          node.connect(filter);
-          node = filter;
-        }
-      }
-      node.connect(this.analyser);
-      this.analyser.connect(this.audioContext.destination);
-    }
-
-    // set stereo balance: -1 (left) .. 0 .. +1 (right)
-    setPan(value) {
-      const v = Math.max(-1, Math.min(1, Number(value) || 0));
-      if (this.panner) {
-        this.panner.pan.value = v;
-      } else if (this.leftGain && this.rightGain) {
-
-        const x = (v + 1) * 0.5; // 0..1
-        const left = Math.cos(x * Math.PI * 0.5);
-        const right = Math.sin(x * Math.PI * 0.5);
-        this.leftGain.gain.value = left;
-        this.rightGain.gain.value = right;
-      }
-    }
-    buildPannerChain() {
-      if (!this.source || !this.analyser) return;
-      if (this.source && typeof this.source.disconnect === 'function') this.source.disconnect();
-      if (this.panner && typeof this.panner.disconnect === 'function') this.panner.disconnect();
-      if (!this.panner) {
-        if (!this.splitter) this.splitter = this.audioContext.createChannelSplitter(2);
-        if (!this.leftGain) this.leftGain = this.audioContext.createGain();
-        if (!this.rightGain) this.rightGain = this.audioContext.createGain();
-        if (!this.merger) this.merger = this.audioContext.createChannelMerger(2);
-      }
-
-      if (this.panner) {
-        this.source.connect(this.panner);
-        this.connectToAnalyser(this.panner);
-      } else {
-        this.source.connect(this.splitter);
-        this.splitter.connect(this.leftGain, 0);
-        this.splitter.connect(this.rightGain, 1);
-        this.leftGain.connect(this.merger, 0, 0);
-        this.rightGain.connect(this.merger, 0, 1);
-        this.connectToAnalyser(this.merger);
-      }
-    }
-
-    
-  
-    async start(effect, processor) {
-      this.processor = processor;
-      this.currentEffect = effect;
-  
-      if (this.audioContext.state === "suspended") {
-        await this.audioContext.resume();
-      }
-  
-      if (this.audio) {
-        this.audio.play();
-      }
-  
-      this.cancelAnimation();
-      this._rafId = requestAnimationFrame(this.animate);
-    }
-  
-    animate = () => {
-      this._rafId = requestAnimationFrame(this.animate);
-      this.analyser.getFloatFrequencyData(this.dataArray);
-
-      const processedData = this.processor(this.dataArray);
-      const canvas = document.getElementById("histogram");
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-      this.currentEffect(ctx, canvas, processedData, this.prevData, this);
-    };
-
-    cancelAnimation() {
-      if (this._rafId) cancelAnimationFrame(this._rafId);
-      this._rafId = 0;
-    }
-  
-    stop() {
-      if (this.audio) {
-        this.pause();
-        this.audio.currentTime = 0;
-        this.updateSeekUI();
-        this.resetVisualization();
-      }
-    }
-
-    pause() {
-      if (this.audio) {
-        this.audio.pause();
-        this.updateSeekUI();
-      }
-      this.cancelAnimation();
-    }
-
-    // set EQ gain in dB for a given band index
-    setEqGain(bandIndex, gainDb) {
-      const idx = Math.max(0, Math.min((this.eqFilters?.length || 1) - 1, Number(bandIndex) || 0));
-      const val = Number(gainDb) || 0;
-      if (this.eqFilters && this.eqFilters[idx]) {
-        this.eqFilters[idx].gain.value = val;
-
-      }
-    }
-
-    resetVisualization() {
-      const canvas = document.getElementById("histogram");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      const silent = new Float32Array(this.bufferLength);
-      for (let i = 0; i < silent.length; i++) silent[i] = -100;
-      if (Array.isArray(this.prevData)) this.prevData.fill(-100);
-      const data = this.processor ? this.processor(silent) : silent;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (typeof this.currentEffect === 'function') {
-        this.currentEffect(ctx, canvas, data, this.prevData, this);
-      }
-    }
-
-    // --- UI helpers ---
-    updateKhzLabel() {
-      const el = document.querySelector('#khz .value');
-      const khz = Math.round(((this.audioContext && this.audioContext.sampleRate) || 0) / 1000);
-      if (el && khz) el.textContent = String(khz);
-    }
-
-    updateKbpsLabel(value) {
-      const el = document.querySelector('#kbps .value');
-      if (el && typeof value === 'number' && isFinite(value)) el.textContent = String(Math.max(1, Math.round(value)));
-    }
-
-    updateSeekUI() {
-      const seekSlider = document.getElementById('seek-slider');
-      if (seekSlider && !seekSlider.matches(':active') && seekSlider.dataset.seeking !== '1') {
-        seekSlider.value = String(Math.floor((this.audio && this.audio.currentTime) || 0));
-      }
-      const d = Math.floor((this.audio && this.audio.duration) || 0);
-      const t = Math.floor((this.audio && this.audio.currentTime) || 0);
-      document.dispatchEvent(new CustomEvent('player:timeupdate', { detail: { currentTime: t, duration: d } }));
-    }
-
-    async computeAndUpdateKbps(durationSeconds) {
-      const src = this.audio?.src || '';
-      if (!src || !durationSeconds) return;
-      let bytes = 0;
-      try {
-        const head = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
-        const len = head.headers.get('content-length');
-        if (len) bytes = parseInt(len, 10) || 0;
-      } catch (_) { /* ignore: some servers block HEAD */ }
-      if (!bytes) {
-        try {
-          const resp = await fetch(src, { cache: 'force-cache' });
-          const blob = await resp.blob();
-          bytes = blob.size || 0;
-        } catch (_) { return; }
-      }
-      if (!bytes) return;
-      const kbps = Math.max(1, Math.round((bytes * 8) / 1000 / Math.max(1, durationSeconds)));
-      this.updateKbpsLabel(kbps);
-    }
-  }
-  
-
-  // The engine passes itself as a fifth argument, so this wraps core's
-  // drawHistogram rather than being it. Looking the ramp up per frame is what
-  // lets a skin switch take effect without restarting playback.
-  const histogram = (ctx, canvas, data, prevData) => {
+  // Looking the ramp up per frame is what lets a skin switch take effect
+  // without restarting playback.
+  const paintHistogram = (data, prevData) => {
+    const canvas = document.getElementById('histogram');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const stops =
       (window.getCurrentHistogramGradient && window.getCurrentHistogramGradient()) ||
       DEFAULT_HISTOGRAM_STOPS;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawHistogram(ctx, canvas, data, prevData, stops);
   };
 
-  let visualizer = new AudioVisualizer('public/tracks/moonlight.mp3');
+  const paintMeta = (meta) => {
+    if (typeof meta.duration === 'number') {
+      document.dispatchEvent(
+        new CustomEvent('player:trackMeta', { detail: { duration: meta.duration } })
+      );
+    }
+    if (meta.khz) {
+      const el = document.querySelector('#khz .value');
+      if (el) el.textContent = String(meta.khz);
+    }
+    if (typeof meta.kbps === 'number' && isFinite(meta.kbps)) {
+      const el = document.querySelector('#kbps .value');
+      if (el) el.textContent = String(Math.max(1, Math.round(meta.kbps)));
+    }
+  };
+
+  const paintTime = (currentTime, duration) => {
+    const slider = document.getElementById('seek-slider');
+    if (slider && !slider.matches(':active') && slider.dataset.seeking !== '1') {
+      slider.value = String(currentTime);
+    }
+    document.dispatchEvent(
+      new CustomEvent('player:timeupdate', {
+        detail: { currentTime, duration },
+      })
+    );
+  };
+
+  let visualizer = new AudioEngine('public/tracks/moonlight.mp3', {
+    onFrame: paintHistogram,
+    onMeta: paintMeta,
+    onTime: paintTime,
+  });
   window.visualizer = visualizer;
   let _dockFollowRaf = 0;
   const DOCK_GAP_PX = 0; // vertical gap between player window and docks
@@ -442,12 +242,12 @@ import {
     void el.offsetWidth;
     window._baseTrackLabel = text;
   };
-  visualizer.updateKhzLabel();
+  paintMeta({ khz: visualizer.sampleRateKhz() });
   {
     const audioEl = visualizer.audio;
     const update = () => {
       const dur = isFinite(audioEl?.duration) ? Math.floor(audioEl.duration) : 0;
-      if (audioEl && dur > 0) visualizer.computeAndUpdateKbps(dur);
+      if (audioEl && dur > 0) visualizer.computeAndEmitKbps(dur);
     };
     audioEl?.addEventListener('loadedmetadata', update);
     audioEl?.addEventListener('loadeddata', update);
@@ -475,14 +275,16 @@ import {
           }
         }
       window._playerStarted = true;
-      await visualizer.start(histogram, processAudioData);
+      await visualizer.start();
     });
   
   document.getElementById("stop-button").addEventListener("click", () => {
     visualizer.stop();
   });
 
-AudioVisualizer.prototype.bindTransportControls = function bindTransportControls() {
+// View wiring, kept on this instance rather than on AudioEngine.prototype so
+// it does not leak into the React consumer of the same class.
+visualizer.bindTransportControls = function bindTransportControls() {
   const visualizer = this;
   const seekSlider = document.getElementById('seek-slider');
   const volumeSlider = document.getElementById('volume-slider');
@@ -509,7 +311,7 @@ AudioVisualizer.prototype.bindTransportControls = function bindTransportControls
     document.dispatchEvent(new CustomEvent('player:trackMeta', { detail: { duration: d } }));
   });
 
-  visualizer.audio.addEventListener('timeupdate', () => visualizer.updateSeekUI());
+  visualizer.audio.addEventListener('timeupdate', () => visualizer.emitTime());
 
   if (seekSlider) {
     const commitSeek = () => { delete seekSlider.dataset.seeking; };
@@ -923,7 +725,7 @@ function applyEqPreset(name) {
   }
 }
 
-AudioVisualizer.prototype.buildTrackList = async function buildTrackList() {
+visualizer.buildTrackList = async function buildTrackList() {
   const container = document.getElementById('track-items');
   if (!container) return;
   try {
