@@ -99,6 +99,7 @@ export interface PlayerProps {
   initialY?: number;
   disableSnap?: boolean;
   icon?: string;
+  onMove?: (x: number, y: number) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ export function Player({
   initialY = 100,
   disableSnap = false,
   icon,
+  onMove,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -480,6 +482,7 @@ export function Player({
       fullscreenIcon={fullscreenIcon}
       closeIcon={closeIcon}
       onClose={onClose}
+      onMove={onMove}
       fullscreenAnimation={fullscreenAnimation}
       style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as React.CSSProperties }}
       className="dd-player"
