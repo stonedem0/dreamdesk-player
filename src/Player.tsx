@@ -8,8 +8,8 @@ import {
   EQ_PRESET_ORDER,
   EQ_FREQS,
   EQ_LABELS,
-  processAudioData,
   drawHistogram,
+  AudioEngine,
 } from '../core/index.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -76,12 +76,10 @@ export function Player({
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const uploadRef     = useRef<HTMLInputElement>(null);
-  const audioCtxRef   = useRef<AudioContext | null>(null);
-  const analyserRef   = useRef<AnalyserNode | null>(null);
-  const filtersRef    = useRef<BiquadFilterNode[]>([]);
-  const pannerRef     = useRef<StereoPannerNode | null>(null);
-  const rafRef        = useRef(0);
-  const prevDataRef   = useRef<number[]>([]);
+  const engineRef     = useRef<AudioEngine | null>(null);
+  // Read by the frame callback so a skin change lands on the next frame
+  // rather than waiting for playback to restart.
+  const stopsRef      = useRef(skin.histogramGradient);
   const historyRef    = useRef<number[]>([]);
   const shuffleRef    = useRef(shuffle);
   const repeatRef     = useRef(repeat);
@@ -104,45 +102,36 @@ export function Player({
   useEffect(() => { showEqRef.current = showEq; }, [showEq]);
 
   // ── Audio graph (imperative to survive StrictMode double-invoke) ──────────
+  // The graph itself lives in core/audio-engine.js, shared with the vanilla
+  // player. This effect owns only its lifetime: one engine per mount, disposed
+  // on unmount. loop is off because the repeat and next-track logic below
+  // needs 'ended' to fire, and no onMeta is passed because the audio-events
+  // effect tracks duration, kHz and kbps itself, with its own byte cache.
   useEffect(() => {
-    const audio = new Audio();
+    const engine = new AudioEngine(null, {
+      loop: false,
+      crossOrigin: null,
+      onFrame: (data, prevData) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx2d = canvas.getContext('2d');
+        if (ctx2d) drawHistogram(ctx2d, canvas, data, prevData, stopsRef.current);
+      },
+    });
+    engineRef.current = engine;
+
+    const audio = engine.audio!;
     audio.volume = 0.5;
     audioRef.current = audio;
 
-    const ctx = new AudioContext();
-    audioCtxRef.current = ctx;
-
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyserRef.current = analyser;
-
-    const filters = EQ_FREQS.map((freq, i) => {
-      const f = ctx.createBiquadFilter();
-      f.type = i === 0 ? 'lowshelf' : i === EQ_FREQS.length - 1 ? 'highshelf' : 'peaking';
-      if (f.type === 'peaking') f.Q.value = 1.0;
-      f.frequency.value = freq;
-      f.gain.value = 0;
-      return f;
-    });
-    filtersRef.current = filters;
-
-    const panner = ctx.createStereoPanner();
-    pannerRef.current = panner;
-
-    const source = ctx.createMediaElementSource(audio);
-    let node: AudioNode = source;
-    node.connect(panner); node = panner;
-    for (const f of filters) { node.connect(f); node = f; }
-    node.connect(analyser);
-    analyser.connect(ctx.destination);
-
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      audio.pause();
-      ctx.close();
+      engine.dispose();
+      engineRef.current = null;
       audioRef.current = null;
     };
   }, []);
+
+  useEffect(() => { stopsRef.current = skin.histogramGradient; }, [skin.histogramGradient]);
 
   // ── Load manifest ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -179,33 +168,21 @@ export function Player({
   }, []);
 
   // ── Animation ─────────────────────────────────────────────────────────────
+  // The engine owns the frame loop and the analyser read; onFrame does the
+  // drawing. start() also resumes the context and plays, so the separate
+  // resume-and-play dance the callers used to do is gone.
   const startAnimation = useCallback(() => {
-    const analyser = analyserRef.current;
-    const canvas = canvasRef.current;
-    if (!analyser || !canvas) return;
-    const dataArray = new Float32Array(analyser.frequencyBinCount);
-    if (!prevDataRef.current.length) prevDataRef.current = new Array(analyser.frequencyBinCount).fill(0);
-    const stops = skin.histogramGradient;
-    const tick = () => {
-      rafRef.current = requestAnimationFrame(tick);
-      analyser.getFloatFrequencyData(dataArray);
-      const ctx2d = canvas.getContext('2d');
-      if (ctx2d) drawHistogram(ctx2d, canvas, processAudioData(dataArray), prevDataRef.current, stops);
-    };
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(tick);
-  }, [skin.histogramGradient]);
+    void engineRef.current?.start();
+  }, []);
 
   const stopAnimation = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = 0;
+    engineRef.current?.cancelAnimation();
   }, []);
 
   // ── Play track ────────────────────────────────────────────────────────────
   const playTrack = useCallback(async (index: number, list?: Track[]) => {
     const tracks = list ?? playlistRef.current;
     const audio = audioRef.current;
-    const ctx = audioCtxRef.current;
     if (!audio || !tracks.length) return;
     const i = ((index % tracks.length) + tracks.length) % tracks.length;
     audio.pause();
@@ -214,9 +191,7 @@ export function Player({
     setCurrentIdx(i);
     currentIdxRef.current = i;
     setTrackLabel(tracks[i].artist ? `${tracks[i].title} — ${tracks[i].artist}` : tracks[i].title);
-    if (ctx?.state === 'suspended') await ctx.resume();
-    await audio.play().catch(() => {});
-    startAnimation();
+    await engineRef.current?.start();
   }, [startAnimation]);
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -252,7 +227,7 @@ export function Player({
     const onMeta = () => {
       const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
       setDuration(d);
-      const k = Math.round((audioCtxRef.current?.sampleRate ?? 0) / 1000);
+      const k = engineRef.current?.sampleRateKhz() ?? 0;
       if (k) setKhz(String(k));
       if (audio.src && d > 0) computeKbps(audio.src, d);
     };
@@ -277,9 +252,9 @@ export function Player({
 
   // ── Volume / balance / EQ ─────────────────────────────────────────────────
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume / 100; }, [volume]);
-  useEffect(() => { if (pannerRef.current) pannerRef.current.pan.value = balance / 100; }, [balance]);
+  useEffect(() => { engineRef.current?.setPan(balance / 100); }, [balance]);
   useEffect(() => {
-    eqBands.forEach((gain, i) => { if (filtersRef.current[i]) filtersRef.current[i].gain.value = gain; });
+    eqBands.forEach((gain, i) => engineRef.current?.setEqGain(i, gain));
   }, [eqBands]);
 
   function fetchBytes(rawSrc: string): Promise<number> {
@@ -312,15 +287,12 @@ export function Player({
   // ── Transport ─────────────────────────────────────────────────────────────
   const handlePlay = useCallback(async () => {
     const audio = audioRef.current;
-    const ctx = audioCtxRef.current;
     if (!audio) return;
     if (!audio.src && playlistRef.current.length) {
       audio.src = playlistRef.current[0].src;
       fetchBytes(playlistRef.current[0].src);
     }
-    if (ctx?.state === 'suspended') await ctx.resume();
-    await audio.play().catch(() => {});
-    startAnimation();
+    await engineRef.current?.start();
   }, [startAnimation]);
 
   const handlePause = useCallback(() => { audioRef.current?.pause(); stopAnimation(); }, [stopAnimation]);
