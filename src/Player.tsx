@@ -31,6 +31,8 @@ export interface PlayerProps {
   disableSnap?: boolean;
   icon?: string;
   onMove?: (x: number, y: number) => void;
+  /** Called when the user picks a skin, so hosts can remember it. */
+  onSkinChange?: (skinId: string) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -44,6 +46,7 @@ export function Player({
   disableSnap = false,
   icon,
   onMove,
+  onSkinChange,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -515,7 +518,7 @@ export function Player({
               </button>
               <div className={`dd-player__dropdown-menu dd-player__dropdown-menu--up${showSkinMenu ? ' open' : ''}`}>
                 {Object.values(SKINS).map(s => (
-                  <button key={s.id} role="menuitem" onClick={() => { setSkinId(s.id); setShowSkinMenu(false); }}>
+                  <button key={s.id} role="menuitem" onClick={() => { setSkinId(s.id); setShowSkinMenu(false); onSkinChange?.(s.id); }}>
                     {s.label}
                   </button>
                 ))}
