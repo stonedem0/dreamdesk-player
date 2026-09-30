@@ -13,10 +13,16 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+
+    /* The shared core is plain ESM so index.html can load it without a build.
+       checkJs is what turns its JSDoc from decoration into enforcement. */
+    "allowJs": true,
+    "checkJs": true,
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "core", "visualizer.js"]
 }
