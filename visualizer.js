@@ -171,7 +171,8 @@ void main() {
 
 /**
  * @param {object} options
- * @param {HTMLCanvasElement} options.canvas   Canvas to render into.
+ * @param {HTMLCanvasElement} [options.canvas]  Canvas to render into. Required;
+ *        validated at runtime so a bare createVisualizer() still explains itself.
  * @param {() => (AnalyserNode|null|undefined)} [options.getAnalyser]
  *        Looked up per frame rather than captured, so the visualizer can be
  *        created before the audio graph exists.
@@ -188,14 +189,15 @@ void main() {
  */
 export function createVisualizer(options = {}) {
   const {
-    canvas,
+    canvas: canvasOption,
     getAnalyser = () => null,
     getAudio = () => null,
     onError = null,
     background = [0.07, 0.035, 0.023],
   } = options;
 
-  if (!canvas) throw new Error('createVisualizer: options.canvas is required');
+  if (!canvasOption) throw new Error('createVisualizer: options.canvas is required');
+  const canvas = canvasOption;
 
   let gl = /** @type {WebGL2RenderingContext|null} */ (null);
   let program = /** @type {WebGLProgram|null} */ (null);
@@ -235,6 +237,7 @@ export function createVisualizer(options = {}) {
   let isContextLost = false;
 
 
+  /** @param {Event} e */
   function handleContextLost(e) {
     e.preventDefault();
     isContextLost = true;
@@ -271,7 +274,12 @@ export function createVisualizer(options = {}) {
   canvas.addEventListener('webglcontextlost', handleContextLost);
   canvas.addEventListener('webglcontextrestored', handleContextRestored);
 
+  /**
+   * @param {GLenum} type
+   * @param {string} source
+   */
   function compileShader(type, source) {
+    if (!gl) throw new Error('compileShader: no WebGL2 context');
     const shader = gl.createShader(type);
     if (!shader) throw new Error('createShader failed');
 
@@ -288,7 +296,12 @@ export function createVisualizer(options = {}) {
     return shader;
   }
 
+  /**
+   * @param {string} vsSrc
+   * @param {string} fsSrc
+   */
   function createProgram(vsSrc, fsSrc) {
+    if (!gl) throw new Error('createProgram: no WebGL2 context');
     const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
     const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
 
@@ -313,6 +326,8 @@ export function createVisualizer(options = {}) {
   }
 
   function createFullscreenTriangleVAO() {
+    if (!gl) throw new Error('createFullscreenTriangleVAO: no WebGL2 context');
+    if (!program) throw new Error('createFullscreenTriangleVAO: no program');
     const positionLoc = gl.getAttribLocation(program, 'a_vertexId');
     if (positionLoc === -1) throw new Error('a_vertexId attribute not found');
 
@@ -353,11 +368,12 @@ export function createVisualizer(options = {}) {
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w;
       canvas.height = h;
-      gl.viewport(0, 0, w, h);
+      if (gl) gl.viewport(0, 0, w, h);
     }
     return dpr;
   }
 
+  /** @param {number} size */
   function ensureFftTexture(size) {
     if (!gl) return;
     if (!fftTexture) {
@@ -443,6 +459,7 @@ export function createVisualizer(options = {}) {
   // --- Render loop -------------------------------------------------------------
   function drawOnce(timeMs = 0) {
     if (isContextLost) return;
+    if (!gl || !program) return;
 
     const dpr = resizeCanvasToDisplaySize();
 
