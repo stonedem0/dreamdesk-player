@@ -27,7 +27,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "check:core": "node core/__checks__/equivalence.mjs"
+    "check:core": "node core/__checks__/equivalence.mjs",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18",
