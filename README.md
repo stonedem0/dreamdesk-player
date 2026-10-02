@@ -38,3 +38,23 @@ Minimize/unminimize animations are defined in `player.js` (search for `customMin
 MIT (or your preferred license). Update this section as needed.
 
 
+
+## React package
+
+The player is also a React component, `@dreamdesk/player`, built on [dreamdesk-ui](https://github.com/stonedem0/dreamdesk-ui).
+
+```sh
+npm install @dreamdesk/player dreamdesk-ui react react-dom
+```
+
+```tsx
+import { Player } from "@dreamdesk/player";
+import "@dreamdesk/player/css";
+
+<Player
+  initialTracks={[{ title: "Track", artist: "Artist", src: "/track.mp3" }]}
+  onSkinChange={(id) => localStorage.setItem("skin", id)}
+/>
+```
+
+`dreamdesk-ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each. Build the package with `npm run build`; the output goes to `dist/`.
