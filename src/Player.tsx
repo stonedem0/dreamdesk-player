@@ -33,6 +33,10 @@ export interface PlayerProps {
   onMove?: (x: number, y: number) => void;
   /** Called when the user picks a skin, so hosts can remember it. */
   onSkinChange?: (skinId: string) => void;
+  /** Start expanded, with the playlist and EQ open. */
+  defaultFullscreen?: boolean;
+  /** Called when the player is expanded or collapsed, so hosts can remember it. */
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -47,6 +51,8 @@ export function Player({
   icon,
   onMove,
   onSkinChange,
+  defaultFullscreen = false,
+  onFullscreenChange,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -64,8 +70,8 @@ export function Player({
   const [trackLabel, setTrackLabel]     = useState(trackLabel0);
   const [kbps, setKbps]                 = useState('');
   const [khz, setKhz]                   = useState('');
-  const [showPlaylist, setShowPlaylist] = useState(false);
-  const [showEq, setShowEq]             = useState(false);
+  const [showPlaylist, setShowPlaylist] = useState(defaultFullscreen);
+  const [showEq, setShowEq]             = useState(defaultFullscreen);
   const [showPresets, setShowPresets]   = useState(false);
   const [showSkinMenu, setShowSkinMenu] = useState(false);
   const [playlist, setPlaylist]         = useState<Track[]>(initialTracks);
@@ -390,6 +396,8 @@ export function Player({
       onClose={onClose}
       onMove={onMove}
       fullscreenAnimation={fullscreenAnimation}
+      defaultFullscreen={defaultFullscreen}
+      onFullscreen={onFullscreenChange}
       style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as React.CSSProperties }}
       className="dd-player"
     >

@@ -5,8 +5,8 @@
 # node dependencies
 node_modules/
 
-# build output - vite build writes here; the site is served from master:/
-# directly and package.json exports point at src/, so nothing ships from it
+# build output - the npm package is built here (npm run build); the site is
+# served from master:/ directly and doesn't use it
 dist/
 
 # local working notes
