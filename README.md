@@ -58,3 +58,12 @@ import "@dreamdesk/player/css";
 ```
 
 `dreamdesk-ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each. Build the package with `npm run build`; the output goes to `dist/`.
+
+## Tests
+
+```sh
+npm test           # Vitest (happy-dom)
+npm run coverage   # tests + coverage report (HTML in coverage/)
+```
+
+happy-dom has no Web Audio, so `src/__tests__/fakeAudio.ts` provides a small fake `AudioContext` that records how nodes are connected; `src/__tests__/setup.ts` installs it, stubs media playback and `fetch`. The `Player` tests swap dreamdesk-ui's `Window` for a stand-in that records its props. CI runs the build and tests on every PR.
