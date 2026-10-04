@@ -11,3 +11,6 @@ dist/
 
 # local working notes
 PLAN.md
+
+# test coverage reports (npm run coverage)
+coverage
