@@ -389,6 +389,9 @@ export function Player({
       disableSnap={disableSnap}
       icon={icon}
       fullscreenMode="expand"
+      // On phones (compact desktops) keep the player's own size instead of
+      // stretching it over the whole screen
+      compactLayout="fit"
       width="297px"
       minimizeIcon={minimizeIcon}
       fullscreenIcon={fullscreenIcon}
