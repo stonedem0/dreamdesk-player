@@ -45,9 +45,14 @@ export interface PlayerProps {
 // with them. (Fading them in place left an empty block of window
 // background, white or black depending on the skin, and then a jump.)
 const folded = { height: '0px', opacity: 0, borderTopWidth: '0px', borderBottomWidth: '0px' };
+// Follows dreamdesk-ui's pace for the whole app (--dd-motion-pace, default 1)
+const pace = () => {
+  const p = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dd-motion-pace'));
+  return Number.isFinite(p) && p > 0 ? p : 1;
+};
 const fold = (el: HTMLDivElement, keyframes: Keyframe[], fill?: FillMode) => {
   el.style.overflow = 'hidden';
-  const a = el.animate(keyframes, { duration: 400, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill });
+  const a = el.animate(keyframes, { duration: Math.round(400 * pace()), easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill });
   a.finished.then(() => { if (!fill) el.style.overflow = ''; }, () => {});
   return a;
 };
