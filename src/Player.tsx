@@ -47,7 +47,7 @@ export interface PlayerProps {
 const folded = { height: '0px', opacity: 0, borderTopWidth: '0px', borderBottomWidth: '0px' };
 const fold = (el: HTMLDivElement, keyframes: Keyframe[], fill?: FillMode) => {
   el.style.overflow = 'hidden';
-  const a = el.animate(keyframes, { duration: 320, easing: 'ease', fill });
+  const a = el.animate(keyframes, { duration: 400, easing: 'ease', fill });
   a.finished.then(() => { if (!fill) el.style.overflow = ''; }, () => {});
   return a;
 };
