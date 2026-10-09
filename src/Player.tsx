@@ -175,12 +175,8 @@ export function Player({
 
   // ── Animation ─────────────────────────────────────────────────────────────
   // The engine owns the frame loop and the analyser read; onFrame does the
-  // drawing. start() also resumes the context and plays, so the separate
-  // resume-and-play dance the callers used to do is gone.
-  const startAnimation = useCallback(() => {
-    void engineRef.current?.start();
-  }, []);
-
+  // drawing. Callers start it with engineRef.current.start(), which also
+  // resumes the context and plays.
   const stopAnimation = useCallback(() => {
     engineRef.current?.cancelAnimation();
   }, []);
@@ -198,7 +194,7 @@ export function Player({
     currentIdxRef.current = i;
     setTrackLabel(tracks[i].artist ? `${tracks[i].title} — ${tracks[i].artist}` : tracks[i].title);
     await engineRef.current?.start();
-  }, [startAnimation]);
+  }, []);
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const goNext = useCallback(() => {
@@ -254,6 +250,8 @@ export function Player({
       audio.removeEventListener('loadedmetadata', onMeta);
       audio.removeEventListener('ended', onEnded);
     };
+    // computeKbps only uses refs and a state setter, so the first render's is fine
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goNext, stopAnimation]);
 
   // ── Volume / balance / EQ ─────────────────────────────────────────────────
@@ -276,7 +274,7 @@ export function Player({
           const h = await fetch(src, { method: 'HEAD', cache: 'force-cache' });
           const n = parseInt(h.headers.get('content-length') ?? '0', 10) || 0;
           if (n) return n;
-        } catch (_) {}
+        } catch (_) { /* some servers refuse HEAD: download it instead */ }
         try { return (await (await fetch(src, { cache: 'force-cache' })).blob()).size; } catch (_) { return 0; }
       })();
       bytesCacheRef.current.set(src, p);
@@ -299,7 +297,7 @@ export function Player({
       fetchBytes(playlistRef.current[0].src);
     }
     await engineRef.current?.start();
-  }, [startAnimation]);
+  }, []);
 
   const handlePause = useCallback(() => { audioRef.current?.pause(); stopAnimation(); }, [stopAnimation]);
 
