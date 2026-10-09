@@ -41,6 +41,21 @@ export interface PlayerProps {
 
 // ── Component ──────────────────────────────────────────────────────────────
 
+// The playlist and EQ fold open and shut, so the window grows and shrinks
+// with them. (Fading them in place left an empty block of window
+// background, white or black depending on the skin, and then a jump.)
+const folded = { height: '0px', opacity: 0, borderTopWidth: '0px', borderBottomWidth: '0px' };
+const fold = (el: HTMLDivElement, keyframes: Keyframe[], fill?: FillMode) => {
+  el.style.overflow = 'hidden';
+  const a = el.animate(keyframes, { duration: 320, easing: 'ease', fill });
+  a.finished.then(() => { if (!fill) el.style.overflow = ''; }, () => {});
+  return a;
+};
+const slideIn = (el: HTMLDivElement | null) =>
+  el && fold(el, [folded, { height: `${el.offsetHeight}px`, opacity: 1 }]);
+const slideOut = (el: HTMLDivElement | null): Promise<void> =>
+  el ? fold(el, [{ height: `${el.offsetHeight}px`, opacity: 1 }, folded], 'forwards').finished.then(() => {}, () => {}) : Promise.resolve();
+
 export function Player({
   skin: initialSkinId = DEFAULT_SKIN,
   initialTracks = [],
@@ -331,15 +346,6 @@ export function Player({
   }, []);
 
   // ── Fullscreen animation: show/hide playlist + EQ docks ──────────────────
-  const slideIn = (el: HTMLDivElement | null) => el?.animate(
-    [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'translateY(0)' }],
-    { duration: 220, easing: 'ease' }
-  );
-  const slideOut = (el: HTMLDivElement | null): Promise<void> =>
-    el?.animate(
-      [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-6px)' }],
-      { duration: 220, easing: 'ease', fill: 'forwards' }
-    ).finished.then(() => {}) ?? Promise.resolve();
 
   const pendingFsSlideInRef = useRef(false);
 
