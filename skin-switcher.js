@@ -148,12 +148,6 @@ function updateSkinIndicator(skinName) {
   }
 }
 
-function toggleSkin() {
-  const currentSkin = getCurrentSkin();
-  const nextSkin = currentSkin === 'default' ? 'sunset' : 'default';
-  setSkin(nextSkin);
-}
-
 function initializeSkinSwitcher() {
   // Honour the stored choice rather than forcing sunset. The stylesheet itself
   // is already in place from the inline boot script in index.html, so this only

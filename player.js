@@ -795,7 +795,7 @@ window.addEventListener('resize', () => {
   
 
 window.DreamDeskAnimations = {
-  customFullscreen(el, { isFullscreen, previousState }) {
+  customFullscreen(el, { isFullscreen }) {
       const playlistDock = document.getElementById('playlist-dock');
       const eqDock = document.getElementById('eq-dock');
       if (!playlistDock || !eqDock) return;
