@@ -2,6 +2,9 @@ import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
   drawHistogram,
+  drawOscilloscope,
+  nextVisualizerMode,
+  VISUALIZER_MODES,
   DEFAULT_HISTOGRAM_STOPS,
   AudioEngine,
 } from './core/index.js';
@@ -11,17 +14,49 @@ import {
 
   // Looking the ramp up per frame is what lets a skin switch take effect
   // without restarting playback.
+  // Winamp's visualizer modes: click the display to cycle bars, oscilloscope,
+  // off. Remembered across visits.
+  let vizMode = 'bars';
+  try {
+    const saved = localStorage.getItem('player-viz-mode');
+    if (VISUALIZER_MODES.indexOf(saved) !== -1) vizMode = saved;
+  } catch (_) { /* private mode: start with bars */ }
+  let waveBuf = null;
+
   const paintHistogram = (data, prevData) => {
     const canvas = document.getElementById('histogram');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    if (vizMode === 'off') return;
     const stops =
       (window.getCurrentHistogramGradient && window.getCurrentHistogramGradient()) ||
       DEFAULT_HISTOGRAM_STOPS;
+    if (vizMode === 'scope') {
+      const analyser = window.visualizer && window.visualizer.analyser;
+      if (!analyser) return;
+      if (!waveBuf || waveBuf.length !== analyser.fftSize) waveBuf = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(waveBuf);
+      drawOscilloscope(ctx, canvas, waveBuf, stops);
+      return;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawHistogram(ctx, canvas, data, prevData, stops);
   };
+
+  const histogramCanvas = document.getElementById('histogram');
+  if (histogramCanvas) {
+    histogramCanvas.title = 'Click to change the visualizer';
+    histogramCanvas.style.cursor = 'pointer';
+    histogramCanvas.addEventListener('click', () => {
+      vizMode = nextVisualizerMode(vizMode);
+      try { localStorage.setItem('player-viz-mode', vizMode); } catch (_) { /* not remembered */ }
+      if (vizMode === 'off') {
+        const ctx = histogramCanvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, histogramCanvas.width, histogramCanvas.height);
+      }
+    });
+  }
 
   const paintMeta = (meta) => {
     if (typeof meta.duration === 'number') {

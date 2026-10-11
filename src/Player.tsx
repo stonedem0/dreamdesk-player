@@ -14,8 +14,13 @@ import {
   EQ_FREQS,
   EQ_LABELS,
   drawHistogram,
+  drawOscilloscope,
+  nextVisualizerMode,
   AudioEngine,
 } from '../core/index.js';
+
+/** Winamp's visualizer modes: spectrum bars, oscilloscope, or nothing. */
+export type VisualizerMode = 'bars' | 'scope' | 'off';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -42,6 +47,10 @@ export interface PlayerProps {
   defaultFullscreen?: boolean;
   /** Called when the player is expanded or collapsed, so hosts can remember it. */
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  /** The visualizer's starting mode; a click on it cycles bars, scope, off. */
+  defaultVisualizerMode?: VisualizerMode;
+  /** Called when the visualizer's mode changes (e.g. to remember it). */
+  onVisualizerModeChange?: (mode: VisualizerMode) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -78,6 +87,8 @@ export function Player({
   onSkinChange,
   defaultFullscreen = false,
   onFullscreenChange,
+  defaultVisualizerMode = 'bars',
+  onVisualizerModeChange,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -110,6 +121,10 @@ export function Player({
   // ── Refs ──────────────────────────────────────────────────────────────────
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
+  const [vizMode, setVizMode] = useState<VisualizerMode>(defaultVisualizerMode);
+  // Read by the frame callback, which is set up once
+  const vizModeRef    = useRef(vizMode);
+  const waveRef       = useRef<Uint8Array | null>(null);
   const uploadRef     = useRef<HTMLInputElement>(null);
   const engineRef     = useRef<AudioEngine | null>(null);
   // Read by the frame callback so a skin change lands on the next frame
@@ -148,9 +163,17 @@ export function Player({
       crossOrigin: null,
       onFrame: (data, prevData) => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx2d = canvas.getContext('2d');
-        if (ctx2d) drawHistogram(ctx2d, canvas, data, prevData, stopsRef.current);
+        const ctx2d = canvas?.getContext('2d');
+        if (!canvas || !ctx2d) return;
+        const mode = vizModeRef.current;
+        if (mode === 'bars') drawHistogram(ctx2d, canvas, data, prevData, stopsRef.current);
+        else if (mode === 'scope') {
+          const analyser = engineRef.current?.analyser;
+          if (!analyser) return;
+          if (waveRef.current?.length !== analyser.fftSize) waveRef.current = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(waveRef.current);
+          drawOscilloscope(ctx2d, canvas, waveRef.current, stopsRef.current);
+        }
       },
     });
     engineRef.current = engine;
@@ -394,6 +417,19 @@ export function Player({
     </div>
   );
 
+  // ── Visualizer mode (click the display, as in Winamp) ─────────────────────
+  const cycleViz = () => {
+    const next = nextVisualizerMode(vizModeRef.current);
+    vizModeRef.current = next;
+    setVizMode(next);
+    onVisualizerModeChange?.(next);
+    // Off: clear what's drawn now, since no more frames will
+    if (next === 'off') {
+      const canvas = canvasRef.current;
+      canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
   // ── Main menu (right-click) ───────────────────────────────────────────────
   const openMainMenu = (e: React.MouseEvent) => {
     // Inputs and buttons keep the browser's menu (copy, paste)
@@ -524,7 +560,12 @@ export function Player({
 
           <div className="dd-player__viz">
             <div className="dd-player__timer">{timer}</div>
-            <canvas ref={canvasRef} width={100} height={35} />
+            <canvas ref={canvasRef} width={100} height={35}
+              className="dd-player__viz-canvas" role="button" tabIndex={0}
+              aria-label={`Visualizer: ${vizMode === 'bars' ? 'spectrum' : vizMode === 'scope' ? 'oscilloscope' : 'off'} (click to change)`}
+              title="Click to change the visualizer"
+              onClick={cycleViz}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleViz(); } }} />
           </div>
 
           <div className="dd-player__track">
