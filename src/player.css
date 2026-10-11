@@ -448,6 +448,24 @@
   padding: 2px 4px;
   &:hover { opacity: 0.8; }
   &.active { color: var(--color-accent-primary); font-weight: bold; }
+  &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
+}
+
+/* REM / SEL / MISC: a button with its menu above it */
+.dd-player__menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.dd-player .dd-player__dropdown-menu.dd-player__dropdown-menu--left {
+  right: auto;
+  left: 0;
+}
+
+.dd-player .dd-player__dropdown-menu button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  background: none;
 }
 
 /* ── EQ dock ─────────────────────────────────────────────────────────────── */

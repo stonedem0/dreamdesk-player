@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Window as DdWindow } from 'dreamdesk-ui';
+import {
+  clickTrack, selectAll, invertSelection, removeSelected, crop, clear,
+  sortByTitle, sortByArtist, reverse, randomize, type PlaylistState, type Selection,
+} from './playlist';
 import 'dreamdesk-ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
@@ -96,6 +100,9 @@ export function Player({
   const [showSkinMenu, setShowSkinMenu] = useState(false);
   const [playlist, setPlaylist]         = useState<Track[]>(initialTracks);
   const [currentIdx, setCurrentIdx]     = useState(0);
+  // Winamp's playlist: click selects, double-click (or Enter) plays
+  const [selection, setSelection]       = useState<Selection>({ selected: [], anchor: null });
+  const [openMenu, setOpenMenu]         = useState<'rem' | 'sel' | 'misc' | null>(null);
   const [eqBands, setEqBands]           = useState<number[]>(Array(7).fill(0));
 
   // ── Refs ──────────────────────────────────────────────────────────────────
@@ -343,6 +350,48 @@ export function Player({
     e.target.value = '';
   }, [playTrack]);
 
+  // ── Playlist menus (REM, SEL, MISC) ───────────────────────────────────────
+  const listState = (): PlaylistState<Track> => ({ list: playlistRef.current, current: currentIdxRef.current });
+  const changeList = (next: PlaylistState<Track>) => {
+    playlistRef.current = next.list;
+    currentIdxRef.current = next.current;
+    setPlaylist(next.list);
+    setCurrentIdx(next.current);
+    setSelection({ selected: [], anchor: null });
+  };
+  const selected = selection.selected.filter((i) => i < playlist.length);
+  const setSelected = (indices: number[]) => setSelection({ selected: indices, anchor: null });
+
+  // A click elsewhere, or Escape, closes the open menu
+  useEffect(() => {
+    if (!openMenu) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.('.dd-player__menu-wrap')) setOpenMenu(null);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenMenu(null); };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [openMenu]);
+
+  type MenuItem = [label: string, run: () => void, disabled?: boolean];
+  const menu = (id: 'rem' | 'sel' | 'misc', label: string, title: string, items: MenuItem[]) => (
+    <div className="dd-player__menu-wrap">
+      <button className="dd-player__statusbar-btn" title={title} aria-haspopup="menu" aria-expanded={openMenu === id}
+        onClick={() => { setShowSkinMenu(false); setOpenMenu((m) => (m === id ? null : id)); }}>
+        {label}
+      </button>
+      <div role="menu" className={`dd-player__dropdown-menu dd-player__dropdown-menu--up dd-player__dropdown-menu--left${openMenu === id ? ' open' : ''}`}>
+        {items.map(([text, run, disabled]) => (
+          <button key={text} role="menuitem" disabled={disabled} onClick={() => { run(); setOpenMenu(null); }}>{text}</button>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── EQ presets ────────────────────────────────────────────────────────────
   const applyPreset = useCallback((name: string) => {
     const v = EQ_PRESETS[name];
@@ -485,8 +534,14 @@ export function Player({
           <div className="dd-player__track-list">
             <ol className="dd-player__track-items">
               {playlist.map((t, i) => (
-                <li key={i} className={i === currentIdx ? 'active' : ''}
-                  tabIndex={0} onClick={() => playTrack(i)}
+                <li key={i}
+                  className={[i === currentIdx && 'active', selected.includes(i) && 'selected'].filter(Boolean).join(' ')}
+                  aria-selected={selected.includes(i)}
+                  tabIndex={0}
+                  // Shift-click selects a range, not the text
+                  onMouseDown={e => { if (e.shiftKey) e.preventDefault(); }}
+                  onClick={e => setSelection(sel => clickTrack(sel, i, { toggle: e.ctrlKey || e.metaKey, range: e.shiftKey }))}
+                  onDoubleClick={() => playTrack(i)}
                   onKeyDown={e => e.key === 'Enter' && playTrack(i)}>
                   {t.artist ? `${t.title} — ${t.artist}` : t.title}
                 </li>
@@ -496,13 +551,26 @@ export function Player({
           <div className="dd-player__playlist-statusbar">
             <div className="dd-player__playlist-statusbar-btns">
               <button className="dd-player__statusbar-btn" title="Add" onClick={() => uploadRef.current?.click()}>ADD</button>
-              <button className="dd-player__statusbar-btn" title="Remove">REM</button>
-              <button className="dd-player__statusbar-btn" title="Select">SEL</button>
-              <button className="dd-player__statusbar-btn" title="Misc">MISC</button>
+              {menu('rem', 'REM', 'Remove', [
+                ['Remove selected', () => changeList(removeSelected(listState(), selected)), !selected.length],
+                ['Crop (keep selected)', () => changeList(crop(listState(), selected)), !selected.length],
+                ['Clear playlist', () => changeList(clear(listState())), !playlist.length],
+              ])}
+              {menu('sel', 'SEL', 'Select', [
+                ['Select all', () => setSelected(selectAll(playlist.length)), !playlist.length],
+                ['Select none', () => setSelected([]), !selected.length],
+                ['Invert selection', () => setSelected(invertSelection(playlist.length, selected)), !playlist.length],
+              ])}
+              {menu('misc', 'MISC', 'Misc', [
+                ['Sort by title', () => changeList(sortByTitle(listState())), playlist.length < 2],
+                ['Sort by artist', () => changeList(sortByArtist(listState())), playlist.length < 2],
+                ['Randomize list', () => changeList(randomize(listState())), playlist.length < 2],
+                ['Reverse list', () => changeList(reverse(listState())), playlist.length < 2],
+              ])}
             </div>
             <div className="dd-player__skin-side">
               <button className="dd-player__statusbar-btn dd-player__settings-btn" title="Settings"
-                onClick={() => setShowSkinMenu(v => !v)}>
+                onClick={() => { setOpenMenu(null); setShowSkinMenu(v => !v); }}>
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
