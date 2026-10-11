@@ -67,8 +67,9 @@ describe('Player', () => {
     render(<Player initialTracks={TRACKS} skin="tokyo-3-sunset" defaultFullscreen onSkinChange={onSkinChange} />);
     expect(windowProps.current.style).toMatchObject(SKINS['tokyo-3-sunset'].vars);
 
-    await act(async () => { fireEvent.click(screen.getByTitle('Settings')); });
-    await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: SKINS.pastelcore.label })); });
+    // Winamp's way: right-click the player, Skins
+    await act(async () => { fireEvent.contextMenu(document.querySelector('.dd-player__body')!); });
+    await act(async () => { fireEvent.click(screen.getByRole('menuitemcheckbox', { name: SKINS.pastelcore.label })); });
     expect(onSkinChange).toHaveBeenCalledWith('pastelcore');
     expect(windowProps.current.style).toMatchObject(SKINS.pastelcore.vars);
   });
@@ -93,5 +94,122 @@ describe('Player', () => {
     const { unmount } = render(<Player initialTracks={TRACKS} />);
     unmount();
     expect(dispose).toHaveBeenCalled();
+  });
+});
+
+describe('Player — the playlist, Winamp style', () => {
+  const MANY = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+    { title: 'Blue Monday', artist: 'New Order', src: '/blue.mp3' },
+  ];
+  const rows = () => [...document.querySelectorAll('.dd-player__track-items li')];
+  const titles = () => rows().map((r) => r.textContent);
+  const selectedRows = () => rows().filter((r) => r.classList.contains('selected')).map((r) => r.textContent);
+  // The track shown as playing
+  const nowPlaying = () => document.querySelector('.dd-player__neon')!.textContent;
+  const choose = async (menu: string, item: string) => {
+    await act(async () => { fireEvent.click(screen.getByTitle(menu)); });
+    await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: item })); });
+  };
+
+  it('a click selects, a double-click plays', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    const before = nowPlaying();
+    await act(async () => { fireEvent.click(rows()[1]); });
+    expect(selectedRows()).toEqual(['Archangel — Burial']);
+    expect(nowPlaying()).toBe(before);
+    await act(async () => { fireEvent.doubleClick(rows()[1]); });
+    expect(nowPlaying()).toContain('Archangel');
+  });
+
+  it('Ctrl/⌘-click and Shift-click select several', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await act(async () => { fireEvent.click(rows()[0]); });
+    await act(async () => { fireEvent.click(rows()[2], { shiftKey: true }); });
+    expect(selectedRows()).toHaveLength(3);
+    await act(async () => { fireEvent.click(rows()[1], { metaKey: true }); });
+    expect(selectedRows()).toEqual(['Rival Dealer — Burial', 'Blue Monday — New Order']);
+  });
+
+  it('REM removes the selected tracks, crops to them, or clears the list', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await act(async () => { fireEvent.click(rows()[1]); });
+    await choose('Remove', 'Remove selected');
+    expect(titles()).toEqual(['Rival Dealer — Burial', 'Blue Monday — New Order']);
+    await act(async () => { fireEvent.click(rows()[1]); });
+    await choose('Remove', 'Crop (keep selected)');
+    expect(titles()).toEqual(['Blue Monday — New Order']);
+    await choose('Remove', 'Clear playlist');
+    expect(titles()).toEqual([]);
+  });
+
+  it('SEL selects all, none, or the rest', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await choose('Select', 'Select all');
+    expect(selectedRows()).toHaveLength(3);
+    await choose('Select', 'Select none');
+    expect(selectedRows()).toHaveLength(0);
+    await act(async () => { fireEvent.click(rows()[0]); });
+    await choose('Select', 'Invert selection');
+    expect(selectedRows()).toEqual(['Archangel — Burial', 'Blue Monday — New Order']);
+  });
+
+  it('MISC sorts and reverses, keeping the playing track playing', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await choose('Misc', 'Sort by title');
+    expect(titles()).toEqual(['Archangel — Burial', 'Blue Monday — New Order', 'Rival Dealer — Burial']);
+    // Rival Dealer was the current track, and still is, now last
+    expect(rows()[2].classList.contains('active')).toBe(true);
+    await choose('Misc', 'Reverse list');
+    expect(titles()[0]).toBe('Rival Dealer — Burial');
+  });
+
+  it("greys out what doesn't apply, and closes the menu on a click elsewhere", async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await act(async () => { fireEvent.click(screen.getByTitle('Remove')); });
+    expect(screen.getByRole('menuitem', { name: 'Remove selected' })).toHaveProperty('disabled', true);
+    await act(async () => { fireEvent.pointerDown(document.body); });
+    expect(screen.getByTitle('Remove').getAttribute('aria-expanded')).toBe('false');
+  });
+});
+
+describe('Player — right-click menu', () => {
+  const MANY = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  const openMenu = async () => {
+    await act(async () => { fireEvent.contextMenu(document.querySelector('.dd-player__body')!, { clientX: 40, clientY: 40 }); });
+  };
+
+  it('has no settings button, and opens Winamp\'s main menu on right-click', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen skin="tokyo-3-sunset" />);
+    expect(screen.queryByTitle('Settings')).toBeNull();
+    await openMenu();
+    const labels = [...document.querySelectorAll('.dd-player__main-menu button')].map((b) => b.textContent!.replace('✓', ''));
+    expect(labels).toEqual(['Play', 'Pause', 'Stop', 'Previous', 'Next', 'Playlist', 'Equalizer', ...Object.values(SKINS).map((s) => s.label)]);
+    expect(screen.getByRole('menuitemcheckbox', { name: /Playlist/ }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('menuitemcheckbox', { name: new RegExp(SKINS['tokyo-3-sunset'].label) }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('toggles the panels, and closes on a click elsewhere or Escape', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await openMenu();
+    await act(async () => { fireEvent.click(screen.getByRole('menuitemcheckbox', { name: /Equalizer/ })); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+    await openMenu();
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+    await openMenu();
+    await act(async () => { fireEvent.pointerDown(document.body); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+  });
+
+  it('plays the next track from the menu', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await openMenu();
+    await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: 'Next' })); });
+    expect(document.querySelector('.dd-player__neon')!.textContent).toContain('Archangel');
   });
 });
