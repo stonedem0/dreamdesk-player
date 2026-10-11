@@ -644,3 +644,12 @@
 .dd-player .dd-win-controls .dd-btn--fullscreen svg,
 .dd-player .dd-win-controls .dd-btn--minimize svg,
 .dd-player .dd-win-controls .dd-btn--close svg { width: 10px; height: 10px; }
+
+/* The visualizer: click to cycle bars, oscilloscope, off */
+.dd-player__viz-canvas {
+  cursor: pointer;
+}
+.dd-player__viz-canvas:focus-visible {
+  outline: 1px dotted var(--color-text-primary, currentColor);
+  outline-offset: 1px;
+}

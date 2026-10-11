@@ -70,3 +70,58 @@ export function drawHistogram(ctx, canvas, data, prevData, stops = DEFAULT_HISTO
 
   ctx.shadowBlur = 0;
 }
+
+/**
+ * Draw one frame of the oscilloscope: the waveform as a line across the
+ * display, Winamp's second visualizer mode. Coloured with the same ramp as the
+ * bars, left to right.
+ *
+ * @param {CanvasRenderingContext2D} ctx Cleared and drawn into.
+ * @param {HTMLCanvasElement} canvas Read for its pixel dimensions.
+ * @param {ArrayLike<number>} wave Time-domain samples, 0-255 with 128 as
+ *   silence (AnalyserNode.getByteTimeDomainData).
+ * @param {GradientStop[]} [stops] The skin's ramp; defaults to
+ *   DEFAULT_HISTOGRAM_STOPS.
+ */
+export function drawOscilloscope(ctx, canvas, wave, stops = DEFAULT_HISTOGRAM_STOPS) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!wave.length) return;
+
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  for (const [p, c] of stops) grad.addColorStop(p, c);
+
+  // Fewer points than samples: one per pixel column is all the display shows
+  const points = Math.min(wave.length, Math.max(2, Math.round(canvas.width)));
+  const step = wave.length / points;
+  const mid = canvas.height / 2;
+
+  ctx.beginPath();
+  for (let i = 0; i < points; i++) {
+    const v = (wave[Math.floor(i * step)] - 128) / 128;
+    const x = (i / (points - 1)) * canvas.width;
+    const y = mid - v * (mid - 1);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+/**
+ * Winamp's visualizer modes, in the order a click cycles through them.
+ * @typedef {'bars' | 'scope' | 'off'} VisualizerMode
+ */
+
+/** @type {VisualizerMode[]} */
+export const VISUALIZER_MODES = ['bars', 'scope', 'off'];
+
+/**
+ * The mode after `mode`, as a click on the display moves on.
+ * @param {VisualizerMode} mode
+ * @returns {VisualizerMode}
+ */
+export function nextVisualizerMode(mode) {
+  const i = VISUALIZER_MODES.indexOf(mode);
+  return VISUALIZER_MODES[(i + 1) % VISUALIZER_MODES.length];
+}

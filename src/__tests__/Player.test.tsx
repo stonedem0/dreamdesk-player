@@ -213,3 +213,23 @@ describe('Player — right-click menu', () => {
     expect(document.querySelector('.dd-player__neon')!.textContent).toContain('Archangel');
   });
 });
+
+describe('Player — visualizer modes', () => {
+  it('cycles bars, oscilloscope and off when the display is clicked, and reports it', async () => {
+    const onChange = vi.fn();
+    render(<Player initialTracks={TRACKS} onVisualizerModeChange={onChange} />);
+    const viz = screen.getByRole('button', { name: /Visualizer: spectrum/ });
+    await act(async () => { fireEvent.click(viz); });
+    expect(onChange).toHaveBeenLastCalledWith('scope');
+    expect(viz.getAttribute('aria-label')).toMatch(/oscilloscope/);
+    await act(async () => { fireEvent.keyDown(viz, { key: 'Enter' }); });
+    expect(onChange).toHaveBeenLastCalledWith('off');
+    await act(async () => { fireEvent.click(viz); });
+    expect(onChange).toHaveBeenLastCalledWith('bars');
+  });
+
+  it('starts in the mode it is given', () => {
+    render(<Player initialTracks={TRACKS} defaultVisualizerMode="off" />);
+    expect(screen.getByRole('button', { name: /Visualizer: off/ })).toBeTruthy();
+  });
+});
