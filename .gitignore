@@ -11,6 +11,7 @@ dist/
 
 # local working notes
 PLAN.md
+IDEAS.md
 
 # test coverage reports (npm run coverage)
 coverage
