@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Window as DdWindow } from 'dreamdesk-ui';
 import {
   clickTrack, selectAll, invertSelection, removeSelected, crop, clear,
@@ -97,7 +98,8 @@ export function Player({
   const [showPlaylist, setShowPlaylist] = useState(defaultFullscreen);
   const [showEq, setShowEq]             = useState(defaultFullscreen);
   const [showPresets, setShowPresets]   = useState(false);
-  const [showSkinMenu, setShowSkinMenu] = useState(false);
+  // Winamp's main menu: right-click the player (transport, panels, skins)
+  const [mainMenu, setMainMenu]         = useState<{ x: number; y: number } | null>(null);
   const [playlist, setPlaylist]         = useState<Track[]>(initialTracks);
   const [currentIdx, setCurrentIdx]     = useState(0);
   // Winamp's playlist: click selects, double-click (or Enter) plays
@@ -381,7 +383,7 @@ export function Player({
   const menu = (id: 'rem' | 'sel' | 'misc', label: string, title: string, items: MenuItem[]) => (
     <div className="dd-player__menu-wrap">
       <button className="dd-player__statusbar-btn" title={title} aria-haspopup="menu" aria-expanded={openMenu === id}
-        onClick={() => { setShowSkinMenu(false); setOpenMenu((m) => (m === id ? null : id)); }}>
+        onClick={() => { setMainMenu(null); setOpenMenu((m) => (m === id ? null : id)); }}>
         {label}
       </button>
       <div role="menu" className={`dd-player__dropdown-menu dd-player__dropdown-menu--up dd-player__dropdown-menu--left${openMenu === id ? ' open' : ''}`}>
@@ -391,6 +393,59 @@ export function Player({
       </div>
     </div>
   );
+
+  // ── Main menu (right-click) ───────────────────────────────────────────────
+  const openMainMenu = (e: React.MouseEvent) => {
+    // Inputs and buttons keep the browser's menu (copy, paste)
+    if ((e.target as Element).closest('input, select, textarea')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setOpenMenu(null);
+    setMainMenu({ x: e.clientX, y: e.clientY });
+  };
+  const mainMenuRef = useRef<HTMLDivElement>(null);
+  // Kept on screen: flip left/up if it would spill over an edge
+  useLayoutEffect(() => {
+    const el = mainMenuRef.current;
+    if (!el || !mainMenu) return;
+    const r = el.getBoundingClientRect();
+    const left = mainMenu.x + r.width > window.innerWidth ? Math.max(0, mainMenu.x - r.width) : mainMenu.x;
+    const top = mainMenu.y + r.height > window.innerHeight ? Math.max(0, mainMenu.y - r.height) : mainMenu.y;
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  }, [mainMenu]);
+  useEffect(() => {
+    if (!mainMenu) return;
+    const close = () => setMainMenu(null);
+    const onPointerDown = (e: PointerEvent) => { if (!mainMenuRef.current?.contains(e.target as Node)) close(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('blur', close);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', close);
+      window.removeEventListener('resize', close);
+    };
+  }, [mainMenu]);
+
+  const chooseSkin = (id: string) => { setSkinId(id); onSkinChange?.(id); };
+  type MainItem = { label: string; run: () => void; checked?: boolean; disabled?: boolean } | 'separator' | { heading: string };
+  const mainItems: MainItem[] = [
+    { label: 'Play', run: () => void handlePlay(), disabled: isPlaying || !playlist.length },
+    { label: 'Pause', run: handlePause, disabled: !isPlaying },
+    { label: 'Stop', run: handleStop },
+    { label: 'Previous', run: goPrev, disabled: !playlist.length },
+    { label: 'Next', run: goNext, disabled: !playlist.length },
+    'separator',
+    { label: 'Playlist', run: () => setShowPlaylist(v => !v), checked: showPlaylist },
+    { label: 'Equalizer', run: () => setShowEq(v => !v), checked: showEq },
+    'separator',
+    { heading: 'Skins' },
+    ...Object.values(SKINS).map(sk => ({ label: sk.label, run: () => chooseSkin(sk.id), checked: sk.id === skinId })),
+  ];
 
   // ── EQ presets ────────────────────────────────────────────────────────────
   const applyPreset = useCallback((name: string) => {
@@ -440,6 +495,7 @@ export function Player({
   const timer = fmtTime(remaining);
 
   return (
+    <>
     <DdWindow
       title="player"
       movable
@@ -463,7 +519,7 @@ export function Player({
       className="dd-player"
     >
       {/* Player body */}
-      <div className="dd-player__body">
+      <div className="dd-player__body" onContextMenu={openMainMenu}>
         <div className="dd-player__display">
 
           <div className="dd-player__viz">
@@ -529,7 +585,7 @@ export function Player({
 
       {/* Playlist */}
       {showPlaylist && (
-        <div className="dd-player__playlist" ref={playlistDomRef}>
+        <div className="dd-player__playlist" ref={playlistDomRef} onContextMenu={openMainMenu}>
           <div className="dd-player__playlist-header">playlist</div>
           <div className="dd-player__track-list">
             <ol className="dd-player__track-items">
@@ -568,29 +624,13 @@ export function Player({
                 ['Reverse list', () => changeList(reverse(listState())), playlist.length < 2],
               ])}
             </div>
-            <div className="dd-player__skin-side">
-              <button className="dd-player__statusbar-btn dd-player__settings-btn" title="Settings"
-                onClick={() => { setOpenMenu(null); setShowSkinMenu(v => !v); }}>
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
-              <div className={`dd-player__dropdown-menu dd-player__dropdown-menu--up${showSkinMenu ? ' open' : ''}`}>
-                {Object.values(SKINS).map(s => (
-                  <button key={s.id} role="menuitem" onClick={() => { setSkinId(s.id); setShowSkinMenu(false); onSkinChange?.(s.id); }}>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}
 
       {/* EQ */}
       {showEq && (
-        <div className="dd-player__eq" ref={eqDomRef}>
+        <div className="dd-player__eq" ref={eqDomRef} onContextMenu={openMainMenu}>
           <div className="dd-player__eq-panel">
             <div className="dd-player__eq-header"><span>equalizer</span></div>
             <div className="dd-player__eq-presets">
@@ -622,5 +662,27 @@ export function Player({
         </div>
       )}
     </DdWindow>
+    {mainMenu && createPortal(
+      <div
+        ref={mainMenuRef}
+        role="menu"
+        className="dd-player__dropdown-menu dd-player__main-menu open"
+        style={{ ...(skin.vars as React.CSSProperties), left: mainMenu.x, top: mainMenu.y }}
+        onContextMenu={e => e.preventDefault()}
+      >
+        {mainItems.map((item, i) =>
+          item === 'separator' ? <div key={i} className="dd-player__menu-separator" role="separator" />
+          : 'heading' in item ? <div key={i} className="dd-player__menu-heading">{item.heading}</div>
+          : (
+            <button key={i} role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+              aria-checked={item.checked} disabled={item.disabled}
+              onClick={() => { item.run(); setMainMenu(null); }}>
+              <span className="dd-player__menu-check" aria-hidden>{item.checked ? '✓' : ''}</span>{item.label}
+            </button>
+          ))}
+      </div>,
+      document.body,
+    )}
+    </>
   );
 }

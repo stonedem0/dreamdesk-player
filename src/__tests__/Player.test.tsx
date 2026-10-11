@@ -67,8 +67,9 @@ describe('Player', () => {
     render(<Player initialTracks={TRACKS} skin="tokyo-3-sunset" defaultFullscreen onSkinChange={onSkinChange} />);
     expect(windowProps.current.style).toMatchObject(SKINS['tokyo-3-sunset'].vars);
 
-    await act(async () => { fireEvent.click(screen.getByTitle('Settings')); });
-    await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: SKINS.pastelcore.label })); });
+    // Winamp's way: right-click the player, Skins
+    await act(async () => { fireEvent.contextMenu(document.querySelector('.dd-player__body')!); });
+    await act(async () => { fireEvent.click(screen.getByRole('menuitemcheckbox', { name: SKINS.pastelcore.label })); });
     expect(onSkinChange).toHaveBeenCalledWith('pastelcore');
     expect(windowProps.current.style).toMatchObject(SKINS.pastelcore.vars);
   });
@@ -170,5 +171,45 @@ describe('Player — the playlist, Winamp style', () => {
     expect(screen.getByRole('menuitem', { name: 'Remove selected' })).toHaveProperty('disabled', true);
     await act(async () => { fireEvent.pointerDown(document.body); });
     expect(screen.getByTitle('Remove').getAttribute('aria-expanded')).toBe('false');
+  });
+});
+
+describe('Player — right-click menu', () => {
+  const MANY = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  const openMenu = async () => {
+    await act(async () => { fireEvent.contextMenu(document.querySelector('.dd-player__body')!, { clientX: 40, clientY: 40 }); });
+  };
+
+  it('has no settings button, and opens Winamp\'s main menu on right-click', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen skin="tokyo-3-sunset" />);
+    expect(screen.queryByTitle('Settings')).toBeNull();
+    await openMenu();
+    const labels = [...document.querySelectorAll('.dd-player__main-menu button')].map((b) => b.textContent!.replace('✓', ''));
+    expect(labels).toEqual(['Play', 'Pause', 'Stop', 'Previous', 'Next', 'Playlist', 'Equalizer', ...Object.values(SKINS).map((s) => s.label)]);
+    expect(screen.getByRole('menuitemcheckbox', { name: /Playlist/ }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('menuitemcheckbox', { name: new RegExp(SKINS['tokyo-3-sunset'].label) }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('toggles the panels, and closes on a click elsewhere or Escape', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await openMenu();
+    await act(async () => { fireEvent.click(screen.getByRole('menuitemcheckbox', { name: /Equalizer/ })); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+    await openMenu();
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+    await openMenu();
+    await act(async () => { fireEvent.pointerDown(document.body); });
+    expect(document.querySelector('.dd-player__main-menu')).toBeNull();
+  });
+
+  it('plays the next track from the menu', async () => {
+    render(<Player initialTracks={MANY} defaultFullscreen />);
+    await openMenu();
+    await act(async () => { fireEvent.click(screen.getByRole('menuitem', { name: 'Next' })); });
+    expect(document.querySelector('.dd-player__neon')!.textContent).toContain('Archangel');
   });
 });

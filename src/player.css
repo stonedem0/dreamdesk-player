@@ -424,17 +424,6 @@
   &:active { transform: translateY(1px); }
 }
 
-.dd-player__settings-btn {
-  width: 20px;
-  height: 17px;
-}
-
-.dd-player__skin-side {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
 .dd-player__track-items {
   margin: 0;
   padding-left: 19px;
@@ -451,6 +440,40 @@
   &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
 }
 
+/* Winamp's main menu: opened by right-clicking the player, drawn on the page
+   (outside the window) at the cursor; it carries the skin's colours itself */
+.dd-player__dropdown-menu.dd-player__main-menu {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  z-index: 100000;
+  min-width: 170px;
+  max-height: none;
+  font-family: monospace;
+  font-size: 11px;
+  button { display: flex; align-items: center; gap: 4px; }
+}
+
+.dd-player__menu-check {
+  display: inline-block;
+  width: 1.1em;
+}
+
+.dd-player__menu-separator {
+  height: 1px;
+  margin: 3px 6px;
+  background: var(--border-color, currentColor);
+  opacity: 0.6;
+}
+
+.dd-player__menu-heading {
+  padding: 4px 10px 2px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dropdown-menu-text, var(--color-text-primary));
+}
+
 /* REM / SEL / MISC: a button with its menu above it */
 .dd-player__menu-wrap {
   position: relative;
@@ -462,7 +485,7 @@
   left: 0;
 }
 
-.dd-player .dd-player__dropdown-menu button:disabled {
+.dd-player__dropdown-menu button:disabled {
   opacity: 0.45;
   cursor: default;
   background: none;
