@@ -1,0 +1,60 @@
+name: Release to npm
+
+# Publish a release: bump "version" in package.json in a PR, merge it, then
+# create a GitHub Release tagged vX.Y.Z (e.g. gh release create v0.1.2
+# --generate-notes). This checks, tests and publishes that tag to npm.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # npm trusted publishing: GitHub vouches for this workflow, so no npm
+      # token is stored. Set up on npmjs.com for @dreamdesk/player.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Trusted publishing needs npm 11.5.1 or later
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - name: Check the release tag matches the version
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "The release is tagged $TAG but package.json says $VERSION"
+            exit 1
+          fi
+
+      - run: npm run lint
+      - run: npm test
+
+      # Builds first (prepublishOnly). A version already on npm is skipped, so
+      # re-running is safe.
+      - name: Publish @dreamdesk/player
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@dreamdesk/player@$VERSION" version > /dev/null 2>&1; then
+            echo "@dreamdesk/player@$VERSION is already on npm: skipped"
+          else
+            npm publish --access public
+          fi

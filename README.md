@@ -72,6 +72,10 @@ Like Winamp: click a track to select it (Ctrl/⌘ or Shift for several) and doub
 
 The `on…Change` callbacks are there so a host can remember the visitor's choices. Build the package with `npm run build`; the output goes to `dist/`.
 
+## Releasing
+
+Bump `version` in `package.json` in a PR and merge it, then create a GitHub Release tagged `vX.Y.Z` (`gh release create v0.1.2 --generate-notes`). The **Release to npm** workflow checks the tag matches the version, runs lint and tests, and publishes `@dreamdesk/player` to npm through trusted publishing (no npm token).
+
 ## Tests
 
 ```sh
