@@ -1,11 +1,11 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Window as DdWindow } from 'dreamdesk-ui';
+import { Window as DdWindow } from '@dreamdesk/ui';
 import {
   clickTrack, selectAll, invertSelection, removeSelected, crop, clear,
   sortByTitle, sortByArtist, reverse, randomize, type PlaylistState, type Selection,
 } from './playlist';
-import 'dreamdesk-ui/style.css';
+import '@dreamdesk/ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import {

@@ -41,10 +41,10 @@ MIT
 
 ## React package
 
-The player is also a React component, `@dreamdesk/player`, built on [dreamdesk-ui](https://github.com/stonedem0/dreamdesk-ui).
+The player is also a React component, `@dreamdesk/player`, built on [@dreamdesk/ui](https://github.com/stonedem0/dreamdesk) (formerly dreamdesk-ui).
 
 ```sh
-npm install @dreamdesk/player dreamdesk-ui react react-dom
+npm install @dreamdesk/player @dreamdesk/ui react react-dom
 ```
 
 ```tsx
@@ -57,7 +57,7 @@ import "@dreamdesk/player/css";
 />
 ```
 
-It needs `dreamdesk-ui` 3.1 or later. `dreamdesk-ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each.
+It needs `@dreamdesk/ui` 3.1 or later (use it instead of the older `dreamdesk-ui`, not alongside it). `@dreamdesk/ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each.
 
 Like Winamp: click a track to select it (Ctrl/⌘ or Shift for several) and double-click to play; REM, SEL and MISC manage the playlist; click the display to cycle the visualizer (bars, oscilloscope, off); right-click the player for its menu, including skins.
 
@@ -68,7 +68,7 @@ Like Winamp: click a track to select it (Ctrl/⌘ or Shift for several) and doub
 | `defaultFullscreen` / `onFullscreenChange` | start expanded (playlist and EQ open); called when it changes |
 | `defaultVisualizerMode` / `onVisualizerModeChange` | `"bars"`, `"scope"` or `"off"`; called when it changes |
 | `initialX`, `initialY` / `onMove` | where the window starts; called after it's dragged |
-| `icon`, `disableSnap`, `onClose` | passed to the dreamdesk-ui window |
+| `icon`, `disableSnap`, `onClose` | passed to the @dreamdesk/ui window |
 
 The `on…Change` callbacks are there so a host can remember the visitor's choices. Build the package with `npm run build`; the output goes to `dist/`.
 
@@ -79,4 +79,4 @@ npm test           # Vitest (happy-dom)
 npm run coverage   # tests + coverage report (HTML in coverage/)
 ```
 
-happy-dom has no Web Audio, so `src/__tests__/fakeAudio.ts` provides a small fake `AudioContext` that records how nodes are connected; `src/__tests__/setup.ts` installs it, stubs media playback and `fetch`. The `Player` tests swap dreamdesk-ui's `Window` for a stand-in that records its props. CI runs the build and tests on every PR.
+happy-dom has no Web Audio, so `src/__tests__/fakeAudio.ts` provides a small fake `AudioContext` that records how nodes are connected; `src/__tests__/setup.ts` installs it, stubs media playback and `fetch`. The `Player` tests swap @dreamdesk/ui's `Window` for a stand-in that records its props. CI runs the build and tests on every PR.

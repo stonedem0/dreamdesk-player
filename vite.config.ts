@@ -31,7 +31,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // Peers come from the host app, so it ends up with one copy of each
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'dreamdesk-ui', /^dreamdesk-ui\//],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@dreamdesk/ui', /^@dreamdesk\/ui\//],
     },
   },
 });
