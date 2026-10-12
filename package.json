@@ -15,11 +15,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stonedem0/winamp-tokyo-3.git"
+    "url": "git+https://github.com/stonedem0/dreamdesk-player.git"
   },
-  "homepage": "https://github.com/stonedem0/winamp-tokyo-3#readme",
+  "homepage": "https://github.com/stonedem0/dreamdesk-player#readme",
   "bugs": {
-    "url": "https://github.com/stonedem0/winamp-tokyo-3/issues"
+    "url": "https://github.com/stonedem0/dreamdesk-player/issues"
   },
   "type": "module",
   "main": "./dist/index.js",
