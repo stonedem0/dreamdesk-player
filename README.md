@@ -35,7 +35,7 @@ Minimize/unminimize animations are defined in `player.js` (search for `customMin
 
 ## License
 
-MIT (or your preferred license). Update this section as needed.
+MIT
 
 
 
@@ -57,7 +57,20 @@ import "@dreamdesk/player/css";
 />
 ```
 
-`dreamdesk-ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each. Build the package with `npm run build`; the output goes to `dist/`.
+It needs `dreamdesk-ui` 3.1 or later. `dreamdesk-ui`, `react` and `react-dom` are peer dependencies, so your app provides them and ends up with a single copy of each.
+
+Like Winamp: click a track to select it (Ctrl/⌘ or Shift for several) and double-click to play; REM, SEL and MISC manage the playlist; click the display to cycle the visualizer (bars, oscilloscope, off); right-click the player for its menu, including skins.
+
+| Prop | |
+|---|---|
+| `initialTracks` | `{ title, artist, src }[]` to start with |
+| `skin` / `onSkinChange` | `"tokyo-3-sunset"` or `"pastelcore"`; called when the visitor picks one |
+| `defaultFullscreen` / `onFullscreenChange` | start expanded (playlist and EQ open); called when it changes |
+| `defaultVisualizerMode` / `onVisualizerModeChange` | `"bars"`, `"scope"` or `"off"`; called when it changes |
+| `initialX`, `initialY` / `onMove` | where the window starts; called after it's dragged |
+| `icon`, `disableSnap`, `onClose` | passed to the dreamdesk-ui window |
+
+The `on…Change` callbacks are there so a host can remember the visitor's choices. Build the package with `npm run build`; the output goes to `dist/`.
 
 ## Tests
 
