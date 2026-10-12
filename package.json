@@ -1,6 +1,26 @@
 {
   "name": "@dreamdesk/player",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": "A Winamp-style music player for React, built on @dreamdesk/ui: playlist, 7-band EQ with presets, skins, and a visualizer.",
+  "keywords": [
+    "winamp",
+    "music-player",
+    "audio",
+    "equalizer",
+    "visualizer",
+    "react",
+    "dreamdesk",
+    "retro"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stonedem0/winamp-tokyo-3.git"
+  },
+  "homepage": "https://github.com/stonedem0/winamp-tokyo-3#readme",
+  "bugs": {
+    "url": "https://github.com/stonedem0/winamp-tokyo-3/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,8 +38,13 @@
     "dist",
     "core",
     "!core/__checks__",
+    "!core/__tests__",
     "visualizer.js",
-    "README.md"
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css"
   ],
   "publishConfig": {
     "access": "public"
@@ -34,11 +59,12 @@
     "coverage": "vitest run --coverage"
   },
   "peerDependencies": {
-    "dreamdesk-ui": ">=3.0.0",
+    "@dreamdesk/ui": ">=3.1.0",
     "react": ">=18",
     "react-dom": ">=18"
   },
   "devDependencies": {
+    "@dreamdesk/ui": "^3.1.0",
     "@eslint/js": "^9.39.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
@@ -46,7 +72,6 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@vitest/coverage-v8": "^3.2.7",
-    "dreamdesk-ui": "^3.0.1",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",

@@ -6,10 +6,10 @@ import { EQ_PRESETS } from '../../core/eq-presets.js';
 import { Player } from '../Player';
 import { SKINS } from '../skins';
 
-// Stand-in for dreamdesk-ui's Window that records its props, so these tests
+// Stand-in for @dreamdesk/ui's Window that records its props, so these tests
 // cover the Player itself whatever dreamdesk-ui version is installed
 const windowProps = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
-vi.mock('dreamdesk-ui', () => ({
+vi.mock('@dreamdesk/ui', () => ({
   Window: (props: Record<string, unknown> & { children?: ReactNode }) => {
     windowProps.current = props;
     return <div data-testid="window">{props.children}</div>;
