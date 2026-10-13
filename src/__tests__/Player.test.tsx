@@ -98,6 +98,67 @@ describe('Player', () => {
   });
 });
 
+describe('Player — panels fold open and shut', () => {
+  // Animations the test finishes by hand, kept per element like the real ones
+  type Anim = { el: HTMLElement; finished: Promise<void>; finish: () => void; cancel: () => void };
+  let anims: Anim[] = [];
+  beforeEach(() => {
+    anims = [];
+    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(function (this: HTMLElement) {
+      let done!: () => void, abort!: (e: unknown) => void;
+      const finished = new Promise<void>((res, rej) => { done = res; abort = rej; });
+      const a: Anim = {
+        el: this, finished,
+        finish: () => { anims = anims.filter((x) => x !== a); done(); },
+        cancel: () => { anims = anims.filter((x) => x !== a); abort(new DOMException('cancelled', 'AbortError')); },
+      };
+      anims.push(a);
+      return a as unknown as Animation;
+    });
+    vi.spyOn(HTMLElement.prototype, 'getAnimations').mockImplementation(function (this: HTMLElement) {
+      return anims.filter((a) => a.el === this) as unknown as Animation[];
+    });
+  });
+  const finishAll = () => act(async () => { [...anims].forEach((a) => a.finish()); });
+  const click = (label: string) => act(async () => { fireEvent.click(screen.getByText(label)); });
+
+  it('PL folds the playlist open, and shut before it goes', async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('PL');
+    expect(anims.map((a) => a.el)).toEqual([playlist()]);
+    await finishAll();
+    await click('PL');
+    expect(playlist()).not.toBeNull(); // still folding shut
+    await finishAll();
+    expect(playlist()).toBeNull();
+  });
+
+  it('a click while it folds shut opens it again, from there', async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('EQ');
+    await finishAll();
+    await click('EQ');
+    await click('EQ');
+    await finishAll();
+    expect(eq()).not.toBeNull();
+  });
+
+  it("expanding folds open only what wasn't open, and collapsing shuts only that", async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('PL');
+    await finishAll();
+    const fullscreen = windowProps.current.fullscreenAnimation as (el: HTMLElement, o: { isFullscreen: boolean }) => void;
+    await act(async () => fullscreen(document.body, { isFullscreen: true }));
+    expect(anims.map((a) => a.el)).toEqual([eq()]);
+    await finishAll();
+    await act(async () => fullscreen(document.body, { isFullscreen: false }));
+    expect(anims.map((a) => a.el)).toEqual([eq()]);
+    await finishAll();
+    expect(eq()).toBeNull();
+    expect(playlist()).not.toBeNull();
+  });
+});
+
 describe('Player — the playlist, Winamp style', () => {
   const MANY = [
     { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
