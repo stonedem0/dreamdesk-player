@@ -212,6 +212,10 @@ export function createVisualizer(options = {}) {
   let pixelRatioLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let colorsLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let audioLevelSmoothed = 0;
+  // Animation time runs only while the music plays, so a pause holds the last
+  // frame and playing on carries on from it rather than jumping
+  let playTime = 0;
+  let lastFrameMs = /** @type {number|null} */ (null);
   let fftTexture = /** @type {WebGLTexture|null} */ (null);
   let fftSize = 0;
   let fftData8 = /** @type {Uint8Array|null} */ (null);
@@ -407,6 +411,8 @@ export function createVisualizer(options = {}) {
   function updateFftTexture() {
     if (!gl) return;
     const audioPaused = !isAudioActive();
+    // Paused: the texture and the level keep the last frame's values
+    if (audioPaused && fftData8) return;
   
     fftUpdateCounter++;
     if (fftUpdateCounter < 2) return;
@@ -426,9 +432,7 @@ export function createVisualizer(options = {}) {
     if (!fftData8) return;
 
     // getByteFrequencyData already normalizes dB to 0-255 against the analyser's
-    // own minDecibels/maxDecibels, so it fills the upload buffer directly. While
-    // paused we leave the last frame in place - u_time is frozen too, so the
-    // figure holds its shape rather than collapsing.
+    // own minDecibels/maxDecibels, so it fills the upload buffer directly.
     if (!audioPaused) analyser.getByteFrequencyData(fftData8);
 
     let bassAvg = 0;
@@ -470,6 +474,8 @@ export function createVisualizer(options = {}) {
     if (isAudioStopped()) {
       if (fftData8) fftData8.fill(0);
       audioLevelSmoothed = 0;
+      playTime = 0;
+      lastFrameMs = null;
       return;
     }
   
@@ -479,10 +485,14 @@ export function createVisualizer(options = {}) {
 
     gl.useProgram(program);
     if (colorsLoc) gl.uniform3fv(colorsLoc, colors.flat());
-    if (timeLoc) {
-      const t = isAudioActive() ? timeMs * 0.001 : 0;
-      gl.uniform1f(timeLoc, t);
+    if (isAudioActive()) {
+      // Capped, so a tab left in the background doesn't skip ahead
+      if (lastFrameMs !== null) playTime += Math.min(timeMs - lastFrameMs, 100) * 0.001;
+      lastFrameMs = timeMs;
+    } else {
+      lastFrameMs = null;
     }
+    if (timeLoc) gl.uniform1f(timeLoc, playTime);
     if (resolutionLoc) {
       gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
     }
