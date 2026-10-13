@@ -59,7 +59,8 @@ describe('Player', () => {
     expect(playlist()).not.toBeNull();
     expect(eq()).not.toBeNull();
     expect(windowProps.current.defaultFullscreen).toBe(true);
-    expect(windowProps.current.onFullscreen).toBe(onFullscreenChange);
+    act(() => (windowProps.current.onFullscreen as (fs: boolean) => void)(false));
+    expect(onFullscreenChange).toHaveBeenCalledWith(false);
   });
 
   it('switches skin from the settings menu and reports it', async () => {
@@ -94,6 +95,67 @@ describe('Player', () => {
     const { unmount } = render(<Player initialTracks={TRACKS} />);
     unmount();
     expect(dispose).toHaveBeenCalled();
+  });
+});
+
+describe('Player — panels fold open and shut', () => {
+  // Animations the test finishes by hand, kept per element like the real ones
+  type Anim = { el: HTMLElement; finished: Promise<void>; finish: () => void; cancel: () => void };
+  let anims: Anim[] = [];
+  beforeEach(() => {
+    anims = [];
+    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(function (this: HTMLElement) {
+      let done!: () => void, abort!: (e: unknown) => void;
+      const finished = new Promise<void>((res, rej) => { done = res; abort = rej; });
+      const a: Anim = {
+        el: this, finished,
+        finish: () => { anims = anims.filter((x) => x !== a); done(); },
+        cancel: () => { anims = anims.filter((x) => x !== a); abort(new DOMException('cancelled', 'AbortError')); },
+      };
+      anims.push(a);
+      return a as unknown as Animation;
+    });
+    vi.spyOn(HTMLElement.prototype, 'getAnimations').mockImplementation(function (this: HTMLElement) {
+      return anims.filter((a) => a.el === this) as unknown as Animation[];
+    });
+  });
+  const finishAll = () => act(async () => { [...anims].forEach((a) => a.finish()); });
+  const click = (label: string) => act(async () => { fireEvent.click(screen.getByText(label)); });
+
+  it('PL folds the playlist open, and shut before it goes', async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('PL');
+    expect(anims.map((a) => a.el)).toEqual([playlist()]);
+    await finishAll();
+    await click('PL');
+    expect(playlist()).not.toBeNull(); // still folding shut
+    await finishAll();
+    expect(playlist()).toBeNull();
+  });
+
+  it('a click while it folds shut opens it again, from there', async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('EQ');
+    await finishAll();
+    await click('EQ');
+    await click('EQ');
+    await finishAll();
+    expect(eq()).not.toBeNull();
+  });
+
+  it("expanding folds open only what wasn't open, and collapsing shuts only that", async () => {
+    render(<Player initialTracks={TRACKS} />);
+    await click('PL');
+    await finishAll();
+    const fullscreen = windowProps.current.fullscreenAnimation as (el: HTMLElement, o: { isFullscreen: boolean }) => void;
+    await act(async () => fullscreen(document.body, { isFullscreen: true }));
+    expect(anims.map((a) => a.el)).toEqual([eq()]);
+    await finishAll();
+    await act(async () => fullscreen(document.body, { isFullscreen: false }));
+    expect(anims.map((a) => a.el)).toEqual([eq()]);
+    await finishAll();
+    expect(eq()).toBeNull();
+    expect(playlist()).not.toBeNull();
   });
 });
 
@@ -231,5 +293,48 @@ describe('Player — visualizer modes', () => {
   it('starts in the mode it is given', () => {
     render(<Player initialTracks={TRACKS} defaultVisualizerMode="off" />);
     expect(screen.getByRole('button', { name: /Visualizer: off/ })).toBeTruthy();
+  });
+});
+
+describe('Player — the WebGL visualizer window', () => {
+  it('hands out its audio for a visualizer elsewhere, and takes it back when it goes', () => {
+    const onAudioSource = vi.fn();
+    const { unmount } = render(<Player initialTracks={TRACKS} onAudioSource={onAudioSource} />);
+    const source = onAudioSource.mock.lastCall![0];
+    expect(source.analyser).toBeTruthy();
+    expect(source.audio).toBeInstanceOf(HTMLAudioElement);
+    unmount();
+    expect(onAudioSource).toHaveBeenLastCalledWith(null);
+  });
+
+  it("opens it from the right-click menu, Winamp's way, only when there is one", async () => {
+    const { container, rerender } = render(<Player initialTracks={TRACKS} />);
+    const menu = async () => { await act(async () => { fireEvent.contextMenu(container.querySelector('.dd-player__body')!); }); };
+    await menu();
+    expect(screen.queryByRole('menuitemcheckbox', { name: /Visualization/ })).toBeNull();
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+    const onToggle = vi.fn();
+    rerender(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen />);
+    await menu();
+    const item = screen.getByRole('menuitemcheckbox', { name: /Visualization/ });
+    expect(item.getAttribute('aria-checked')).toBe('true');
+    await act(async () => { fireEvent.click(item); });
+    expect(onToggle).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'VIZ' })).toBeNull();
+  });
+
+  it('expanding opens it with the playlist and EQ, and collapsing puts it back', () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen={false} />);
+    const onFullscreen = () => windowProps.current.onFullscreen as (fs: boolean) => void;
+    act(() => onFullscreen()(true));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    rerender(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen />);
+    act(() => onFullscreen()(false));
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    // Already open before expanding: stays open after collapsing
+    act(() => onFullscreen()(true));
+    act(() => onFullscreen()(false));
+    expect(onToggle).toHaveBeenCalledTimes(2);
   });
 });

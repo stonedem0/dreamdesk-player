@@ -8,6 +8,8 @@ export interface Skin {
   vars: Record<string, string>;
   histogramGradient: [number, string][];
   accentColor: string;
+  /** The WebGL visualizer: the three colours its rings cycle through, on this background. */
+  visualizer: { colors: [string, string, string]; background: string };
 }
 
 export const SKINS: Record<string, Skin> = {
@@ -58,9 +60,9 @@ export const SKINS: Record<string, Skin> = {
       '--dd-controls-border':                  '1px solid #ff8500',
       '--dd-controls-fg':                      '#ff8500',
       '--dd-controls-shadow':                  '0 0 6px rgba(255,133,0,0.35)',
-      '--dd-controls-button-w':                '18px',
-      '--dd-controls-button-h':                '18px',
-      '--dd-controls-icon-size':               '14px',
+      '--dd-controls-button-w':                '16px',
+      '--dd-controls-button-h':                '16px',
+      '--dd-controls-icon-size':               '12px',
       '--dd-header-border-bottom': '1px solid #d0774a',
     },
     histogramGradient: [
@@ -69,6 +71,7 @@ export const SKINS: Record<string, Skin> = {
       [0.8, '#ffaa00'], [1.0, '#ffb600'],
     ],
     accentColor: '#ff8500',
+    visualizer: { colors: ['#ff4800', '#fb5607', '#ff9900'], background: '#120906' },
   },
   'pastelcore': {
     id: 'pastelcore',
@@ -123,11 +126,12 @@ export const SKINS: Record<string, Skin> = {
       '--color-window-control-bg':             '#ffffff',
       '--color-window-control-fullscreen-bg':  '#ffffff',
       '--dd-controls-border':                  '1px solid #190201',
-      '--dd-controls-fg':                      '#fb6f92',
-      '--dd-controls-shadow':                  '0 0 6px rgba(251,111,146,0.35)',
-      '--dd-controls-button-w':                '18px',
-      '--dd-controls-button-h':                '18px',
-      '--dd-controls-icon-size':               '14px',
+      // Black icons, like the title text
+      '--dd-controls-fg':                      '#3d2d33',
+      '--dd-controls-shadow':                  'none',
+      '--dd-controls-button-w':                '16px',
+      '--dd-controls-button-h':                '16px',
+      '--dd-controls-icon-size':               '12px',
       '--dd-header-border-bottom': '1px solid #c8b6ff',
     },
     histogramGradient: [
@@ -136,6 +140,8 @@ export const SKINS: Record<string, Skin> = {
       [0.8, '#c8b6ff'], [1.0, '#fb6f92'],
     ],
     accentColor: '#fb6f92',
+    // Pastel neon on the black of the player's displays
+    visualizer: { colors: ['#fb6f92', '#a1e4ff', '#c8b6ff'], background: '#0e0a14' },
   },
 };
 

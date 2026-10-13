@@ -130,25 +130,14 @@ in float v_vertexRatio;
 in float v_ringId;
 in float v_glow;
 uniform float u_mode;
+// The rings cycle through three colours (options.colors)
+uniform vec3 u_colors[3];
 out vec4 outColor;
 
 void main() {
-  // Color based on which ring (cycle through 3 colors)
-  vec3 color;
   float colorRing = mod(v_ringId, 3.0);
-  if (colorRing < 1.0) {
-    // Inner ring: #ff4800
-    color = vec3(1.0, 0.28, 0.0);
-  } else if (colorRing < 2.0) {
-    // Middle ring: #fb5607
-    color = vec3(0.98, 0.34, 0.03);
-  } else {
-    // Outer ring: Orange
-    color = vec3(1.0, 0.6, 0.0);
-  }
-  
+  vec3 color = colorRing < 1.0 ? u_colors[0] : colorRing < 2.0 ? u_colors[1] : u_colors[2];
 
-  
   float alpha;
   if (u_mode > 0.5) {
     // Glow pass: a fat point with a soft radial falloff and a very low alpha.
@@ -185,7 +174,11 @@ void main() {
  *        is opaque, so this covers whatever the element sits on; the default is
  *        a near-black warm tone rather than pure black, which reads as a hole
  *        next to the sunset skin.
- * @returns {{ start: () => void, stop: () => void, destroy: () => void }}
+ * @param {[number, number, number][]} [options.colors]
+ *        The three colours the rings cycle through, 0-1 per channel. The
+ *        default is the sunset skin's oranges.
+ * @returns {{ start: () => void, stop: () => void, destroy: () => void,
+ *   setColors: (colors: [number, number, number][], background?: [number, number, number]) => void }}
  */
 export function createVisualizer(options = {}) {
   const {
@@ -193,8 +186,12 @@ export function createVisualizer(options = {}) {
     getAnalyser = () => null,
     getAudio = () => null,
     onError = null,
-    background = [0.07, 0.035, 0.023],
+    background: initialBackground = [0.07, 0.035, 0.023],
+    colors: initialColors = [[1.0, 0.28, 0.0], [0.98, 0.34, 0.03], [1.0, 0.6, 0.0]],
   } = options;
+  // Changeable while running (a skin change), so read per frame
+  let background = initialBackground;
+  let colors = initialColors;
 
   if (!canvasOption) throw new Error('createVisualizer: options.canvas is required');
   const canvas = canvasOption;
@@ -213,7 +210,12 @@ export function createVisualizer(options = {}) {
   let vertexCountLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let modeLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let pixelRatioLoc = /** @type {WebGLUniformLocation|null} */ (null);
+  let colorsLoc = /** @type {WebGLUniformLocation|null} */ (null);
   let audioLevelSmoothed = 0;
+  // Animation time runs only while the music plays, so a pause holds the last
+  // frame and playing on carries on from it rather than jumping
+  let playTime = 0;
+  let lastFrameMs = /** @type {number|null} */ (null);
   let fftTexture = /** @type {WebGLTexture|null} */ (null);
   let fftSize = 0;
   let fftData8 = /** @type {Uint8Array|null} */ (null);
@@ -259,6 +261,7 @@ export function createVisualizer(options = {}) {
     vertexCountLoc = null;
     modeLoc = null;
     pixelRatioLoc = null;
+    colorsLoc = null;
     // Also drop the context itself, so start() knows to rebuild rather than
     // reuse a dead one.
     gl = null;
@@ -408,6 +411,8 @@ export function createVisualizer(options = {}) {
   function updateFftTexture() {
     if (!gl) return;
     const audioPaused = !isAudioActive();
+    // Paused: the texture and the level keep the last frame's values
+    if (audioPaused && fftData8) return;
   
     fftUpdateCounter++;
     if (fftUpdateCounter < 2) return;
@@ -427,9 +432,7 @@ export function createVisualizer(options = {}) {
     if (!fftData8) return;
 
     // getByteFrequencyData already normalizes dB to 0-255 against the analyser's
-    // own minDecibels/maxDecibels, so it fills the upload buffer directly. While
-    // paused we leave the last frame in place - u_time is frozen too, so the
-    // figure holds its shape rather than collapsing.
+    // own minDecibels/maxDecibels, so it fills the upload buffer directly.
     if (!audioPaused) analyser.getByteFrequencyData(fftData8);
 
     let bassAvg = 0;
@@ -471,6 +474,8 @@ export function createVisualizer(options = {}) {
     if (isAudioStopped()) {
       if (fftData8) fftData8.fill(0);
       audioLevelSmoothed = 0;
+      playTime = 0;
+      lastFrameMs = null;
       return;
     }
   
@@ -479,10 +484,15 @@ export function createVisualizer(options = {}) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
     gl.useProgram(program);
-    if (timeLoc) {
-      const t = isAudioActive() ? timeMs * 0.001 : 0;
-      gl.uniform1f(timeLoc, t);
+    if (colorsLoc) gl.uniform3fv(colorsLoc, colors.flat());
+    if (isAudioActive()) {
+      // Capped, so a tab left in the background doesn't skip ahead
+      if (lastFrameMs !== null) playTime += Math.min(timeMs - lastFrameMs, 100) * 0.001;
+      lastFrameMs = timeMs;
+    } else {
+      lastFrameMs = null;
     }
+    if (timeLoc) gl.uniform1f(timeLoc, playTime);
     if (resolutionLoc) {
       gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
     }
@@ -553,6 +563,7 @@ export function createVisualizer(options = {}) {
     vertexCountLoc = gl.getUniformLocation(program, 'u_vertexCount');
     modeLoc = gl.getUniformLocation(program, 'u_mode');
     pixelRatioLoc = gl.getUniformLocation(program, 'u_pixelRatio');
+    colorsLoc = gl.getUniformLocation(program, 'u_colors');
     vao = createFullscreenTriangleVAO();
 
     // The canvas must have a CSS size of its own, or its layout size follows the
@@ -601,5 +612,15 @@ export function createVisualizer(options = {}) {
     gl = null;
   }
 
-  return { start, stop, destroy };
+  /**
+   * New ring colours (and clear colour), from the next frame.
+   * @param {[number, number, number][]} next
+   * @param {[number, number, number]} [nextBackground]
+   */
+  function setColors(next, nextBackground) {
+    colors = next;
+    if (nextBackground) background = nextBackground;
+  }
+
+  return { start, stop, destroy, setColors };
 }

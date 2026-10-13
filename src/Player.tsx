@@ -8,6 +8,8 @@ import {
 import '@dreamdesk/ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
+import type { AudioSource } from './Visualizer';
+import { WINDOW_ICONS } from './windowIcons';
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
@@ -51,6 +53,15 @@ export interface PlayerProps {
   defaultVisualizerMode?: VisualizerMode;
   /** Called when the visualizer's mode changes (e.g. to remember it). */
   onVisualizerModeChange?: (mode: VisualizerMode) => void;
+  /**
+   * Called with the Player's audio once it exists, and with null when the
+   * Player goes away: give it to a `<Visualizer>` elsewhere (its own window).
+   */
+  onAudioSource?: (source: AudioSource | null) => void;
+  /** Adds Visualization to the right-click menu, calling this, e.g. to open or close a `VisualizerWindow`. */
+  onVisualizerToggle?: () => void;
+  /** Whether that visualizer is open, so the menu ticks it. */
+  visualizerOpen?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -64,16 +75,31 @@ const pace = () => {
   const p = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dd-motion-pace'));
   return Number.isFinite(p) && p > 0 ? p : 1;
 };
-const fold = (el: HTMLDivElement, keyframes: Keyframe[], fill?: FillMode) => {
+// Near-instant for people who ask their system for less motion (as in dreamdesk-ui)
+const reducedMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+/**
+ * Folds a panel open or shut. A fold in the other direction (a quick second
+ * click) takes over from wherever this one has got to, rather than jumping.
+ */
+const fold = (el: HTMLDivElement, open: boolean) => {
+  const running = el.getAnimations();
+  const cs = getComputedStyle(el);
+  const now = running.length
+    ? { height: cs.height, opacity: cs.opacity, borderTopWidth: cs.borderTopWidth, borderBottomWidth: cs.borderBottomWidth }
+    : null;
+  running.forEach((a) => { a.finished.catch(() => {}); a.cancel(); });
+  const shown = { height: `${el.offsetHeight}px`, opacity: 1 };
   el.style.overflow = 'hidden';
-  const a = el.animate(keyframes, { duration: Math.round(400 * pace()), easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill });
-  a.finished.then(() => { if (!fill) el.style.overflow = ''; }, () => {});
-  return a;
+  const a = el.animate(open ? [now ?? folded, shown] : [now ?? shown, folded], {
+    duration: reducedMotion() ? 1 : Math.round(400 * pace()),
+    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    // Shut stays shut until React removes the panel
+    fill: open ? 'none' : 'forwards',
+  });
+  return a.finished.then(() => { if (open) el.style.overflow = ''; }, () => {});
 };
-const slideIn = (el: HTMLDivElement | null) =>
-  el && fold(el, [folded, { height: `${el.offsetHeight}px`, opacity: 1 }]);
-const slideOut = (el: HTMLDivElement | null): Promise<void> =>
-  el ? fold(el, [{ height: `${el.offsetHeight}px`, opacity: 1 }, folded], 'forwards').finished.then(() => {}, () => {}) : Promise.resolve();
+const slideIn = (el: HTMLDivElement | null) => { if (el) void fold(el, true); };
+const slideOut = (el: HTMLDivElement | null): Promise<void> => (el ? fold(el, false) : Promise.resolve());
 
 export function Player({
   skin: initialSkinId = DEFAULT_SKIN,
@@ -89,6 +115,9 @@ export function Player({
   onFullscreenChange,
   defaultVisualizerMode = 'bars',
   onVisualizerModeChange,
+  onAudioSource,
+  onVisualizerToggle,
+  visualizerOpen = false,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -136,20 +165,33 @@ export function Player({
   const playlistRef   = useRef(playlist);
   const currentIdxRef = useRef(currentIdx);
   const isSeekingRef  = useRef(false);
-  const showPlaylistRef  = useRef(showPlaylist);
-  const showEqRef        = useRef(showEq);
   const preFsPlaylistRef = useRef(false);
   const preFsEqRef       = useRef(false);
+  const preFsVizRef      = useRef(false);
   const playlistDomRef   = useRef<HTMLDivElement>(null);
   const eqDomRef         = useRef<HTMLDivElement>(null);
   const bytesCacheRef    = useRef<Map<string, Promise<number>>>(new Map());
+  // Read by the audio-graph effect, which runs once
+  const onAudioSourceRef = useRef(onAudioSource);
+  useEffect(() => { onAudioSourceRef.current = onAudioSource; }, [onAudioSource]);
+  // Expanding opens the visualizer along with the playlist and EQ; collapsing
+  // puts it back the way it was, like them
+  const vizRef = useRef({ open: visualizerOpen, toggle: onVisualizerToggle });
+  useEffect(() => { vizRef.current = { open: visualizerOpen, toggle: onVisualizerToggle }; }, [visualizerOpen, onVisualizerToggle]);
+  const onFullscreen = useCallback((isFullscreen: boolean) => {
+    onFullscreenChange?.(isFullscreen);
+    const viz = vizRef.current;
+    if (!viz.toggle) return;
+    if (isFullscreen) {
+      preFsVizRef.current = viz.open;
+      if (!viz.open) viz.toggle();
+    } else if (viz.open && !preFsVizRef.current) viz.toggle();
+  }, [onFullscreenChange]);
 
   useEffect(() => { shuffleRef.current = shuffle; },  [shuffle]);
   useEffect(() => { repeatRef.current = repeat; },    [repeat]);
   useEffect(() => { playlistRef.current = playlist; },[playlist]);
   useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
-  useEffect(() => { showPlaylistRef.current = showPlaylist; }, [showPlaylist]);
-  useEffect(() => { showEqRef.current = showEq; }, [showEq]);
 
   // ── Audio graph (imperative to survive StrictMode double-invoke) ──────────
   // The graph itself lives in core/audio-engine.js, shared with the vanilla
@@ -181,8 +223,10 @@ export function Player({
     const audio = engine.audio!;
     audio.volume = 0.5;
     audioRef.current = audio;
+    onAudioSourceRef.current?.({ analyser: engine.analyser, audio });
 
     return () => {
+      onAudioSourceRef.current?.(null);
       engine.dispose();
       engineRef.current = null;
       audioRef.current = null;
@@ -476,8 +520,10 @@ export function Player({
     { label: 'Previous', run: goPrev, disabled: !playlist.length },
     { label: 'Next', run: goNext, disabled: !playlist.length },
     'separator',
-    { label: 'Playlist', run: () => setShowPlaylist(v => !v), checked: showPlaylist },
-    { label: 'Equalizer', run: () => setShowEq(v => !v), checked: showEq },
+    { label: 'Playlist', run: () => togglePanel('playlist'), checked: showPlaylist },
+    { label: 'Equalizer', run: () => togglePanel('eq'), checked: showEq },
+    // Winamp started its visualization plugin (MilkDrop) from here, not a button
+    ...(onVisualizerToggle ? [{ label: 'Visualization', run: onVisualizerToggle, checked: visualizerOpen }] : []),
     'separator',
     { heading: 'Skins' },
     ...Object.values(SKINS).map(sk => ({ label: sk.label, run: () => chooseSkin(sk.id), checked: sk.id === skinId })),
@@ -490,42 +536,51 @@ export function Player({
     setShowPresets(false);
   }, []);
 
-  // ── Fullscreen animation: show/hide playlist + EQ docks ──────────────────
+  // ── Opening and closing the playlist and EQ ─────────────────────────────
+  // PL, EQ, the menu and expanding all go through showPanel, so every way of
+  // opening or closing a panel folds it the same way.
 
-  const pendingFsSlideInRef = useRef(false);
+  type Panel = 'playlist' | 'eq';
+  const panelDom = useCallback((p: Panel) => (p === 'playlist' ? playlistDomRef : eqDomRef).current, []);
+  const setPanel = useCallback((p: Panel, show: boolean) => (p === 'playlist' ? setShowPlaylist : setShowEq)(show), []);
+  // Panels just mounted, to fold open once they're in the DOM
+  const slideInNextRef = useRef(new Set<Panel>());
+  // Each panel's latest open/close, so a close finishing late can't undo a reopen
+  const panelTargetRef = useRef<Record<Panel, boolean>>({ playlist: showPlaylist, eq: showEq });
 
-  // Runs after React commits the newly-mounted panels to the DOM
+  const showPanel = useCallback((p: Panel, show: boolean) => {
+    if (panelTargetRef.current[p] === show) return;
+    panelTargetRef.current[p] = show;
+    const el = panelDom(p);
+    if (show && el) slideIn(el); // still folding shut: open it again from there
+    else if (show) { slideInNextRef.current.add(p); setPanel(p, true); }
+    else void slideOut(el).then(() => { if (!panelTargetRef.current[p]) setPanel(p, false); });
+  }, [panelDom, setPanel]);
+  const togglePanel = (p: Panel) => showPanel(p, !panelTargetRef.current[p]);
+
+  // Runs after React commits the newly mounted panels to the DOM
   useEffect(() => {
-    if (pendingFsSlideInRef.current && showPlaylist && showEq) {
-      pendingFsSlideInRef.current = false;
-      slideIn(playlistDomRef.current);
-      slideIn(eqDomRef.current);
+    for (const p of slideInNextRef.current) {
+      const el = panelDom(p);
+      if (el) { slideIn(el); slideInNextRef.current.delete(p); }
     }
-  }, [showPlaylist, showEq]);
+  }, [showPlaylist, showEq, panelDom]);
 
+  // Expanding opens both; collapsing puts each back the way it was
   const fullscreenAnimation = useCallback((_el: HTMLElement, { isFullscreen }: { isFullscreen: boolean; defaultFn: () => void }) => {
     if (isFullscreen) {
-      preFsPlaylistRef.current = showPlaylistRef.current;
-      preFsEqRef.current = showEqRef.current;
-      pendingFsSlideInRef.current = true;
-      setShowPlaylist(true);
-      setShowEq(true);
+      preFsPlaylistRef.current = panelTargetRef.current.playlist;
+      preFsEqRef.current = panelTargetRef.current.eq;
+      showPanel('playlist', true);
+      showPanel('eq', true);
     } else {
-      Promise.all([
-        slideOut(playlistDomRef.current),
-        slideOut(eqDomRef.current),
-      ]).then(() => {
-        setShowPlaylist(preFsPlaylistRef.current);
-        setShowEq(preFsEqRef.current);
-      });
+      showPanel('playlist', preFsPlaylistRef.current);
+      showPanel('eq', preFsEqRef.current);
     }
-  }, []);
+  }, [showPanel]);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const c = skin.accentColor;
-  const minimizeIcon   = `<svg viewBox="0 0 24 24" width="14" height="14"><line x1="3" y1="17" x2="21" y2="17" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
-  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="10" height="10"><rect x="3" y="3" width="18" height="18" fill="none" stroke="${c}" stroke-width="2.5"/><line x1="3" y1="8" x2="21" y2="8" stroke="${c}" stroke-width="3.5"/></svg>`;
-  const closeIcon      = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
+  const { minimizeIcon, fullscreenIcon, closeIcon } = WINDOW_ICONS;
 
   const remaining = Math.max(0, duration - currentTime);
   const timer = fmtTime(remaining);
@@ -550,7 +605,7 @@ export function Player({
       onMove={onMove}
       fullscreenAnimation={fullscreenAnimation}
       defaultFullscreen={defaultFullscreen}
-      onFullscreen={onFullscreenChange}
+      onFullscreen={onFullscreen}
       style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as React.CSSProperties }}
       className="dd-player"
     >
@@ -586,8 +641,8 @@ export function Player({
               onChange={e => setVolume(Number(e.target.value))} />
             <input type="range" min={-100} max={100} value={balance} step={1} className="dd-player__balance"
               title="Balance" onChange={e => setBalance(Number(e.target.value))} />
-            <button className="dd-player__mini-btn" onClick={() => setShowEq(v => !v)}>EQ</button>
-            <button className="dd-player__mini-btn" onClick={() => setShowPlaylist(v => !v)}>PL</button>
+            <button className="dd-player__mini-btn" onClick={() => togglePanel('eq')}>EQ</button>
+            <button className="dd-player__mini-btn" onClick={() => togglePanel('playlist')}>PL</button>
           </div>
 
           <div className="dd-player__seek">
