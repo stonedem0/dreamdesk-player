@@ -8,6 +8,8 @@ export interface Skin {
   vars: Record<string, string>;
   histogramGradient: [number, string][];
   accentColor: string;
+  /** The WebGL visualizer: the three colours its rings cycle through, on this background. */
+  visualizer: { colors: [string, string, string]; background: string };
 }
 
 export const SKINS: Record<string, Skin> = {
@@ -69,6 +71,7 @@ export const SKINS: Record<string, Skin> = {
       [0.8, '#ffaa00'], [1.0, '#ffb600'],
     ],
     accentColor: '#ff8500',
+    visualizer: { colors: ['#ff4800', '#fb5607', '#ff9900'], background: '#120906' },
   },
   'pastelcore': {
     id: 'pastelcore',
@@ -136,6 +139,8 @@ export const SKINS: Record<string, Skin> = {
       [0.8, '#c8b6ff'], [1.0, '#fb6f92'],
     ],
     accentColor: '#fb6f92',
+    // Pastel neon on the black of the player's displays
+    visualizer: { colors: ['#fb6f92', '#a1e4ff', '#c8b6ff'], background: '#0e0a14' },
   },
 };
 

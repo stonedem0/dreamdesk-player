@@ -59,7 +59,8 @@ describe('Player', () => {
     expect(playlist()).not.toBeNull();
     expect(eq()).not.toBeNull();
     expect(windowProps.current.defaultFullscreen).toBe(true);
-    expect(windowProps.current.onFullscreen).toBe(onFullscreenChange);
+    act(() => (windowProps.current.onFullscreen as (fs: boolean) => void)(false));
+    expect(onFullscreenChange).toHaveBeenCalledWith(false);
   });
 
   it('switches skin from the settings menu and reports it', async () => {
@@ -231,5 +232,48 @@ describe('Player — visualizer modes', () => {
   it('starts in the mode it is given', () => {
     render(<Player initialTracks={TRACKS} defaultVisualizerMode="off" />);
     expect(screen.getByRole('button', { name: /Visualizer: off/ })).toBeTruthy();
+  });
+});
+
+describe('Player — the WebGL visualizer window', () => {
+  it('hands out its audio for a visualizer elsewhere, and takes it back when it goes', () => {
+    const onAudioSource = vi.fn();
+    const { unmount } = render(<Player initialTracks={TRACKS} onAudioSource={onAudioSource} />);
+    const source = onAudioSource.mock.lastCall![0];
+    expect(source.analyser).toBeTruthy();
+    expect(source.audio).toBeInstanceOf(HTMLAudioElement);
+    unmount();
+    expect(onAudioSource).toHaveBeenLastCalledWith(null);
+  });
+
+  it("opens it from the right-click menu, Winamp's way, only when there is one", async () => {
+    const { container, rerender } = render(<Player initialTracks={TRACKS} />);
+    const menu = async () => { await act(async () => { fireEvent.contextMenu(container.querySelector('.dd-player__body')!); }); };
+    await menu();
+    expect(screen.queryByRole('menuitemcheckbox', { name: /Visualization/ })).toBeNull();
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }); });
+    const onToggle = vi.fn();
+    rerender(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen />);
+    await menu();
+    const item = screen.getByRole('menuitemcheckbox', { name: /Visualization/ });
+    expect(item.getAttribute('aria-checked')).toBe('true');
+    await act(async () => { fireEvent.click(item); });
+    expect(onToggle).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'VIZ' })).toBeNull();
+  });
+
+  it('expanding opens it with the playlist and EQ, and collapsing puts it back', () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen={false} />);
+    const onFullscreen = () => windowProps.current.onFullscreen as (fs: boolean) => void;
+    act(() => onFullscreen()(true));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    rerender(<Player initialTracks={TRACKS} onVisualizerToggle={onToggle} visualizerOpen />);
+    act(() => onFullscreen()(false));
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    // Already open before expanding: stays open after collapsing
+    act(() => onFullscreen()(true));
+    act(() => onFullscreen()(false));
+    expect(onToggle).toHaveBeenCalledTimes(2);
   });
 });

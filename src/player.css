@@ -653,3 +653,17 @@
   outline: 1px dotted var(--color-text-primary, currentColor);
   outline-offset: 1px;
 }
+
+/* ── Visualizer window (VisualizerWindow) ────────────────────────────────── */
+
+/* Only a close button, as on MilkDrop's window (double-click for fullscreen) */
+.dd-player--viz .dd-win-controls :is(.dd-btn--minimize, .dd-btn--fullscreen) { display: none; }
+
+/* The canvas fills the body, whatever size the window is dragged to */
+.dd-player--viz .dd-win { display: flex; flex-direction: column; }
+.dd-player--viz .dd-win-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.dd-player__viz-body { width: 100%; height: 100%; }

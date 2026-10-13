@@ -1,6 +1,7 @@
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Player } from './Player';
+import { VisualizerWindow, type AudioSource } from './Visualizer';
 import { SKINS } from './skins';
 
 // The Player keeps the chosen skin in state and reports changes through
@@ -32,8 +33,27 @@ function rememberSkin(id: string) {
   }
 }
 
+// Visualization (right-click the Player) opens the WebGL visualizer in a window of its own, as a host would:
+// against the Player's right edge (its default place and width), in its skin
+function Demo() {
+  const [skin, setSkin] = useState(storedSkin);
+  const [source, setSource] = useState<AudioSource | null>(null);
+  const [vizOpen, setVizOpen] = useState(false);
+  return (
+    <>
+      <Player skin={skin} onSkinChange={(id) => { setSkin(id); rememberSkin(id); }} onAudioSource={setSource}
+        onVisualizerToggle={() => setVizOpen((v) => !v)} visualizerOpen={vizOpen} />
+      {vizOpen && (
+        <VisualizerWindow source={source} skin={skin} initialX={200 + 297} initialY={100}
+          dockTo={() => document.querySelector<HTMLElement>('.dd-player:not(.dd-player--viz)')}
+          onClose={() => setVizOpen(false)} />
+      )}
+    </>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Player skin={storedSkin()} onSkinChange={rememberSkin} />
+    <Demo />
   </StrictMode>
 );

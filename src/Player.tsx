@@ -8,6 +8,8 @@ import {
 import '@dreamdesk/ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
+import type { AudioSource } from './Visualizer';
+import { windowIcons } from './windowIcons';
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
@@ -51,6 +53,15 @@ export interface PlayerProps {
   defaultVisualizerMode?: VisualizerMode;
   /** Called when the visualizer's mode changes (e.g. to remember it). */
   onVisualizerModeChange?: (mode: VisualizerMode) => void;
+  /**
+   * Called with the Player's audio once it exists, and with null when the
+   * Player goes away: give it to a `<Visualizer>` elsewhere (its own window).
+   */
+  onAudioSource?: (source: AudioSource | null) => void;
+  /** Adds Visualization to the right-click menu, calling this, e.g. to open or close a `VisualizerWindow`. */
+  onVisualizerToggle?: () => void;
+  /** Whether that visualizer is open, so the menu ticks it. */
+  visualizerOpen?: boolean;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -89,6 +100,9 @@ export function Player({
   onFullscreenChange,
   defaultVisualizerMode = 'bars',
   onVisualizerModeChange,
+  onAudioSource,
+  onVisualizerToggle,
+  visualizerOpen = false,
 }: PlayerProps) {
   const [skinId, setSkinId] = useState(initialSkinId);
   const skin: Skin = SKINS[skinId] ?? SKINS[DEFAULT_SKIN]!;
@@ -140,9 +154,26 @@ export function Player({
   const showEqRef        = useRef(showEq);
   const preFsPlaylistRef = useRef(false);
   const preFsEqRef       = useRef(false);
+  const preFsVizRef      = useRef(false);
   const playlistDomRef   = useRef<HTMLDivElement>(null);
   const eqDomRef         = useRef<HTMLDivElement>(null);
   const bytesCacheRef    = useRef<Map<string, Promise<number>>>(new Map());
+  // Read by the audio-graph effect, which runs once
+  const onAudioSourceRef = useRef(onAudioSource);
+  useEffect(() => { onAudioSourceRef.current = onAudioSource; }, [onAudioSource]);
+  // Expanding opens the visualizer along with the playlist and EQ; collapsing
+  // puts it back the way it was, like them
+  const vizRef = useRef({ open: visualizerOpen, toggle: onVisualizerToggle });
+  useEffect(() => { vizRef.current = { open: visualizerOpen, toggle: onVisualizerToggle }; }, [visualizerOpen, onVisualizerToggle]);
+  const onFullscreen = useCallback((isFullscreen: boolean) => {
+    onFullscreenChange?.(isFullscreen);
+    const viz = vizRef.current;
+    if (!viz.toggle) return;
+    if (isFullscreen) {
+      preFsVizRef.current = viz.open;
+      if (!viz.open) viz.toggle();
+    } else if (viz.open && !preFsVizRef.current) viz.toggle();
+  }, [onFullscreenChange]);
 
   useEffect(() => { shuffleRef.current = shuffle; },  [shuffle]);
   useEffect(() => { repeatRef.current = repeat; },    [repeat]);
@@ -181,8 +212,10 @@ export function Player({
     const audio = engine.audio!;
     audio.volume = 0.5;
     audioRef.current = audio;
+    onAudioSourceRef.current?.({ analyser: engine.analyser, audio });
 
     return () => {
+      onAudioSourceRef.current?.(null);
       engine.dispose();
       engineRef.current = null;
       audioRef.current = null;
@@ -478,6 +511,8 @@ export function Player({
     'separator',
     { label: 'Playlist', run: () => setShowPlaylist(v => !v), checked: showPlaylist },
     { label: 'Equalizer', run: () => setShowEq(v => !v), checked: showEq },
+    // Winamp started its visualization plugin (MilkDrop) from here, not a button
+    ...(onVisualizerToggle ? [{ label: 'Visualization', run: onVisualizerToggle, checked: visualizerOpen }] : []),
     'separator',
     { heading: 'Skins' },
     ...Object.values(SKINS).map(sk => ({ label: sk.label, run: () => chooseSkin(sk.id), checked: sk.id === skinId })),
@@ -522,10 +557,7 @@ export function Player({
   }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const c = skin.accentColor;
-  const minimizeIcon   = `<svg viewBox="0 0 24 24" width="14" height="14"><line x1="3" y1="17" x2="21" y2="17" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
-  const fullscreenIcon = `<svg viewBox="0 0 24 24" width="10" height="10"><rect x="3" y="3" width="18" height="18" fill="none" stroke="${c}" stroke-width="2.5"/><line x1="3" y1="8" x2="21" y2="8" stroke="${c}" stroke-width="3.5"/></svg>`;
-  const closeIcon      = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 5l14 14M19 5L5 19" stroke="${c}" stroke-width="3.5" stroke-linecap="butt"/></svg>`;
+  const { minimizeIcon, fullscreenIcon, closeIcon } = windowIcons(skin.accentColor);
 
   const remaining = Math.max(0, duration - currentTime);
   const timer = fmtTime(remaining);
@@ -550,7 +582,7 @@ export function Player({
       onMove={onMove}
       fullscreenAnimation={fullscreenAnimation}
       defaultFullscreen={defaultFullscreen}
-      onFullscreen={onFullscreenChange}
+      onFullscreen={onFullscreen}
       style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as React.CSSProperties }}
       className="dd-player"
     >
