@@ -9,7 +9,7 @@ import '@dreamdesk/ui/style.css';
 import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
-import { windowIcons } from './windowIcons';
+import { WINDOW_ICONS } from './windowIcons';
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
@@ -580,7 +580,7 @@ export function Player({
   }, [showPanel]);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const { minimizeIcon, fullscreenIcon, closeIcon } = windowIcons(skin.accentColor);
+  const { minimizeIcon, fullscreenIcon, closeIcon } = WINDOW_ICONS;
 
   const remaining = Math.max(0, duration - currentTime);
   const timer = fmtTime(remaining);

@@ -59,21 +59,24 @@
   gap: 2px;
 }
 
-/* Reset browser default button padding; lock bg so pastelcore #fff doesn't bleed */
+/* Title bar buttons look like the EQ / PL buttons, in the skin's colours.
+   Locks the bg so pastelcore's #fff doesn't bleed. */
 .dd-player .dd-win-controls button {
   padding: 0;
-  background-color: var(--dd-controls-bg, #1d1c1c);
-  border: var(--dd-controls-border, none);
+  background-color: var(--color-button-bg, var(--player-bg-soft));
+  color: var(--color-text-secondary, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 }
 
 /* Higher specificity (3 classes) to beat pastelcore's .dd-win-controls .dd-btn--fullscreen */
 .dd-player .dd-win-controls .dd-btn--fullscreen {
-  background-color: var(--dd-controls-bg, #1d1c1c);
+  background-color: var(--color-button-bg, var(--player-bg-soft));
 }
 
 .dd-player .dd-btn--minimize {
   align-items: flex-end;
-  padding-bottom: 3px;
+  padding-bottom: 2px;
 }
 
 .dd-player__win-btn {
@@ -643,7 +646,7 @@
 
 .dd-player .dd-win-controls .dd-btn--fullscreen svg,
 .dd-player .dd-win-controls .dd-btn--minimize svg,
-.dd-player .dd-win-controls .dd-btn--close svg { width: 10px; height: 10px; }
+.dd-player .dd-win-controls .dd-btn--close svg { width: 12px; height: 12px; }
 
 /* The visualizer: click to cycle bars, oscilloscope, off */
 .dd-player__viz-canvas {

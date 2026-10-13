@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Window as DdWindow } from '@dreamdesk/ui';
 import { createVisualizer } from '../visualizer.js';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
-import { windowIcons } from './windowIcons';
+import { WINDOW_ICONS } from './windowIcons';
 
 /** The Player's audio, as handed out by its `onAudioSource`. */
 export interface AudioSource {
@@ -153,7 +153,7 @@ export function VisualizerWindow({
       defaultOpen
       disableMinimize
       disableFullscreen
-      {...windowIcons(skin.accentColor)}
+      {...WINDOW_ICONS}
       onMove={onMove}
       onClose={onClose}
       style={{ position: 'absolute', left: initialX, top: initialY, ...skin.vars as CSSProperties }}
