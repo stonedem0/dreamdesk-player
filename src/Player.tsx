@@ -23,6 +23,8 @@ import {
 
 /** Winamp's visualizer modes: spectrum bars, oscilloscope, or nothing. */
 export type VisualizerMode = 'bars' | 'scope' | 'off';
+/** What the timer shows: time played, or time left (with a minus, as in Winamp). */
+export type TimeMode = 'elapsed' | 'remaining';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -53,6 +55,10 @@ export interface PlayerProps {
   defaultVisualizerMode?: VisualizerMode;
   /** Called when the visualizer's mode changes (e.g. to remember it). */
   onVisualizerModeChange?: (mode: VisualizerMode) => void;
+  /** What the timer starts on: time played (default, as in Winamp) or time left. A click switches. */
+  defaultTimeMode?: TimeMode;
+  /** Called when the timer is switched (e.g. to remember it). */
+  onTimeModeChange?: (mode: TimeMode) => void;
   /**
    * Called with the Player's audio once it exists, and with null when the
    * Player goes away: give it to a `<Visualizer>` elsewhere (its own window).
@@ -115,6 +121,8 @@ export function Player({
   onFullscreenChange,
   defaultVisualizerMode = 'bars',
   onVisualizerModeChange,
+  defaultTimeMode = 'elapsed',
+  onTimeModeChange,
   onAudioSource,
   onVisualizerToggle,
   visualizerOpen = false,
@@ -151,6 +159,7 @@ export function Player({
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const [vizMode, setVizMode] = useState<VisualizerMode>(defaultVisualizerMode);
+  const [timeMode, setTimeMode] = useState<TimeMode>(defaultTimeMode);
   // Read by the frame callback, which is set up once
   const vizModeRef    = useRef(vizMode);
   const waveRef       = useRef<Uint8Array<ArrayBuffer> | null>(null);
@@ -582,8 +591,12 @@ export function Player({
   // ── Render ────────────────────────────────────────────────────────────────
   const { minimizeIcon, fullscreenIcon, closeIcon } = WINDOW_ICONS;
 
-  const remaining = Math.max(0, duration - currentTime);
-  const timer = fmtTime(remaining);
+  const timer = timeMode === 'remaining' ? `-${fmtTime(Math.max(0, duration - currentTime))}` : fmtTime(currentTime);
+  const switchTime = () => {
+    const next: TimeMode = timeMode === 'elapsed' ? 'remaining' : 'elapsed';
+    setTimeMode(next);
+    onTimeModeChange?.(next);
+  };
 
   return (
     <>
@@ -614,7 +627,9 @@ export function Player({
         <div className="dd-player__display">
 
           <div className="dd-player__viz">
-            <div className="dd-player__timer">{timer}</div>
+            <button type="button" className="dd-player__timer" onClick={switchTime}
+              title={timeMode === 'elapsed' ? 'Time played (click for time left)' : 'Time left (click for time played)'}
+              aria-label={`${timeMode === 'elapsed' ? 'Time played' : 'Time left'} ${timer} (click to switch)`}>{timer}</button>
             <canvas ref={canvasRef} width={100} height={35}
               className="dd-player__viz-canvas" role="button" tabIndex={0}
               aria-label={`Visualizer: ${vizMode === 'bars' ? 'spectrum' : vizMode === 'scope' ? 'oscilloscope' : 'off'} (click to change)`}

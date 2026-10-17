@@ -276,6 +276,25 @@ describe('Player — right-click menu', () => {
   });
 });
 
+describe('Player — the timer', () => {
+  it('shows time played, and a click switches to time left (with a minus) and back, reported', async () => {
+    const onChange = vi.fn();
+    render(<Player initialTracks={TRACKS} onTimeModeChange={onChange} />);
+    const timer = screen.getByRole('button', { name: /Time played 0:00/ });
+    await act(async () => { fireEvent.click(timer); });
+    expect(timer.textContent).toBe('-0:00');
+    expect(onChange).toHaveBeenLastCalledWith('remaining');
+    await act(async () => { fireEvent.click(timer); });
+    expect(timer.textContent).toBe('0:00');
+    expect(onChange).toHaveBeenLastCalledWith('elapsed');
+  });
+
+  it('starts on time left when asked', () => {
+    render(<Player initialTracks={TRACKS} defaultTimeMode="remaining" />);
+    expect(screen.getByRole('button', { name: /Time left -0:00/ })).toBeTruthy();
+  });
+});
+
 describe('Player — visualizer modes', () => {
   it('cycles bars, oscilloscope and off when the display is clicked, and reports it', async () => {
     const onChange = vi.fn();
