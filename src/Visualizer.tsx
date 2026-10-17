@@ -86,6 +86,31 @@ export function Visualizer({ source, colors = DEFAULT_LOOK.colors, background = 
   );
 }
 
+/** The Player's panels, which fold open and shut under it. */
+const PANELS = ['dd-player__playlist', 'dd-player__eq'];
+
+/**
+ * How tall the Player is with every panel open, whichever are open now (and
+ * however far a fold has got): its own height, less the panels' current
+ * heights, plus their full ones. A closed panel isn't in the page, so its full
+ * height comes from an empty, invisible stand-in with the same class, sized by
+ * player.css like the real one.
+ */
+export function playerStackHeight(player: HTMLElement): number {
+  let height = player.offsetHeight;
+  for (const cls of PANELS) {
+    const panel = player.querySelector<HTMLElement>(`.${cls}`);
+    if (panel) height -= panel.offsetHeight;
+    const probe = document.createElement('div');
+    probe.className = cls;
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
+    player.appendChild(probe);
+    height += probe.offsetHeight;
+    probe.remove();
+  }
+  return height;
+}
+
 export interface VisualizerWindowProps {
   /** What to draw: the Player's audio, from its `onAudioSource`. */
   source: AudioSource | null;
@@ -97,9 +122,10 @@ export interface VisualizerWindowProps {
   /** Used when there's no `dockTo`. */
   height?: string;
   /**
-   * The Player's window (a getter, read when this opens). The visualizer takes
-   * its height and keeps it as the Player expands or collapses, the way
-   * MilkDrop ran the height of Winamp's stacked windows, until it's resized by hand.
+   * The Player's window (a getter, read when this opens). The visualizer is as
+   * tall as the Player with its playlist and EQ open, whether they're open or
+   * not, the way MilkDrop ran the height of Winamp's stacked windows. It keeps
+   * that (if the Player's size changes) until it's resized by hand.
    */
   dockTo?: () => HTMLElement | null;
   icon?: string;
@@ -121,18 +147,19 @@ export function VisualizerWindow({
   const dockRef = useRef(dockTo);
   const [height, setHeight] = useState(() => {
     const dock = dockTo?.();
-    return dock?.offsetHeight ? `${dock.offsetHeight}px` : fixedHeight;
+    const stack = dock ? playerStackHeight(dock) : 0;
+    return stack ? `${stack}px` : fixedHeight;
   });
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  // Keep the Player's height while the two still line up
+  // Keep the stack's height while the two still line up
   useEffect(() => {
     const dock = dockRef.current?.();
     if (!dock || typeof ResizeObserver === 'undefined') return;
-    let last = dock.offsetHeight;
+    let last = playerStackHeight(dock);
     const observer = new ResizeObserver(() => {
       const own = bodyRef.current?.closest<HTMLElement>('.dd-window');
-      const now = dock.offsetHeight;
+      const now = playerStackHeight(dock);
       if (now !== last && own && Math.abs(own.offsetHeight - last) <= 1) setHeight(`${now}px`);
       last = now;
     });
