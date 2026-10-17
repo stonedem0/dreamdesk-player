@@ -394,7 +394,7 @@
 
 .dd-player__track-list {
   flex: 1;
-  padding: 8px;
+  padding: var(--player-pad);
   overflow-y: auto;
   background: transparent;
   scrollbar-width: thin;
@@ -406,16 +406,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: var(--player-gap);
   height: 20px;
-  padding: 0 4px;
+  padding: 0 var(--player-pad);
   background: var(--panel-header-bg, rgba(0,11,25,0.6));
   border-top: 1px solid var(--border-color);
 }
 
 .dd-player__playlist-statusbar-btns {
   display: flex;
-  gap: 2px;
+  gap: var(--player-gap);
 }
 
 .dd-player__statusbar-btn {
@@ -435,7 +435,9 @@
 
 .dd-player__track-items {
   margin: 0;
-  padding-left: 19px;
+  /* Numbers inside each row, so the one-line cut-off doesn't clip them */
+  padding-left: 0;
+  list-style-position: inside;
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
   text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
@@ -444,6 +446,10 @@
 .dd-player__track-items li {
   cursor: pointer;
   padding: 2px 4px;
+  /* One line each, cut off with an ellipsis, as in Winamp */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   &:hover { opacity: 0.8; }
   &.active { color: var(--color-accent-primary); font-weight: bold; }
   &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
@@ -505,7 +511,8 @@
 .dd-player__eq {
   height: 165px;
   border: 1px solid #190201;
-  border-top: 1px solid var(--border-color);
+  /* The line above is the body's or the playlist's bottom border: one, not two */
+  border-top: none;
   background-image: var(--eq-body-bg, none);
   background-size: cover;
   background-position: center;
@@ -534,8 +541,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 10px 11px;
+  gap: var(--player-pad);
+  padding: var(--player-pad);
 }
 
 .dd-player__eq-side {
