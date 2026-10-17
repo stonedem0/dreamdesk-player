@@ -413,6 +413,39 @@ export function Player({
     stopAnimation(); setCurrentTime(0);
   }, [stopAnimation]);
 
+  // ── Keyboard: Winamp's Z X C V B ──────────────────────────────────────────
+  // Only while the Player is the window in use (last clicked, or holding
+  // focus), so typing elsewhere on the page doesn't skip tracks; never while
+  // typing in a field.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const inUseRef = useRef(false);
+  useEffect(() => {
+    const win = () => bodyRef.current?.closest('.dd-window') ?? null;
+    const onPointerDown = (e: PointerEvent) => { inUseRef.current = !!win()?.contains(e.target as Node); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (!inUseRef.current && !win()?.contains(document.activeElement)) return;
+      const t = e.target as HTMLElement;
+      if (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range')) return;
+      const keys: Record<string, () => unknown> = {
+        z: goPrev,
+        x: handlePlay,
+        // Winamp's C pauses, and unpauses
+        c: () => (audioRef.current?.paused && audioRef.current.currentTime ? handlePlay() : handlePause()),
+        v: handleStop,
+        b: goNext,
+      };
+      const run = keys[e.key.toLowerCase()];
+      if (run) { e.preventDefault(); void run(); }
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [goPrev, handlePlay, handlePause, handleStop, goNext]);
+
   // ── Upload ────────────────────────────────────────────────────────────────
   const handleUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -623,7 +656,7 @@ export function Player({
       className="dd-player"
     >
       {/* Player body */}
-      <div className="dd-player__body" onContextMenu={openMainMenu}>
+      <div className="dd-player__body" ref={bodyRef} onContextMenu={openMainMenu}>
         <div className="dd-player__display">
 
           <div className="dd-player__viz">
@@ -674,11 +707,11 @@ export function Player({
           </div>
 
           <div className="dd-player__controls">
-            <button onClick={goPrev}>⏮︎</button>
-            <button onClick={handlePause} disabled={!isPlaying}>⏸︎</button>
-            <button onClick={handlePlay}>▶︎</button>
-            <button onClick={handleStop}>⏹︎</button>
-            <button onClick={goNext}>⏭︎</button>
+            <button onClick={goPrev} title="Previous (Z)" aria-label="Previous">⏮︎</button>
+            <button onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause">⏸︎</button>
+            <button onClick={handlePlay} title="Play (X)" aria-label="Play">▶︎</button>
+            <button onClick={handleStop} title="Stop (V)" aria-label="Stop">⏹︎</button>
+            <button onClick={goNext} title="Next (B)" aria-label="Next">⏭︎</button>
             <button className="dd-player__upload-btn" onClick={() => uploadRef.current?.click()}>⏏︎</button>
             <input ref={uploadRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={handleUpload} />
             <button

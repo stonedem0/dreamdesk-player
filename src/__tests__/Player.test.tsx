@@ -295,6 +295,58 @@ describe('Player — the timer', () => {
   });
 });
 
+describe("Player — Winamp's keys", () => {
+  const TWO = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  // The Player's window (the Window stand-in in these tests)
+  const inside = () => document.querySelector('.dd-player__body')!;
+  const label = () => document.querySelector('.dd-player__neon')!.textContent;
+  const press = (key: string, target: Element = document.body) => act(async () => { fireEvent.keyDown(target, { key }); });
+
+  beforeEach(() => {
+    // Inside the Player means inside its window
+    vi.spyOn(Element.prototype, 'closest').mockImplementation(function (this: Element, sel: string) {
+      if (sel === '.dd-window') return document.querySelector('[data-testid="window"]');
+      return Element.prototype.matches.call(this, sel) ? this : null;
+    });
+  });
+
+  it('B and Z go to the next and previous track, X plays, V stops', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    await press('x');
+    expect(start).toHaveBeenCalled();
+    await press('b');
+    expect(label()).toBe('Archangel — Burial');
+    await press('Z');
+    expect(label()).toBe('Rival Dealer — Burial');
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause');
+    await press('v');
+    expect(pause).toHaveBeenCalled();
+  });
+
+  it('does nothing once something else on the page was clicked', async () => {
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    await act(async () => { fireEvent.pointerDown(document.body); });
+    await press('b');
+    expect(label()).toBe('Rival Dealer — Burial');
+  });
+
+  it('leaves typing alone, and keys with Ctrl or ⌘', async () => {
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    const field = document.body.appendChild(document.createElement('input'));
+    await press('b', field);
+    await act(async () => { fireEvent.keyDown(document.body, { key: 'b', metaKey: true }); });
+    expect(label()).toBe('Rival Dealer — Burial');
+    field.remove();
+  });
+});
+
 describe('Player — visualizer modes', () => {
   it('cycles bars, oscilloscope and off when the display is clicked, and reports it', async () => {
     const onChange = vi.fn();
