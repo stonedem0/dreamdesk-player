@@ -448,6 +448,24 @@
   &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
 }
 
+/* Each track's length, on the right of its first line */
+.dd-player__track-length {
+  float: right;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Selected / total length, in a little display like the main one's */
+.dd-player__playlist-time {
+  padding: 1px 4px;
+  font-size: var(--player-font-size-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--color-display-bg, #000);
+  color: var(--color-screen-text, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
+}
+
 /* Winamp's main menu: opened by right-clicking the player, drawn on the page
    (outside the window) at the cursor; it carries the skin's colours itself */
 .dd-player__dropdown-menu.dd-player__main-menu {

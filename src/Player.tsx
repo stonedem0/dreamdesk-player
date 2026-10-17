@@ -10,6 +10,7 @@ import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
 import { WINDOW_ICONS } from './windowIcons';
+import { probeLength } from './trackLength';
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
@@ -40,6 +41,12 @@ export interface Track {
 
 function fmtTime(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+/** A playlist's total: h:mm:ss once it's an hour or more. */
+function fmtTotal(s: number) {
+  if (s < 3600) return fmtTime(s);
+  const m = Math.floor((s % 3600) / 60);
+  return `${Math.floor(s / 3600)}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────
@@ -162,6 +169,8 @@ export function Player({
   const [selection, setSelection]       = useState<Selection>({ selected: [], anchor: null });
   const [openMenu, setOpenMenu]         = useState<'rem' | 'sel' | 'misc' | null>(null);
   const [eqBands, setEqBands]           = useState<number[]>(Array(7).fill(0));
+  // Each track's length in seconds, by src, for the playlist
+  const [lengths, setLengths]           = useState<Record<string, number>>({});
 
   // ── Refs ──────────────────────────────────────────────────────────────────
   const audioRef      = useRef<HTMLAudioElement | null>(null);
@@ -342,6 +351,8 @@ export function Player({
     const onMeta = () => {
       const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
       setDuration(d);
+      const playing = playlistRef.current[currentIdxRef.current];
+      if (playing && d > 0) setLengths((l) => (l[playing.src] === d ? l : { ...l, [playing.src]: d }));
       const k = engineRef.current?.sampleRateKhz() ?? 0;
       if (k) setKhz(String(k));
       if (audio.src && d > 0) computeKbps(audio.src, d);
@@ -366,6 +377,22 @@ export function Player({
     // computeKbps only uses refs and a state setter, so the first render's is fine
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goNext, stopAnimation]);
+
+  // ── Track lengths ─────────────────────────────────────────────────────────
+  // Read from each file's header as the playlist changes; the playing track's
+  // own metadata (onMeta) has the final say.
+  const lengthsRef = useRef(lengths);
+  useEffect(() => { lengthsRef.current = lengths; }, [lengths]);
+  useEffect(() => {
+    const probing = new AbortController();
+    for (const src of new Set(playlist.map((t) => t.src))) {
+      if (lengthsRef.current[src]) continue;
+      void probeLength(src, probing.signal).then((seconds) => {
+        if (seconds && !probing.signal.aborted) setLengths((l) => ({ ...l, [src]: seconds }));
+      });
+    }
+    return () => probing.abort();
+  }, [playlist]);
 
   // ── Volume / balance / EQ ─────────────────────────────────────────────────
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume / 100; }, [volume]);
@@ -676,6 +703,10 @@ export function Player({
   const { minimizeIcon, fullscreenIcon, closeIcon } = WINDOW_ICONS;
 
   const timer = timeMode === 'remaining' ? `-${fmtTime(Math.max(0, duration - currentTime))}` : fmtTime(currentTime);
+  // Winamp's selected/total, with a + while some lengths aren't known yet
+  const sum = (tracks: Track[]) => tracks.reduce((n, t) => n + (lengths[t.src] ?? 0), 0);
+  const allKnown = playlist.every((t) => lengths[t.src]);
+  const playlistTime = `${fmtTotal(sum(selected.map((i) => playlist[i]).filter((t): t is Track => !!t)))}/${fmtTotal(sum(playlist))}${allKnown ? '' : '+'}`;
   const switchTime = () => {
     const next: TimeMode = timeMode === 'elapsed' ? 'remaining' : 'elapsed';
     setTimeMode(next);
@@ -794,6 +825,8 @@ export function Player({
                   onClick={e => setSelection(sel => clickTrack(sel, i, { toggle: e.ctrlKey || e.metaKey, range: e.shiftKey }))}
                   onDoubleClick={() => playTrack(i)}
                   onKeyDown={e => e.key === 'Enter' && playTrack(i)}>
+                  {/* First, so it floats to the right of the first line */}
+                  {lengths[t.src] ? <span className="dd-player__track-length">{fmtTime(lengths[t.src]!)}</span> : null}
                   {t.artist ? `${t.title} — ${t.artist}` : t.title}
                 </li>
               ))}
@@ -819,6 +852,7 @@ export function Player({
                 ['Reverse list', () => changeList(reverse(listState())), playlist.length < 2],
               ])}
             </div>
+            <span className="dd-player__playlist-time" title="Selected / total length">{playlistTime}</span>
           </div>
         </div>
       )}
