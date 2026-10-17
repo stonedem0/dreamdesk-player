@@ -218,7 +218,7 @@ export function createVisualizer(options = {}) {
   let lastFrameMs = /** @type {number|null} */ (null);
   let fftTexture = /** @type {WebGLTexture|null} */ (null);
   let fftSize = 0;
-  let fftData8 = /** @type {Uint8Array|null} */ (null);
+  let fftData8 = /** @type {Uint8Array<ArrayBuffer>|null} */ (null);
   let fftUpdateCounter = 0; // only update FFT every 2 frames
 
   // player.js implements stop() as pause() + currentTime = 0, so a stopped
