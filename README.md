@@ -1,4 +1,4 @@
-# Winamp Tokyo 3
+# @dreamdesk/player
 
 A lightweight, static web music player with a retro Winamp vibe. No build step required — just open the page and play.
 
