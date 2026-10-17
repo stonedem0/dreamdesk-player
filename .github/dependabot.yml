@@ -1,0 +1,14 @@
+# Dependabot: keeps the GitHub Actions these workflows use up to date (a PR a
+# week at most, grouped). Security updates for npm dependencies are on in the
+# repo settings and come as their own PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

@@ -1,0 +1,42 @@
+name: CodeQL
+
+# GitHub's security scan: looks through the code for things like XSS,
+# injection and unsafe workflow patterns. Findings show on PRs and under
+# Security > Code scanning.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Weekly, for new kinds of findings in code that hasn't changed
+    - cron: "27 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # The Player's TypeScript and JavaScript, and these workflows
+        language: [javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Nothing to compile: TypeScript and workflows are read as they are
+          build-mode: none
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
