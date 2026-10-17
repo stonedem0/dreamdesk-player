@@ -8,6 +8,9 @@
   z-index: 1000;
   --player-font-size: 12px;
   --player-font-size-small: 10px;
+  /* The body's spacing: round the edge, and between everything in it */
+  --player-pad: 6px;
+  --player-gap: 3px;
 }
 
 /* gradient border — same technique as vanilla tokyo-3-sunset-skin.css */
@@ -102,15 +105,17 @@
   background-image: var(--player-body-bg, none);
   background-size: 100%;
   background-position: 50% 33%;
-  height: 116px;
   border-bottom: 1px solid var(--border-color);
 }
 
+/* One padding round the edge and one gap between everything: each piece
+   stretches to fill its row instead of having a width of its own */
 .dd-player__display {
-  height: 105px;
   display: grid;
-  grid-template-columns: 110px auto auto 1fr;
-  grid-template-rows: auto auto auto 1fr auto;
+  padding: var(--player-pad);
+  gap: var(--player-gap);
+  grid-template-columns: auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto auto;
   grid-template-areas:
     "viz title title title"
     "viz kbps khz ."
@@ -123,12 +128,11 @@
 
 .dd-player__viz {
   grid-area: viz;
-  margin-top: 6px;
-  margin-left: 5px;
   display: flex;
   background-color: var(--color-display-bg, transparent);
   width: 100px;
-  height: 35px;
+  /* As tall as the three rows beside it */
+  align-self: stretch;
   position: relative;
   padding-top: 18px;
   flex-direction: column;
@@ -157,9 +161,8 @@
   justify-content: center;
   background-color: var(--color-display-bg, transparent);
   height: 18px;
-  width: 177px;
+  min-width: 0;
   font-size: var(--player-font-size);
-  margin-top: 6px;
   overflow: hidden;
   white-space: nowrap;
   border: 0.5px solid var(--border-color);
@@ -222,8 +225,8 @@
 
 .dd-player__screen-unit { margin-left: 2px; color: var(--color-text-secondary, var(--color-text-primary)); }
 
-.dd-player__kbps { grid-area: kbps; margin-top: 0; }
-.dd-player__khz  { grid-area: khz;  margin-top: 0; margin-left: 0; width: 32px; }
+.dd-player__kbps { grid-area: kbps; }
+.dd-player__khz  { grid-area: khz; }
 
 /* ── Sliders row ─────────────────────────────────────────────────────────── */
 
@@ -232,9 +235,10 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  margin-right: 6px;
-  gap: 2px;
+  gap: var(--player-gap);
 }
+/* EQ and PL against the right edge */
+.dd-player__sliders .dd-player__mini-btn:first-of-type { margin-left: auto; }
 
 .dd-player__seek {
   grid-area: seek;
@@ -244,6 +248,7 @@
 .dd-player__volume,
 .dd-player__balance {
   appearance: none;
+  margin: 0;
   height: 6px;
   background: var(--color-slider-bg);
   border: 1px solid var(--border-color);
@@ -272,9 +277,11 @@
 /* Seek */
 .dd-player__seek-slider {
   appearance: none;
-  margin-left: 3px;
-  width: 286px;
-  height: 6px;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  width: 100%;
+  height: 8px;
   background: var(--player-gradient, var(--border-color));
   border: 1px solid var(--border-color);
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
@@ -316,11 +323,11 @@
 
 .dd-player__controls {
   grid-area: controls;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  margin-left: 4px;
-  padding: 6px 3px;
+  gap: var(--player-gap);
+  /* A little more air between the seek bar and the buttons */
+  margin-top: var(--player-gap);
 }
 
 .dd-player__controls button {
@@ -348,9 +355,8 @@
   outline: 1px solid var(--color-accent-primary);
 }
 
-.dd-player__upload-btn { margin-right: 6px !important; }
-
-.dd-player__shuffle { margin-left: 8px !important; }
+/* Shuffle and Repeat against the right edge */
+.dd-player__shuffle { margin-left: auto; }
 
 .dd-player__shuffle,
 .dd-player__repeat {
@@ -651,6 +657,8 @@
 /* The visualizer: click to cycle bars, oscilloscope, off */
 .dd-player__viz-canvas {
   cursor: pointer;
+  /* At the bottom of the display, under the timer */
+  margin-top: auto;
 }
 .dd-player__viz-canvas:focus-visible {
   outline: 1px dotted var(--color-text-primary, currentColor);
