@@ -153,7 +153,7 @@ export function Player({
   const [vizMode, setVizMode] = useState<VisualizerMode>(defaultVisualizerMode);
   // Read by the frame callback, which is set up once
   const vizModeRef    = useRef(vizMode);
-  const waveRef       = useRef<Uint8Array | null>(null);
+  const waveRef       = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const uploadRef     = useRef<HTMLInputElement>(null);
   const engineRef     = useRef<AudioEngine | null>(null);
   // Read by the frame callback so a skin change lands on the next frame

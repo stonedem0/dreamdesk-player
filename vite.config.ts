@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     // One bundled .d.ts for the package; core/ is JSDoc-typed JS (allowJs)
-    dts({ tsconfigPath: './tsconfig.app.json', include: ['src', 'core'], exclude: ['src/demo.tsx', 'core/__checks__', '**/__tests__/**'], rollupTypes: true }),
+    dts({ tsconfigPath: './tsconfig.app.json', include: ['src', 'core'], exclude: ['src/demo.tsx', 'core/__checks__', '**/__tests__/**'], bundleTypes: true }),
   ],
   test: {
     environment: 'happy-dom',
@@ -28,6 +28,8 @@ export default defineConfig({
       name: 'DreamDeskPlayer',
       formats: ['es'],
       fileName: 'index',
+      // The ./css export: Vite 6+ would name it index.css
+      cssFileName: 'style',
     },
     rollupOptions: {
       // Peers come from the host app, so it ends up with one copy of each
