@@ -20,15 +20,19 @@
 .dd-player input,
 .dd-player select { font-family: inherit; }
 
-/* Labels are lowercase, like the rest of dreamdesk; track titles stay as written */
+/* All text is lowercase, like the rest of dreamdesk: labels, menus (on the
+   menu itself, since its buttons are \`all: unset\`), and tracks and artists.
+   Only how they look: the lock screen and media controls show tracks as written. */
 .dd-player__mini-btn,
 .dd-player__toggle,
 .dd-player__statusbar-btn,
 .dd-player__playlist-header,
 .dd-player__eq-header,
 .dd-player__screen-unit,
-.dd-player__dropdown-menu button,
-.dd-player__menu-heading { text-transform: lowercase; }
+.dd-player__dropdown-menu,
+.dd-player__menu-heading,
+.dd-player__track-items,
+.dd-player__neon { text-transform: lowercase; }
 
 /* gradient border — same technique as vanilla tokyo-3-sunset-skin.css */
 .dd-player .dd-win-header {
