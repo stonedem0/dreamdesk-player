@@ -143,7 +143,12 @@
   top: 4px;
   right: 4px;
   font-size: calc(var(--player-font-size) * 1.1);
-  pointer-events: none;
+  /* A button (click to switch elapsed / remaining) that looks like the display */
+  font-family: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   color: var(--color-screen-text, var(--color-text-primary));
   text-shadow: var(--screen-text-shadow, 0 0 2px var(--color-neon-primary), 0 0 2px rgba(255,165,0,0.85), 0 0 7px rgba(255,69,0,0.7));
 }
@@ -441,6 +446,24 @@
   &:hover { opacity: 0.8; }
   &.active { color: var(--color-accent-primary); font-weight: bold; }
   &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
+}
+
+/* Each track's length, on the right of its first line */
+.dd-player__track-length {
+  float: right;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Selected / total length, in a little display like the main one's */
+.dd-player__playlist-time {
+  padding: 1px 4px;
+  font-size: var(--player-font-size-small);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--color-display-bg, #000);
+  color: var(--color-screen-text, var(--color-text-primary));
+  border: 0.5px solid var(--border-color);
 }
 
 /* Winamp's main menu: opened by right-clicking the player, drawn on the page

@@ -10,6 +10,7 @@ import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
 import { WINDOW_ICONS } from './windowIcons';
+import { probeLength } from './trackLength';
 import {
   EQ_PRESETS,
   EQ_PRESET_ORDER,
@@ -23,13 +24,29 @@ import {
 
 /** Winamp's visualizer modes: spectrum bars, oscilloscope, or nothing. */
 export type VisualizerMode = 'bars' | 'scope' | 'off';
+/** What the timer shows: time played, or time left (with a minus, as in Winamp). */
+export type TimeMode = 'elapsed' | 'remaining';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface Track { title: string; artist: string; src: string; }
+export interface Track {
+  title: string;
+  artist: string;
+  src: string;
+  /** Shown with the track on a phone's lock screen and in the system's media controls. */
+  album?: string;
+  /** A picture for the lock screen and media controls (a URL). */
+  artwork?: string;
+}
 
 function fmtTime(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+/** A playlist's total: h:mm:ss once it's an hour or more. */
+function fmtTotal(s: number) {
+  if (s < 3600) return fmtTime(s);
+  const m = Math.floor((s % 3600) / 60);
+  return `${Math.floor(s / 3600)}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────
@@ -53,6 +70,10 @@ export interface PlayerProps {
   defaultVisualizerMode?: VisualizerMode;
   /** Called when the visualizer's mode changes (e.g. to remember it). */
   onVisualizerModeChange?: (mode: VisualizerMode) => void;
+  /** What the timer starts on: time played (default, as in Winamp) or time left. A click switches. */
+  defaultTimeMode?: TimeMode;
+  /** Called when the timer is switched (e.g. to remember it). */
+  onTimeModeChange?: (mode: TimeMode) => void;
   /**
    * Called with the Player's audio once it exists, and with null when the
    * Player goes away: give it to a `<Visualizer>` elsewhere (its own window).
@@ -115,6 +136,8 @@ export function Player({
   onFullscreenChange,
   defaultVisualizerMode = 'bars',
   onVisualizerModeChange,
+  defaultTimeMode = 'elapsed',
+  onTimeModeChange,
   onAudioSource,
   onVisualizerToggle,
   visualizerOpen = false,
@@ -146,11 +169,14 @@ export function Player({
   const [selection, setSelection]       = useState<Selection>({ selected: [], anchor: null });
   const [openMenu, setOpenMenu]         = useState<'rem' | 'sel' | 'misc' | null>(null);
   const [eqBands, setEqBands]           = useState<number[]>(Array(7).fill(0));
+  // Each track's length in seconds, by src, for the playlist
+  const [lengths, setLengths]           = useState<Record<string, number>>({});
 
   // ── Refs ──────────────────────────────────────────────────────────────────
   const audioRef      = useRef<HTMLAudioElement | null>(null);
   const canvasRef     = useRef<HTMLCanvasElement>(null);
   const [vizMode, setVizMode] = useState<VisualizerMode>(defaultVisualizerMode);
+  const [timeMode, setTimeMode] = useState<TimeMode>(defaultTimeMode);
   // Read by the frame callback, which is set up once
   const vizModeRef    = useRef(vizMode);
   const waveRef       = useRef<Uint8Array<ArrayBuffer> | null>(null);
@@ -325,6 +351,8 @@ export function Player({
     const onMeta = () => {
       const d = isFinite(audio.duration) ? Math.floor(audio.duration) : 0;
       setDuration(d);
+      const playing = playlistRef.current[currentIdxRef.current];
+      if (playing && d > 0) setLengths((l) => (l[playing.src] === d ? l : { ...l, [playing.src]: d }));
       const k = engineRef.current?.sampleRateKhz() ?? 0;
       if (k) setKhz(String(k));
       if (audio.src && d > 0) computeKbps(audio.src, d);
@@ -349,6 +377,22 @@ export function Player({
     // computeKbps only uses refs and a state setter, so the first render's is fine
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goNext, stopAnimation]);
+
+  // ── Track lengths ─────────────────────────────────────────────────────────
+  // Read from each file's header as the playlist changes; the playing track's
+  // own metadata (onMeta) has the final say.
+  const lengthsRef = useRef(lengths);
+  useEffect(() => { lengthsRef.current = lengths; }, [lengths]);
+  useEffect(() => {
+    const probing = new AbortController();
+    for (const src of new Set(playlist.map((t) => t.src))) {
+      if (lengthsRef.current[src]) continue;
+      void probeLength(src, probing.signal).then((seconds) => {
+        if (seconds && !probing.signal.aborted) setLengths((l) => ({ ...l, [src]: seconds }));
+      });
+    }
+    return () => probing.abort();
+  }, [playlist]);
 
   // ── Volume / balance / EQ ─────────────────────────────────────────────────
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume / 100; }, [volume]);
@@ -403,6 +447,82 @@ export function Player({
     audio.pause(); audio.currentTime = 0;
     stopAnimation(); setCurrentTime(0);
   }, [stopAnimation]);
+
+  // ── Keyboard: Winamp's Z X C V B ──────────────────────────────────────────
+  // Only while the Player is the window in use (last clicked, or holding
+  // focus), so typing elsewhere on the page doesn't skip tracks; never while
+  // typing in a field.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const inUseRef = useRef(false);
+  useEffect(() => {
+    const win = () => bodyRef.current?.closest('.dd-window') ?? null;
+    const onPointerDown = (e: PointerEvent) => { inUseRef.current = !!win()?.contains(e.target as Node); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (!inUseRef.current && !win()?.contains(document.activeElement)) return;
+      const t = e.target as HTMLElement;
+      if (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || (t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range')) return;
+      const keys: Record<string, () => unknown> = {
+        z: goPrev,
+        x: handlePlay,
+        // Winamp's C pauses, and unpauses
+        c: () => (audioRef.current?.paused && audioRef.current.currentTime ? handlePlay() : handlePause()),
+        v: handleStop,
+        b: goNext,
+      };
+      const run = keys[e.key.toLowerCase()];
+      if (run) { e.preventDefault(); void run(); }
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [goPrev, handlePlay, handlePause, handleStop, goNext]);
+
+  // ── Media Session: media keys, and the track on a phone's lock screen ─────
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session) return;
+    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+      ['play', () => void handlePlay()],
+      ['pause', handlePause],
+      ['stop', handleStop],
+      ['previoustrack', goPrev],
+      ['nexttrack', goNext],
+      ['seekto', (d) => {
+        const audio = audioRef.current;
+        if (audio && d.seekTime !== undefined && isFinite(audio.duration)) audio.currentTime = d.seekTime;
+      }],
+    ];
+    // A browser that doesn't know an action throws: skip that one
+    for (const [action, run] of handlers) { try { session.setActionHandler(action, run); } catch { /* unsupported */ } }
+    return () => { for (const [action] of handlers) { try { session.setActionHandler(action, null); } catch { /* unsupported */ } } };
+  }, [handlePlay, handlePause, handleStop, goPrev, goNext]);
+
+  const nowPlaying = playlist[currentIdx];
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session || typeof MediaMetadata === 'undefined') return;
+    session.metadata = nowPlaying ? new MediaMetadata({
+      title: nowPlaying.title,
+      artist: nowPlaying.artist,
+      album: nowPlaying.album ?? '',
+      artwork: nowPlaying.artwork ? [{ src: nowPlaying.artwork }] : [],
+    }) : null;
+  }, [nowPlaying]);
+  useEffect(() => () => { if (navigator.mediaSession) navigator.mediaSession.metadata = null; }, []);
+
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session) return;
+    session.playbackState = isPlaying ? 'playing' : currentTime ? 'paused' : 'none';
+    // The lock screen's progress bar
+    if (duration > 0 && session.setPositionState) {
+      try { session.setPositionState({ duration, position: Math.min(currentTime, duration), playbackRate: 1 }); } catch { /* out of range */ }
+    }
+  }, [isPlaying, currentTime, duration]);
 
   // ── Upload ────────────────────────────────────────────────────────────────
   const handleUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -582,8 +702,16 @@ export function Player({
   // ── Render ────────────────────────────────────────────────────────────────
   const { minimizeIcon, fullscreenIcon, closeIcon } = WINDOW_ICONS;
 
-  const remaining = Math.max(0, duration - currentTime);
-  const timer = fmtTime(remaining);
+  const timer = timeMode === 'remaining' ? `-${fmtTime(Math.max(0, duration - currentTime))}` : fmtTime(currentTime);
+  // Winamp's selected/total, with a + while some lengths aren't known yet
+  const sum = (tracks: Track[]) => tracks.reduce((n, t) => n + (lengths[t.src] ?? 0), 0);
+  const allKnown = playlist.every((t) => lengths[t.src]);
+  const playlistTime = `${fmtTotal(sum(selected.map((i) => playlist[i]).filter((t): t is Track => !!t)))}/${fmtTotal(sum(playlist))}${allKnown ? '' : '+'}`;
+  const switchTime = () => {
+    const next: TimeMode = timeMode === 'elapsed' ? 'remaining' : 'elapsed';
+    setTimeMode(next);
+    onTimeModeChange?.(next);
+  };
 
   return (
     <>
@@ -610,11 +738,13 @@ export function Player({
       className="dd-player"
     >
       {/* Player body */}
-      <div className="dd-player__body" onContextMenu={openMainMenu}>
+      <div className="dd-player__body" ref={bodyRef} onContextMenu={openMainMenu}>
         <div className="dd-player__display">
 
           <div className="dd-player__viz">
-            <div className="dd-player__timer">{timer}</div>
+            <button type="button" className="dd-player__timer" onClick={switchTime}
+              title={timeMode === 'elapsed' ? 'Time played (click for time left)' : 'Time left (click for time played)'}
+              aria-label={`${timeMode === 'elapsed' ? 'Time played' : 'Time left'} ${timer} (click to switch)`}>{timer}</button>
             <canvas ref={canvasRef} width={100} height={35}
               className="dd-player__viz-canvas" role="button" tabIndex={0}
               aria-label={`Visualizer: ${vizMode === 'bars' ? 'spectrum' : vizMode === 'scope' ? 'oscilloscope' : 'off'} (click to change)`}
@@ -659,11 +789,11 @@ export function Player({
           </div>
 
           <div className="dd-player__controls">
-            <button onClick={goPrev}>⏮︎</button>
-            <button onClick={handlePause} disabled={!isPlaying}>⏸︎</button>
-            <button onClick={handlePlay}>▶︎</button>
-            <button onClick={handleStop}>⏹︎</button>
-            <button onClick={goNext}>⏭︎</button>
+            <button onClick={goPrev} title="Previous (Z)" aria-label="Previous">⏮︎</button>
+            <button onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause">⏸︎</button>
+            <button onClick={handlePlay} title="Play (X)" aria-label="Play">▶︎</button>
+            <button onClick={handleStop} title="Stop (V)" aria-label="Stop">⏹︎</button>
+            <button onClick={goNext} title="Next (B)" aria-label="Next">⏭︎</button>
             <button className="dd-player__upload-btn" onClick={() => uploadRef.current?.click()}>⏏︎</button>
             <input ref={uploadRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={handleUpload} />
             <button
@@ -695,6 +825,8 @@ export function Player({
                   onClick={e => setSelection(sel => clickTrack(sel, i, { toggle: e.ctrlKey || e.metaKey, range: e.shiftKey }))}
                   onDoubleClick={() => playTrack(i)}
                   onKeyDown={e => e.key === 'Enter' && playTrack(i)}>
+                  {/* First, so it floats to the right of the first line */}
+                  {lengths[t.src] ? <span className="dd-player__track-length">{fmtTime(lengths[t.src]!)}</span> : null}
                   {t.artist ? `${t.title} — ${t.artist}` : t.title}
                 </li>
               ))}
@@ -720,6 +852,7 @@ export function Player({
                 ['Reverse list', () => changeList(reverse(listState())), playlist.length < 2],
               ])}
             </div>
+            <span className="dd-player__playlist-time" title="Selected / total length">{playlistTime}</span>
           </div>
         </div>
       )}

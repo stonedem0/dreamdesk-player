@@ -276,6 +276,142 @@ describe('Player — right-click menu', () => {
   });
 });
 
+describe('Player — the timer', () => {
+  it('shows time played, and a click switches to time left (with a minus) and back, reported', async () => {
+    const onChange = vi.fn();
+    render(<Player initialTracks={TRACKS} onTimeModeChange={onChange} />);
+    const timer = screen.getByRole('button', { name: /Time played 0:00/ });
+    await act(async () => { fireEvent.click(timer); });
+    expect(timer.textContent).toBe('-0:00');
+    expect(onChange).toHaveBeenLastCalledWith('remaining');
+    await act(async () => { fireEvent.click(timer); });
+    expect(timer.textContent).toBe('0:00');
+    expect(onChange).toHaveBeenLastCalledWith('elapsed');
+  });
+
+  it('starts on time left when asked', () => {
+    render(<Player initialTracks={TRACKS} defaultTimeMode="remaining" />);
+    expect(screen.getByRole('button', { name: /Time left -0:00/ })).toBeTruthy();
+  });
+});
+
+describe("Player — Winamp's keys", () => {
+  const TWO = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  // The Player's window (the Window stand-in in these tests)
+  const inside = () => document.querySelector('.dd-player__body')!;
+  const label = () => document.querySelector('.dd-player__neon')!.textContent;
+  const press = (key: string, target: Element = document.body) => act(async () => { fireEvent.keyDown(target, { key }); });
+
+  beforeEach(() => {
+    // Inside the Player means inside its window
+    vi.spyOn(Element.prototype, 'closest').mockImplementation(function (this: Element, sel: string) {
+      if (sel === '.dd-window') return document.querySelector('[data-testid="window"]');
+      return Element.prototype.matches.call(this, sel) ? this : null;
+    });
+  });
+
+  it('B and Z go to the next and previous track, X plays, V stops', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    await press('x');
+    expect(start).toHaveBeenCalled();
+    await press('b');
+    expect(label()).toBe('Archangel — Burial');
+    await press('Z');
+    expect(label()).toBe('Rival Dealer — Burial');
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause');
+    await press('v');
+    expect(pause).toHaveBeenCalled();
+  });
+
+  it('C pauses, and unpauses', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause');
+    let audio: HTMLAudioElement | undefined;
+    render(<Player initialTracks={TWO} onAudioSource={(s) => { if (s) audio = s.audio; }} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    // Playing: C pauses
+    Object.defineProperty(audio!, 'paused', { value: false, configurable: true });
+    await press('c');
+    expect(pause).toHaveBeenCalled();
+    // Paused part-way: C plays on
+    Object.defineProperty(audio!, 'paused', { value: true, configurable: true });
+    Object.defineProperty(audio!, 'currentTime', { value: 42, configurable: true });
+    start.mockClear();
+    await press('c');
+    expect(start).toHaveBeenCalled();
+  });
+
+  it('does nothing once something else on the page was clicked', async () => {
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    await act(async () => { fireEvent.pointerDown(document.body); });
+    await press('b');
+    expect(label()).toBe('Rival Dealer — Burial');
+  });
+
+  it('leaves typing alone, and keys with Ctrl or ⌘', async () => {
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    const field = document.body.appendChild(document.createElement('input'));
+    await press('b', field);
+    await act(async () => { fireEvent.keyDown(document.body, { key: 'b', metaKey: true }); });
+    expect(label()).toBe('Rival Dealer — Burial');
+    field.remove();
+  });
+});
+
+describe('Player — media keys and the lock screen (Media Session)', () => {
+  const TWO = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3', album: 'Rival Dealer', artwork: '/cover.jpg' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  let session: { metadata: unknown; playbackState: string; setActionHandler: ReturnType<typeof vi.fn>; setPositionState: ReturnType<typeof vi.fn> };
+  const handler = (action: string) => { const set = session.setActionHandler.mock.calls.filter(([a, h]) => a === action && h); return set[set.length - 1]![1] as () => void; };
+  beforeEach(() => {
+    session = { metadata: null, playbackState: 'none', setActionHandler: vi.fn(), setPositionState: vi.fn() };
+    Object.defineProperty(navigator, 'mediaSession', { value: session, configurable: true });
+    vi.stubGlobal('MediaMetadata', class { constructor(init: object) { Object.assign(this, init); } });
+  });
+  afterEach(() => { Reflect.deleteProperty(navigator, 'mediaSession'); });
+
+  it('shows the track, with its album and artwork', () => {
+    render(<Player initialTracks={TWO} />);
+    expect(session.metadata).toMatchObject({ title: 'Rival Dealer', artist: 'Burial', album: 'Rival Dealer', artwork: [{ src: '/cover.jpg' }] });
+  });
+
+  it('the media keys work the Player, and next shows the new track', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { handler('play')(); });
+    expect(start).toHaveBeenCalled();
+    await act(async () => { handler('nexttrack')(); });
+    expect(session.metadata).toMatchObject({ title: 'Archangel' });
+    for (const a of ['pause', 'stop', 'previoustrack', 'seekto']) expect(handler(a)).toBeTypeOf('function');
+  });
+
+  it("keeps the lock screen's progress bar up to date", async () => {
+    let audio: HTMLAudioElement | undefined;
+    render(<Player initialTracks={TWO} onAudioSource={(s) => { if (s) audio = s.audio; }} />);
+    Object.defineProperty(audio!, 'duration', { value: 348, configurable: true });
+    Object.defineProperty(audio!, 'currentTime', { value: 61, configurable: true, writable: true });
+    await act(async () => { audio!.dispatchEvent(new Event('loadedmetadata')); audio!.dispatchEvent(new Event('timeupdate')); });
+    expect(session.setPositionState).toHaveBeenLastCalledWith({ duration: 348, position: 61, playbackRate: 1 });
+    expect(session.playbackState).toBe('paused');
+  });
+
+  it('lets go of the keys and the lock screen when it goes', () => {
+    const { unmount } = render(<Player initialTracks={TWO} />);
+    unmount();
+    expect(session.setActionHandler).toHaveBeenCalledWith('play', null);
+    expect(session.metadata).toBeNull();
+  });
+});
+
 describe('Player — visualizer modes', () => {
   it('cycles bars, oscilloscope and off when the display is clicked, and reports it', async () => {
     const onChange = vi.fn();
