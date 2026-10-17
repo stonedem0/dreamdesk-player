@@ -28,7 +28,15 @@ export type TimeMode = 'elapsed' | 'remaining';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface Track { title: string; artist: string; src: string; }
+export interface Track {
+  title: string;
+  artist: string;
+  src: string;
+  /** Shown with the track on a phone's lock screen and in the system's media controls. */
+  album?: string;
+  /** A picture for the lock screen and media controls (a URL). */
+  artwork?: string;
+}
 
 function fmtTime(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -445,6 +453,49 @@ export function Player({
       document.removeEventListener('keydown', onKey);
     };
   }, [goPrev, handlePlay, handlePause, handleStop, goNext]);
+
+  // ── Media Session: media keys, and the track on a phone's lock screen ─────
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session) return;
+    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+      ['play', () => void handlePlay()],
+      ['pause', handlePause],
+      ['stop', handleStop],
+      ['previoustrack', goPrev],
+      ['nexttrack', goNext],
+      ['seekto', (d) => {
+        const audio = audioRef.current;
+        if (audio && d.seekTime !== undefined && isFinite(audio.duration)) audio.currentTime = d.seekTime;
+      }],
+    ];
+    // A browser that doesn't know an action throws: skip that one
+    for (const [action, run] of handlers) { try { session.setActionHandler(action, run); } catch { /* unsupported */ } }
+    return () => { for (const [action] of handlers) { try { session.setActionHandler(action, null); } catch { /* unsupported */ } } };
+  }, [handlePlay, handlePause, handleStop, goPrev, goNext]);
+
+  const nowPlaying = playlist[currentIdx];
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session || typeof MediaMetadata === 'undefined') return;
+    session.metadata = nowPlaying ? new MediaMetadata({
+      title: nowPlaying.title,
+      artist: nowPlaying.artist,
+      album: nowPlaying.album ?? '',
+      artwork: nowPlaying.artwork ? [{ src: nowPlaying.artwork }] : [],
+    }) : null;
+  }, [nowPlaying]);
+  useEffect(() => () => { if (navigator.mediaSession) navigator.mediaSession.metadata = null; }, []);
+
+  useEffect(() => {
+    const session = navigator.mediaSession;
+    if (!session) return;
+    session.playbackState = isPlaying ? 'playing' : currentTime ? 'paused' : 'none';
+    // The lock screen's progress bar
+    if (duration > 0 && session.setPositionState) {
+      try { session.setPositionState({ duration, position: Math.min(currentTime, duration), playbackRate: 1 }); } catch { /* out of range */ }
+    }
+  }, [isPlaying, currentTime, duration]);
 
   // ── Upload ────────────────────────────────────────────────────────────────
   const handleUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

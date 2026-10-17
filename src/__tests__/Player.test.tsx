@@ -347,6 +347,43 @@ describe("Player — Winamp's keys", () => {
   });
 });
 
+describe('Player — media keys and the lock screen (Media Session)', () => {
+  const TWO = [
+    { title: 'Rival Dealer', artist: 'Burial', src: '/rival.mp3', album: 'Rival Dealer', artwork: '/cover.jpg' },
+    { title: 'Archangel', artist: 'Burial', src: '/archangel.mp3' },
+  ];
+  let session: { metadata: unknown; playbackState: string; setActionHandler: ReturnType<typeof vi.fn>; setPositionState: ReturnType<typeof vi.fn> };
+  const handler = (action: string) => { const set = session.setActionHandler.mock.calls.filter(([a, h]) => a === action && h); return set[set.length - 1]![1] as () => void; };
+  beforeEach(() => {
+    session = { metadata: null, playbackState: 'none', setActionHandler: vi.fn(), setPositionState: vi.fn() };
+    Object.defineProperty(navigator, 'mediaSession', { value: session, configurable: true });
+    vi.stubGlobal('MediaMetadata', class { constructor(init: object) { Object.assign(this, init); } });
+  });
+  afterEach(() => { Reflect.deleteProperty(navigator, 'mediaSession'); });
+
+  it('shows the track, with its album and artwork', () => {
+    render(<Player initialTracks={TWO} />);
+    expect(session.metadata).toMatchObject({ title: 'Rival Dealer', artist: 'Burial', album: 'Rival Dealer', artwork: [{ src: '/cover.jpg' }] });
+  });
+
+  it('the media keys work the Player, and next shows the new track', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    render(<Player initialTracks={TWO} />);
+    await act(async () => { handler('play')(); });
+    expect(start).toHaveBeenCalled();
+    await act(async () => { handler('nexttrack')(); });
+    expect(session.metadata).toMatchObject({ title: 'Archangel' });
+    for (const a of ['pause', 'stop', 'previoustrack', 'seekto']) expect(handler(a)).toBeTypeOf('function');
+  });
+
+  it('lets go of the keys and the lock screen when it goes', () => {
+    const { unmount } = render(<Player initialTracks={TWO} />);
+    unmount();
+    expect(session.setActionHandler).toHaveBeenCalledWith('play', null);
+    expect(session.metadata).toBeNull();
+  });
+});
+
 describe('Player — visualizer modes', () => {
   it('cycles bars, oscilloscope and off when the display is clicked, and reports it', async () => {
     const onChange = vi.fn();
