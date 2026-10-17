@@ -60,4 +60,16 @@ describe('Player — track lengths', () => {
     await settle();
     expect(probe.asked.sort()).toEqual(['/archangel.mp3', '/rival.mp3', '/untitled.mp3']);
   });
+
+  it("takes the playing track's own length over the header's", async () => {
+    probe.lengths = { '/rival.mp3': 340 };
+    let audio: HTMLAudioElement | undefined;
+    render(<Player initialTracks={TRACKS} defaultFullscreen onAudioSource={(s) => { if (s) audio = s.audio; }} />);
+    await settle();
+    expect(lengthOf(rows()[0]!)).toBe('5:40');
+    // Playing it, its own metadata says 5:48
+    Object.defineProperty(audio!, 'duration', { value: 348, configurable: true });
+    await act(async () => { audio!.dispatchEvent(new Event('loadedmetadata')); });
+    expect(lengthOf(rows()[0]!)).toBe('5:48');
+  });
 });

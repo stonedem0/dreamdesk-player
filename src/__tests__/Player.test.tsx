@@ -328,6 +328,24 @@ describe("Player — Winamp's keys", () => {
     expect(pause).toHaveBeenCalled();
   });
 
+  it('C pauses, and unpauses', async () => {
+    const start = vi.spyOn(AudioEngine.prototype, 'start');
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause');
+    let audio: HTMLAudioElement | undefined;
+    render(<Player initialTracks={TWO} onAudioSource={(s) => { if (s) audio = s.audio; }} />);
+    await act(async () => { fireEvent.pointerDown(inside()); });
+    // Playing: C pauses
+    Object.defineProperty(audio!, 'paused', { value: false, configurable: true });
+    await press('c');
+    expect(pause).toHaveBeenCalled();
+    // Paused part-way: C plays on
+    Object.defineProperty(audio!, 'paused', { value: true, configurable: true });
+    Object.defineProperty(audio!, 'currentTime', { value: 42, configurable: true });
+    start.mockClear();
+    await press('c');
+    expect(start).toHaveBeenCalled();
+  });
+
   it('does nothing once something else on the page was clicked', async () => {
     render(<Player initialTracks={TWO} />);
     await act(async () => { fireEvent.pointerDown(inside()); });
@@ -374,6 +392,16 @@ describe('Player — media keys and the lock screen (Media Session)', () => {
     await act(async () => { handler('nexttrack')(); });
     expect(session.metadata).toMatchObject({ title: 'Archangel' });
     for (const a of ['pause', 'stop', 'previoustrack', 'seekto']) expect(handler(a)).toBeTypeOf('function');
+  });
+
+  it("keeps the lock screen's progress bar up to date", async () => {
+    let audio: HTMLAudioElement | undefined;
+    render(<Player initialTracks={TWO} onAudioSource={(s) => { if (s) audio = s.audio; }} />);
+    Object.defineProperty(audio!, 'duration', { value: 348, configurable: true });
+    Object.defineProperty(audio!, 'currentTime', { value: 61, configurable: true, writable: true });
+    await act(async () => { audio!.dispatchEvent(new Event('loadedmetadata')); audio!.dispatchEvent(new Event('timeupdate')); });
+    expect(session.setPositionState).toHaveBeenLastCalledWith({ duration: 348, position: 61, playbackRate: 1 });
+    expect(session.playbackState).toBe('paused');
   });
 
   it('lets go of the keys and the lock screen when it goes', () => {
