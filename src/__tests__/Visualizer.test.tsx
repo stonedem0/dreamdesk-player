@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Visualizer, VisualizerWindow, type AudioSource } from '../Visualizer';
 import { SKINS } from '../skins';
 
@@ -72,26 +72,47 @@ describe('VisualizerWindow', () => {
 });
 
 describe('VisualizerWindow docked to the Player', () => {
-  const sized = (el: HTMLElement, h: number) => Object.defineProperty(el, 'offsetHeight', { value: h, configurable: true });
+  // Heights by class, as player.css would lay them out
+  let heights: Record<string, number> = {};
+  beforeEach(() => {
+    heights = { player: 300, 'dd-window': 0, 'dd-player__playlist': 150, 'dd-player__eq': 170 };
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return heights[this.className] ?? 0;
+    });
+  });
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-  it("takes the Player's height and follows it, until it's resized by hand", () => {
+  const player = (...open: string[]) => {
+    const el = document.createElement('div');
+    el.className = 'player';
+    for (const cls of open) el.appendChild(Object.assign(document.createElement('div'), { className: cls }));
+    return el;
+  };
+
+  it('is as tall as the Player with both panels open, even when they are shut', () => {
+    // 300 with the playlist open: 150 of that is the playlist, so 150 + 150 + 170
+    render(<VisualizerWindow source={null} dockTo={() => player('dd-player__playlist')} />);
+    expect(windowProps.current.height).toBe('470px');
+    // And with neither open (the Player alone is 300)
+    render(<VisualizerWindow source={null} dockTo={() => player()} />);
+    expect(windowProps.current.height).toBe('620px');
+  });
+
+  it('follows the Player if its size changes, until resized by hand', () => {
     let resized = () => {};
     vi.stubGlobal('ResizeObserver', class { constructor(cb: () => void) { resized = cb; } observe() {} disconnect() {} });
-    const player = sized(document.createElement('div'), 300);
-    const { container } = render(<VisualizerWindow source={null} dockTo={() => player} />);
-    expect(windowProps.current.height).toBe('300px');
-    const own = container.querySelector<HTMLElement>('.dd-window')!;
+    render(<VisualizerWindow source={null} dockTo={() => player()} />);
+    expect(windowProps.current.height).toBe('620px');
 
-    // The Player expands; the visualizer still matched it, so it grows too
-    sized(own, 300); sized(player, 520);
+    // Still matched, so a bigger Player (another skin, say) makes it bigger too
+    heights['dd-window'] = 620; heights.player = 320;
     act(() => resized());
-    expect(windowProps.current.height).toBe('520px');
+    expect(windowProps.current.height).toBe('640px');
 
     // Resized by hand: no longer follows
-    sized(own, 400); sized(player, 300);
+    heights['dd-window'] = 500; heights.player = 300;
     act(() => resized());
-    expect(windowProps.current.height).toBe('520px');
-    vi.unstubAllGlobals();
+    expect(windowProps.current.height).toBe('640px');
   });
 });
 
