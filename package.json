@@ -1,6 +1,6 @@
 {
   "name": "@dreamdesk/player",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A Winamp-style music player for React, built on @dreamdesk/ui: playlist, 7-band EQ with presets, skins, and a visualizer.",
   "keywords": [
     "winamp",

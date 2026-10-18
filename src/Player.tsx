@@ -809,6 +809,39 @@ export function Player({
         </div>
       </div>
 
+      {/* EQ: under the main window, above the playlist, as in Winamp */}
+      {showEq && (
+        <div className="dd-player__eq" ref={eqDomRef} onContextMenu={openMainMenu}>
+          <div className="dd-player__eq-panel">
+            <div className="dd-player__eq-header"><span>equalizer</span></div>
+            <div className="dd-player__eq-presets">
+              <div className="dd-player__eq-side">
+                <button className="dd-player__mini-btn" onClick={() => setShowPresets(v => !v)}>presets ▾</button>
+                <div className={`dd-player__dropdown-menu${showPresets ? ' open' : ''}`}>
+                  {EQ_PRESET_ORDER.map(key => (
+                    <button key={key} role="menuitem" onClick={() => applyPreset(key)}>
+                      {key.replace(/\b\w/g, m => m.toUpperCase())}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="dd-player__eq-sliders">
+                {EQ_FREQS.map((_, i) => (
+                  <label key={i}>
+                    <span>{EQ_LABELS[i]}</span>
+                    <input className="dd-player__eq-slider" type="range" min={-12} max={12}
+                      value={eqBands[i]} data-band={i}
+                      onChange={e => {
+                        const v = Number(e.target.value);
+                        setEqBands(prev => { const n = [...prev]; n[i] = v; return n; });
+                      }} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Playlist */}
       {showPlaylist && (
         <div className="dd-player__playlist" ref={playlistDomRef} onContextMenu={openMainMenu}>
@@ -857,39 +890,6 @@ export function Player({
         </div>
       )}
 
-      {/* EQ */}
-      {showEq && (
-        <div className="dd-player__eq" ref={eqDomRef} onContextMenu={openMainMenu}>
-          <div className="dd-player__eq-panel">
-            <div className="dd-player__eq-header"><span>equalizer</span></div>
-            <div className="dd-player__eq-presets">
-              <div className="dd-player__eq-side">
-                <button className="dd-player__mini-btn" onClick={() => setShowPresets(v => !v)}>presets ▾</button>
-                <div className={`dd-player__dropdown-menu${showPresets ? ' open' : ''}`}>
-                  {EQ_PRESET_ORDER.map(key => (
-                    <button key={key} role="menuitem" onClick={() => applyPreset(key)}>
-                      {key.replace(/\b\w/g, m => m.toUpperCase())}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="dd-player__eq-sliders">
-                {EQ_FREQS.map((_, i) => (
-                  <label key={i}>
-                    <span>{EQ_LABELS[i]}</span>
-                    <input className="dd-player__eq-slider" type="range" min={-12} max={12}
-                      value={eqBands[i]} data-band={i}
-                      onChange={e => {
-                        const v = Number(e.target.value);
-                        setEqBands(prev => { const n = [...prev]; n[i] = v; return n; });
-                      }} />
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </DdWindow>
     {mainMenu && createPortal(
       <div

@@ -20,8 +20,31 @@
 .dd-player input,
 .dd-player select { font-family: inherit; }
 
+/* A skin can draw every edge as a gradient (border-image), like the window's
+   frame: buttons, displays, sliders, menus, and the panels and their lines.
+   (.dd-player first: the parts' own border shorthands reset border-image.) */
+.dd-player .dd-player__mini-btn,
+.dd-player .dd-player__controls button,
+.dd-player .dd-player__statusbar-btn,
+.dd-player.dd-player .dd-win-controls button,
+.dd-player .dd-player__viz,
+.dd-player .dd-player__track,
+.dd-player .dd-player__screen-value,
+.dd-player .dd-player__playlist-time,
+.dd-player .dd-player__volume,
+.dd-player .dd-player__balance,
+.dd-player .dd-player__seek-slider,
+.dd-player .dd-player__eq-slider,
+.dd-player .dd-player__dropdown-menu,
+.dd-player .dd-player__body,
+.dd-player .dd-player__playlist,
+.dd-player .dd-player__eq,
+.dd-player .dd-player__playlist-header,
+.dd-player .dd-player__eq-header,
+.dd-player .dd-player__playlist-statusbar { border-image: var(--edge-image, none); }
+
 /* All text is lowercase, like the rest of dreamdesk: labels, menus (on the
-   menu itself, since its buttons are \`all: unset\`), and tracks and artists.
+   menu itself, since its buttons are `all: unset`), and tracks and artists.
    Only how they look: the lock screen and media controls show tracks as written. */
 .dd-player__mini-btn,
 .dd-player__toggle,
@@ -126,7 +149,7 @@
   background-image: var(--player-body-bg, none);
   background-size: 100%;
   background-position: 50% 33%;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--panel-line-width, 1px) solid var(--border-color);
 }
 
 /* One padding round the edge and one gap between everything: each piece
@@ -249,7 +272,7 @@
   box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
 }
 
-.dd-player__screen-unit { margin-left: 2px; color: var(--color-text-secondary, var(--color-text-primary)); }
+.dd-player__screen-unit { margin-left: 2px; color: var(--screen-unit-color, var(--color-text-secondary, var(--color-text-primary))); }
 
 .dd-player__kbps { grid-area: kbps; }
 .dd-player__khz  { grid-area: khz; }
@@ -408,7 +431,7 @@
 .dd-player__playlist-header {
   padding: 4px 6px;
   background: var(--panel-header-bg, rgba(0,11,25,0.6));
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--panel-line-width, 1px) solid var(--border-color);
   color: var(--color-text-secondary, var(--color-text-primary));
   font-size: var(--player-font-size-small);
   font-weight: 600;
@@ -435,7 +458,7 @@
   height: 20px;
   padding: 0 var(--player-pad);
   background: var(--panel-header-bg, rgba(0,11,25,0.6));
-  border-top: 1px solid var(--border-color);
+  border-top: var(--panel-line-width, 1px) solid var(--border-color);
 }
 
 .dd-player__playlist-statusbar-btns {
@@ -463,7 +486,7 @@
   /* Numbers inside each row, so the one-line cut-off doesn't clip them */
   padding-left: 0;
   list-style-position: inside;
-  color: var(--color-text-secondary, var(--color-text-primary));
+  color: var(--playlist-text-color, var(--color-text-secondary, var(--color-text-primary)));
   font-size: var(--player-font-size-small);
   text-shadow: var(--playlist-text-shadow, 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6));
 }
@@ -476,7 +499,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   &:hover { opacity: 0.8; }
-  &.active { color: var(--color-accent-primary); font-weight: bold; }
+  &.active { color: var(--playlist-active-color, var(--color-accent-primary)); font-weight: bold; }
   &.selected { background: var(--playlist-selected-bg, rgba(255, 255, 255, 0.22)); }
 }
 
@@ -571,7 +594,7 @@
 .dd-player__eq-header {
   padding: 4px 6px;
   background-color: var(--panel-header-bg, rgba(0,11,25,0.6));
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: var(--panel-line-width, 1px) solid var(--border-color);
   display: flex; align-items: center; justify-content: center;
   font-size: var(--player-font-size-small);
   font-weight: 600; letter-spacing: 0.5px;
@@ -638,7 +661,7 @@
   display: flex; flex-direction: column;
   align-items: center; gap: 2px;
   flex: 1;
-  span { font-size: var(--player-font-size-small); order: -1; color: var(--border-color); }
+  span { font-size: var(--player-font-size-small); order: -1; color: var(--eq-label-color, var(--border-color)); }
 }
 
 /* ── EQ slider ───────────────────────────────────────────────────────────── */

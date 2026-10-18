@@ -1,6 +1,3 @@
-import playerBodyBg from './img/image-asset.jpeg';
-import playlistBodyBg from './img/playlist-bg.png';
-import eqBodyBg from './img/eq-bg.webp';
 
 export interface Skin {
   id: string;
@@ -17,14 +14,24 @@ export const SKINS: Record<string, Skin> = {
     id: 'tokyo-3-sunset',
     label: 'Tokyo Sunset',
     vars: {
-      '--player-bg':           '#000b19',
-      '--player-bg-soft':      'rgba(0,11,25,0.73)',
-      '--player-bg-strong':    'rgba(0,11,25,0.86)',
-      '--border-color':        '#120602',
+      // One warm near-black for every dark (panels, displays, headers, menus,
+      // the visualizer)
+      '--player-bg':           '#120906',
+      '--panel-header-bg':     '#1c0f0a',
+      '--dropdown-menu-bg':    'rgba(18,9,6,0.96)',
+      '--dropdown-menu-hover': 'rgba(255,133,0,0.15)',
+      '--player-bg-soft':      'rgba(18,9,6,0.73)',
+      '--player-bg-strong':    'rgba(18,9,6,0.86)',
+      // Edges: a warm amber, thin, so buttons, displays and headers show on the dark
+      '--border-color':        'rgba(184,96,30,0.55)',
+      '--panel-line-width':    '0.5px',
+      // ...every edge drawn in the window frame's red-orange to gold, dimmed so
+      // the edges sit back
+      '--edge-image':          'linear-gradient(135deg,rgba(255,72,0,0.4),rgba(255,145,0,0.4),rgba(255,182,0,0.4)) 1',
       '--color-text-primary':  '#fff6a9',
       '--color-text-secondary':'#ffb600',
-      '--color-display-bg':    '#001127c9',
-      '--color-slider-bg':     '#0d1624',
+      '--color-display-bg':    '#0a0503',
+      '--color-slider-bg':     '#2a1610',
       '--color-slider-thumb':  '#080808',
       '--color-button-bg':     '#000000b9',
       '--color-button-press-bg': '#1b1b1b',
@@ -34,15 +41,18 @@ export const SKINS: Record<string, Skin> = {
       '--color-pure-black':    '#000',
       '--player-gradient':     'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--eq-gradient':         'linear-gradient(180deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
-      '--player-body-bg':      `url(${playerBodyBg})`,
-      '--playlist-body-bg':    `url(${playlistBodyBg})`,
-      '--eq-body-bg':          `url(${eqBodyBg})`,
+      // Plain dark for now: the pictures this skin had weren't ours to ship
+      '--player-body-bg':      'none',
+      '--eq-body-bg':          'none',
+      '--playlist-body-bg':    'none',
+      // On the plain dark, the EQ's band numbers in amber like the rest
+      '--eq-label-color':      '#ffb600',
       '--titlebar-bg':         'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--titlebar-color':      '#2d1b3d',
       '--win-controls-bg':     '#1d1c1c',
       '--win-controls-border': '1px solid #ff8500',
       // dreamdesk Window vars — match vanilla tokyo-3-sunset-skin.css
-      '--dd-window-body':      '#000b19',
+      '--dd-window-body':      '#120906',
       '--dd-border':           '2px solid transparent',
       '--dd-header-bg':        'linear-gradient(90deg,#ff4800,#ff5400,#ff6000,#ff6d00,#ff7900,#ff8500,#ff9100,#ff9e00,#ffaa00,#ffb600)',
       '--dd-header-color':     '#2d1b3d',
