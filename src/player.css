@@ -522,7 +522,8 @@
 }
 
 /* Winamp's main menu: opened by right-clicking the player, drawn on the page
-   (outside the window) at the cursor; it carries the skin's colours itself */
+   (outside the window) at the cursor; it carries the skin's colours itself, but
+   not .dd-player's variables, so the size needs a fallback */
 .dd-player__dropdown-menu.dd-player__main-menu {
   position: fixed;
   right: auto;
@@ -531,7 +532,7 @@
   min-width: 170px;
   max-height: none;
   font-family: monospace;
-  font-size: var(--player-font-size-small);
+  font-size: var(--player-font-size-small, 10px);
   button { display: flex; align-items: center; gap: 4px; }
 }
 
