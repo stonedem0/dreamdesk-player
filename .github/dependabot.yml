@@ -1,6 +1,6 @@
 # Dependabot: keeps the GitHub Actions these workflows use up to date (a PR a
 # week at most, grouped). Security updates for npm dependencies are on in the
-# repo settings and come as their own PRs.
+# repo settings; the npm entry below groups them into one PR.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -12,3 +12,16 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: ci
+
+  # npm: security updates only (no routine bumps), all in one PR
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+    commit-message:
+      prefix: chore
