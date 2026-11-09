@@ -10,6 +10,7 @@ import './player.css';
 import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
 import { WINDOW_ICONS } from './windowIcons';
+import { readTags } from './trackTags';
 import { probeLength } from './trackLength';
 import {
   EQ_PRESETS,
@@ -525,18 +526,21 @@ export function Player({
   }, [isPlaying, currentTime, duration]);
 
   // ── Upload ────────────────────────────────────────────────────────────────
-  const handleUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    const title = file.name.replace(/\.(mp3|wav|ogg|m4a)$/i, '');
+    // Title and artist from the file's tags; the file name when it has none
+    const tags = await readTags(file);
+    const title = tags.title || file.name.replace(/\.(mp3|wav|ogg|m4a)$/i, '');
     setPlaylist(prev => {
-      const next = [...prev, { title, artist: '', src: url }];
+      const next = [...prev, { title, artist: tags.artist || '', src: url }];
       playlistRef.current = next;
       playTrack(next.length - 1, next);
       return next;
     });
-    e.target.value = '';
+    input.value = '';
   }, [playTrack]);
 
   // ── Playlist menus (REM, SEL, MISC) ───────────────────────────────────────
