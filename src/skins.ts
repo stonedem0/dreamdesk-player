@@ -110,8 +110,8 @@ export const SKINS: Record<string, Skin> = {
       '--color-neon-red':      '#ff9ea6',
       '--color-accent-primary':'#fb6f92',
       // Button and icon shadows: a darker pink, not black
-      '--skin-bevel-lo':       'rgba(214,92,126,0.5)',
-      '--skin-bevel-lo-soft':  'rgba(214,92,126,0.16)',
+      '--skin-bevel-lo':       'rgba(214,92,126,0.36)',
+      '--skin-bevel-lo-soft':  'rgba(214,92,126,0.12)',
       '--color-pure-black':    '#3d2d33',
       '--player-gradient':     'linear-gradient(90deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',
       '--eq-gradient':         'linear-gradient(180deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',

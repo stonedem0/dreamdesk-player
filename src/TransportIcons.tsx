@@ -15,7 +15,7 @@ const Icon = ({ shape, lit }: { shape: React.ReactNode; lit: string[] /* the top
   <svg className="dd-player__icon" viewBox="-1 -1 12 12" width="14" height="14" aria-hidden="true" focusable="false">
     <g fill="none" strokeWidth="1" strokeLinejoin="miter" strokeLinecap="butt">
       {/* White, a little stronger than the bevel's: on a pale button the lit edge has to show to close the shape, but not so strong it clashes with the shadow */}
-      <g style={{ stroke: 'var(--icon-hi, rgba(255,255,255,0.4))' }} strokeWidth="1.1">{shape}</g>
+      <g style={{ stroke: 'var(--icon-hi, rgba(255,255,255,0.5))' }} strokeWidth="1.1">{shape}</g>
       <g style={{ stroke: 'var(--bevel-lo)' }}>{lit.map((d) => <path key={d} d={d} />)}</g>
     </g>
   </svg>
