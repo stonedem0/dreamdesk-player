@@ -415,7 +415,12 @@
 
 /* Raised outlines like Winamp's (see TransportIcons.tsx): the edges take the
    button's bevel colours */
-.dd-player__icon { display: block; flex: none; }
+.dd-player__icon {
+  display: block;
+  flex: none;
+  /* A touch of blur so the 1px edges don't look cut with a blade */
+  filter: blur(0.3px);
+}
 
 /* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
