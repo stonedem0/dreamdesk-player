@@ -220,6 +220,22 @@ export function Player({
   useEffect(() => { playlistRef.current = playlist; },[playlist]);
   useEffect(() => { currentIdxRef.current = currentIdx; }, [currentIdx]);
 
+  // The visualizer fills the whole display, under the timer. Its drawing
+  // height follows the display's (which is as tall as the rows beside it), so
+  // bars use all of it instead of stopping at a fixed 35px.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === 'undefined') return;
+    const fit = () => {
+      const h = Math.round(canvas.clientHeight);
+      if (h > 0 && canvas.height !== h) canvas.height = h;
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
   // ── Audio graph (imperative to survive StrictMode double-invoke) ──────────
   // The graph itself lives in core/audio-engine.js, shared with the vanilla
   // player. This effect owns only its lifetime: one engine per mount, disposed
