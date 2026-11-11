@@ -384,8 +384,8 @@
    bottom-right, and pressed in (the edges swap) while held. Icons are SVG in
    one box, so they sit the same in every button. */
 .dd-player__controls button {
-  --bevel-hi: rgba(255,255,255,0.45);
-  --bevel-hi-soft: rgba(255,255,255,0.15);
+  --bevel-hi: rgba(255,255,255,0.55);
+  --bevel-hi-soft: rgba(255,255,255,0.2);
   /* A skin can tint its shadows (--skin-bevel-lo...) instead of the black default */
   --bevel-lo: var(--skin-bevel-lo, rgba(0,0,0,0.6));
   --bevel-lo-soft: var(--skin-bevel-lo-soft, rgba(0,0,0,0.2));
