@@ -380,29 +380,50 @@
   margin-top: var(--player-gap);
 }
 
+/* Winamp's buttons: raised, with a light edge top-left and a dark one
+   bottom-right, and pressed in (the edges swap) while held. Icons are SVG in
+   one box, so they sit the same in every button. */
 .dd-player__controls button {
+  --bevel-hi: rgba(255,255,255,0.55);
+  --bevel-hi-soft: rgba(255,255,255,0.2);
+  /* A skin can tint its shadows (--skin-bevel-lo...) instead of the black default */
+  --bevel-lo: var(--skin-bevel-lo, rgba(0,0,0,0.6));
+  --bevel-lo-soft: var(--skin-bevel-lo-soft, rgba(0,0,0,0.2));
   font-size: var(--player-font-size-small);
-  height: 20px;
-  width: 23px;
+  height: 24px;
+  width: 28px;
+  min-width: 28px;
   background-color: var(--color-button-bg);
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
+    inset -1px -1px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-lo-soft);
   display: flex; align-items: center; justify-content: center;
   line-height: 1; padding: 0; cursor: pointer;
-  transition: transform 80ms ease, filter 120ms ease;
+  transition: filter 120ms ease;
 
-  &:not(.dd-player__toggle) { width: 25px; min-width: 25px; }
   &:hover { filter: brightness(1.15); }
-  &:active { transform: translateY(1px); }
+  &:active:not(:disabled) {
+    box-shadow:
+      inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+      inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
+    padding: 1px 0 0 1px; /* the icon moves with the press */
+  }
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
-.dd-player__controls button:nth-child(3) { font-size: 8px; padding-top: 2px; }
+/* Raised outlines like Winamp's (see TransportIcons.tsx): the edges take the
+   button's bevel colours */
+.dd-player__icon { display: block; flex: none; }
 
+/* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
   background-color: var(--color-button-press-bg);
   outline: 1px solid var(--color-accent-primary);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+    inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
 }
 
 /* Shuffle and Repeat against the right edge */
@@ -411,8 +432,8 @@
 .dd-player__shuffle,
 .dd-player__repeat {
   width: auto !important;
-  min-width: 45px !important;
-  padding: 0 4px !important;
+  min-width: 43px !important;
+  padding: 0 3px !important;
 }
 
 /* ── Playlist dock ───────────────────────────────────────────────────────── */
