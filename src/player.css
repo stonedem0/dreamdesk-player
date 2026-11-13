@@ -393,6 +393,8 @@
   box-shadow:
     inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
     inset -1px -1px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-lo-soft);
+  /* The pressed pattern is a pixel checker: keep its squares sharp */
+  image-rendering: pixelated;
 
   &:active:not(:disabled) {
     box-shadow:
@@ -417,7 +419,8 @@
   line-height: 1; padding: 0; cursor: pointer;
   transition: filter 120ms ease;
 
-  &:hover { filter: brightness(1.15); }
+  /* A skin can pick its own hover (a pale button would just go white) */
+  &:hover { filter: var(--skin-hover-filter, brightness(1.15)); }
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
