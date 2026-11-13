@@ -399,6 +399,9 @@
       inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
       inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
     padding: 1px 0 0 1px; /* the label moves with the press */
+    /* A skin can fill a pressed button with a pattern (--skin-pressed-pattern) */
+    background-image: var(--skin-pressed-pattern, none);
+    background-size: 4px 4px;
   }
 }
 
@@ -425,6 +428,8 @@
 /* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
   background-color: var(--color-button-press-bg);
+  background-image: var(--skin-pressed-pattern, none);
+  background-size: 4px 4px;
   outline: 1px solid var(--color-accent-primary);
   box-shadow:
     inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
