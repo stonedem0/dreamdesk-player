@@ -12,7 +12,7 @@
  * system finds for each, so their size and baseline differ.
  */
 const Icon = ({ shape, lit }: { shape: React.ReactNode; lit: string[] /* the top and left edges: the shadowed ones */ }) => (
-  <svg className="dd-player__icon" viewBox="-1 -1 12 12" width="14" height="14" aria-hidden="true" focusable="false">
+  <svg className="dd-player__icon" viewBox="-1 -1 12 12" width="11" height="11" aria-hidden="true" focusable="false">
     <g fill="none" strokeWidth="1" strokeLinejoin="miter" strokeLinecap="butt">
       {/* White, a little stronger than the bevel's: on a pale button the lit edge has to show to close the shape, but not so strong it clashes with the shadow */}
       <g style={{ stroke: 'var(--icon-hi, rgba(255,255,255,0.5))', fill: 'var(--skin-icon-fill, none)' }} strokeWidth="1.1">{shape}</g>
