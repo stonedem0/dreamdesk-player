@@ -821,12 +821,12 @@ export function Player({
               className={`dd-player__toggle dd-player__shuffle${shuffle ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={shuffle} onClick={() => setShuffle(v => !v)}
               title="Shuffle" aria-label="Shuffle"
-            >Shuf</button>
+            ><span className="dd-player__led" aria-hidden="true" />Shuf</button>
             <button
               className={`dd-player__toggle dd-player__repeat${repeat ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={repeat} onClick={() => setRepeat(v => !v)}
               title="Repeat" aria-label="Repeat"
-            >Rpt</button>
+            ><span className="dd-player__led" aria-hidden="true" />Rpt</button>
           </div>
 
         </div>

@@ -119,7 +119,11 @@ export const SKINS: Record<string, Skin> = {
       '--skin-label-color':    '#16100f',
       '--skin-label-shadow':   '1px 1px 0 rgba(255,255,255,0.5)',
       // A pressed button, or a toggle that is on: a fine checkerboard of pink, as in Winamp's dithered buttons
-      '--skin-pressed-pattern': 'repeating-conic-gradient(rgba(251,111,146,0.3) 0 25%, transparent 0 50%)',
+      '--skin-pressed-pattern': 'repeating-conic-gradient(rgba(214,92,126,0.22) 0 25%, transparent 0 50%)',
+      '--skin-pressed-size':    '2px',
+      // A toggle that is on keeps the button's own pale pink (a touch deeper), with no outline
+      '--skin-toggle-on-bg':    '#f8dce3',
+      '--skin-toggle-on-outline': 'none',
       '--color-pure-black':    '#3d2d33',
       '--player-gradient':     'linear-gradient(90deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',
       '--eq-gradient':         'linear-gradient(180deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',

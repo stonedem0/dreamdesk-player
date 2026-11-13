@@ -401,7 +401,7 @@
     padding: 1px 0 0 1px; /* the label moves with the press */
     /* A skin can fill a pressed button with a pattern (--skin-pressed-pattern) */
     background-image: var(--skin-pressed-pattern, none);
-    background-size: 4px 4px;
+    background-size: var(--skin-pressed-size, 4px);
   }
 }
 
@@ -427,10 +427,10 @@
 
 /* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
-  background-color: var(--color-button-press-bg);
+  background-color: var(--skin-toggle-on-bg, var(--color-button-press-bg));
   background-image: var(--skin-pressed-pattern, none);
-  background-size: 4px 4px;
-  outline: 1px solid var(--color-accent-primary);
+  background-size: var(--skin-pressed-size, 4px);
+  outline: var(--skin-toggle-on-outline, 1px solid var(--color-accent-primary));
   box-shadow:
     inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
     inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
@@ -441,12 +441,25 @@
    outline */
 .dd-player__controls button.dd-player__is-pressed {
   background-image: var(--skin-pressed-pattern, none);
-  background-size: 4px 4px;
+  background-size: var(--skin-pressed-size, 4px);
   box-shadow:
     inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
     inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
   padding: 1px 0 0 1px;
 }
+
+/* The little square before a toggle's label: empty when it's off, filled when
+   it's on */
+.dd-player__led {
+  flex: none;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+  border: 1px solid currentColor;
+  text-shadow: none;
+}
+.dd-player__toggle[aria-pressed="true"] .dd-player__led { background: var(--color-accent-primary); }
 
 /* Shuffle and Repeat against the right edge */
 .dd-player__shuffle { margin-left: auto; }
