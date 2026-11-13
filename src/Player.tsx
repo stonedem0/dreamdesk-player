@@ -787,16 +787,26 @@ export function Player({
             <span className="dd-player__screen-unit">kHz</span>
           </div>
 
-          <div className="dd-player__sliders">
-            <input type="range" min={0} max={100} value={volume} className="dd-player__volume"
-              onChange={e => setVolume(Number(e.target.value))} />
-            <input type="range" min={-100} max={100} value={balance} step={1} className="dd-player__balance"
-              title="Balance" onChange={e => setBalance(Number(e.target.value))} />
+          <div className="dd-player__panels">
             <button className="dd-player__mini-btn" onClick={() => togglePanel('eq')}>EQ</button>
             <button className="dd-player__mini-btn" onClick={() => togglePanel('playlist')}>PL</button>
           </div>
 
+          <div className="dd-player__row dd-player__vol">
+            <span className="dd-player__row-label">vol</span>
+            <input type="range" min={0} max={100} value={volume} className="dd-player__volume" aria-label="Volume"
+              onChange={e => setVolume(Number(e.target.value))} />
+            <span className="dd-player__row-value">{volume}</span>
+          </div>
+          <div className="dd-player__row dd-player__bal">
+            <span className="dd-player__row-label">bal</span>
+            <input type="range" min={-100} max={100} value={balance} step={1} className="dd-player__balance"
+              title="Balance" aria-label="Balance" onChange={e => setBalance(Number(e.target.value))} />
+            <span className="dd-player__row-value">{balance === 0 ? 'C' : `${balance < 0 ? 'L' : 'R'}${Math.abs(balance)}`}</span>
+          </div>
+
           <div className="dd-player__seek">
+            <span className="dd-player__seek-time">{fmtTime(currentTime)}</span>
             <input type="range" min={0} max={duration || 100} value={currentTime} step={1}
               className="dd-player__seek-slider"
               onPointerDown={() => { isSeekingRef.current = true; }}
@@ -807,6 +817,7 @@ export function Player({
                 const audio = audioRef.current;
                 if (audio && isFinite(audio.duration)) audio.currentTime = v;
               }} />
+            <span className="dd-player__seek-time">-{fmtTime(Math.max(0, duration - currentTime))}</span>
           </div>
 
           <div className="dd-player__controls">
