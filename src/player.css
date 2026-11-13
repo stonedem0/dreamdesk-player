@@ -288,7 +288,7 @@
   display: flex;
   gap: var(--player-gap);
 }
-.dd-player__panels .dd-player__mini-btn { width: 36px; }
+.dd-player__panels .dd-player__mini-btn { width: 30px; }
 
 /* Volume and balance: a label, the slider, and its value */
 .dd-player__row {
