@@ -159,11 +159,12 @@
   padding: var(--player-pad);
   gap: var(--player-gap);
   grid-template-columns: auto auto auto 1fr;
-  grid-template-rows: auto auto auto auto auto;
+  grid-template-rows: repeat(6, auto);
   grid-template-areas:
     "viz title title title"
-    "viz kbps khz ."
-    "viz sliders sliders sliders"
+    "viz kbps khz panels"
+    "viz vol vol vol"
+    "viz bal bal bal"
     "seek seek seek seek"
     "controls controls controls controls";
 }
@@ -280,19 +281,41 @@
 
 /* ── Sliders row ─────────────────────────────────────────────────────────── */
 
-.dd-player__sliders {
-  grid-area: sliders;
+/* EQ and PL, against the right edge of the kbps / kHz row */
+.dd-player__panels {
+  grid-area: panels;
+  justify-self: end;
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
   gap: var(--player-gap);
 }
-/* EQ and PL against the right edge */
-.dd-player__sliders .dd-player__mini-btn:first-of-type { margin-left: auto; }
+.dd-player__panels .dd-player__mini-btn { width: 36px; }
 
+/* Volume and balance: a label, the slider, and its value */
+.dd-player__row {
+  display: flex;
+  align-items: center;
+  gap: var(--player-gap);
+  min-width: 0;
+  font-size: var(--player-font-size-small);
+  color: var(--color-text-secondary, var(--color-text-primary));
+}
+.dd-player__vol { grid-area: vol; }
+.dd-player__bal { grid-area: bal; }
+.dd-player__row-label { width: 20px; flex: none; }
+.dd-player__row-value { width: 26px; flex: none; text-align: right; }
+
+/* The seek bar, with the time played and the time left either side */
 .dd-player__seek {
   grid-area: seek;
+  display: flex;
+  align-items: center;
+  gap: var(--player-gap);
+  font-size: var(--player-font-size-small);
+  color: var(--color-text-secondary, var(--color-text-primary));
 }
+.dd-player__seek-time { flex: none; min-width: 30px; }
+.dd-player__seek-time:last-child { text-align: right; }
+.dd-player__seek .dd-player__seek-slider { flex: 1; min-width: 0; width: auto; }
 
 /* Volume & Balance */
 .dd-player__volume,
@@ -321,8 +344,8 @@
   &::-moz-range-track { height: 6px; background: var(--color-slider-bg); border: none; }
 }
 
-.dd-player__volume  { width: 70px; }
-.dd-player__balance { width: 40px; }
+.dd-player__volume,
+.dd-player__balance { flex: 1; min-width: 0; }
 
 /* Seek */
 .dd-player__seek-slider {
