@@ -363,10 +363,8 @@
   background-color: var(--color-button-bg, var(--player-bg-soft));
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
-  &:active { transform: translateY(1px); }
 }
 
 /* ── Transport controls ──────────────────────────────────────────────────── */
@@ -380,30 +378,91 @@
   margin-top: var(--player-gap);
 }
 
+/* Winamp's buttons: raised, with a light edge top-left and a dark one
+   bottom-right, and pressed in (the edges swap) while held. The transport
+   buttons, EQ / PL / presets and the playlist's ADD / REM / SEL / MISC all
+   share it. */
+.dd-player__controls button,
+.dd-player__mini-btn,
+.dd-player__statusbar-btn {
+  --bevel-hi: rgba(255,255,255,0.45);
+  --bevel-hi-soft: rgba(255,255,255,0.15);
+  /* A skin can tint its shadows (--skin-bevel-lo...) instead of the black default */
+  --bevel-lo: var(--skin-bevel-lo, rgba(0,0,0,0.6));
+  --bevel-lo-soft: var(--skin-bevel-lo-soft, rgba(0,0,0,0.2));
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
+    inset -1px -1px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-lo-soft);
+  /* The pressed pattern is a pixel checker: keep its squares sharp */
+  image-rendering: pixelated;
+
+  &:active:not(:disabled) {
+    box-shadow:
+      inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+      inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
+    padding: 1px 0 0 1px; /* the label moves with the press */
+    /* A skin can fill a pressed button with a pattern (--skin-pressed-pattern) */
+    background-image: var(--skin-pressed-pattern, none);
+    background-size: var(--skin-pressed-size, 4px);
+  }
+}
+
 .dd-player__controls button {
   font-size: var(--player-font-size-small);
-  height: 20px;
-  width: 23px;
+  height: 24px;
+  width: 28px;
+  min-width: 28px;
   background-color: var(--color-button-bg);
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: flex; align-items: center; justify-content: center;
   line-height: 1; padding: 0; cursor: pointer;
-  transition: transform 80ms ease, filter 120ms ease;
+  transition: filter 120ms ease;
 
-  &:not(.dd-player__toggle) { width: 25px; min-width: 25px; }
-  &:hover { filter: brightness(1.15); }
-  &:active { transform: translateY(1px); }
+  /* A skin can pick its own hover (a pale button would just go white) */
+  &:hover { filter: var(--skin-hover-filter, brightness(1.15)); }
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
-.dd-player__controls button:nth-child(3) { font-size: 8px; padding-top: 2px; }
+/* Recessed outlines like Winamp's (see TransportIcons.tsx): the edges take the
+   button's bevel colours */
+.dd-player__icon { display: block; flex: none; }
 
+/* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
-  background-color: var(--color-button-press-bg);
-  outline: 1px solid var(--color-accent-primary);
+  background-color: var(--skin-toggle-on-bg, var(--color-button-press-bg));
+  background-image: var(--skin-pressed-pattern, none);
+  background-size: var(--skin-pressed-size, 4px);
+  outline: var(--skin-toggle-on-outline, 1px solid var(--color-accent-primary));
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+    inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
 }
+
+/* The pause button stays pressed in while a track is playing, as Winamp's
+   did: the same flipped bevel and pattern as a toggle that is on, without its
+   outline */
+.dd-player__controls button.dd-player__is-pressed {
+  background-image: var(--skin-pressed-pattern, none);
+  background-size: var(--skin-pressed-size, 4px);
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+    inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
+  padding: 1px 0 0 1px;
+}
+
+/* The little square before a toggle's label: empty when it's off, filled when
+   it's on */
+.dd-player__led {
+  flex: none;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+  border: 1px solid currentColor;
+  text-shadow: none;
+}
+.dd-player__toggle[aria-pressed="true"] .dd-player__led { background: var(--color-accent-primary); }
 
 /* Shuffle and Repeat against the right edge */
 .dd-player__shuffle { margin-left: auto; }
@@ -411,8 +470,18 @@
 .dd-player__shuffle,
 .dd-player__repeat {
   width: auto !important;
-  min-width: 45px !important;
-  padding: 0 4px !important;
+  min-width: 36px !important;
+  padding: 0 3px !important;
+}
+
+/* The labels on text buttons: a skin can give them the same depth as the
+   transport icons (dark, with a pale edge below-right, as if pressed into the
+   button). Two more specific classes so it wins over each button's own colour. */
+.dd-player .dd-player__toggle,
+.dd-player .dd-player__mini-btn,
+.dd-player .dd-player__statusbar-btn {
+  color: var(--skin-label-color, var(--color-text-secondary, var(--color-text-primary)));
+  text-shadow: var(--skin-label-shadow, none);
 }
 
 /* ── Playlist dock ───────────────────────────────────────────────────────── */
@@ -476,10 +545,8 @@
   background-color: var(--color-button-bg, var(--player-bg-soft));
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
-  &:active { transform: translateY(1px); }
 }
 
 .dd-player__track-items {

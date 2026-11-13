@@ -11,6 +11,7 @@ import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
 import { WINDOW_ICONS } from './windowIcons';
 import { readTags } from './trackTags';
+import { PrevIcon, PauseIcon, PlayIcon, StopIcon, NextIcon, EjectIcon } from './TransportIcons';
 import { probeLength } from './trackLength';
 import {
   EQ_PRESETS,
@@ -809,21 +810,23 @@ export function Player({
           </div>
 
           <div className="dd-player__controls">
-            <button onClick={goPrev} title="Previous (Z)" aria-label="Previous">⏮︎</button>
-            <button onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause">⏸︎</button>
-            <button onClick={handlePlay} title="Play (X)" aria-label="Play">▶︎</button>
-            <button onClick={handleStop} title="Stop (V)" aria-label="Stop">⏹︎</button>
-            <button onClick={goNext} title="Next (B)" aria-label="Next">⏭︎</button>
-            <button className="dd-player__upload-btn" onClick={() => uploadRef.current?.click()}>⏏︎</button>
+            <button onClick={goPrev} title="Previous (Z)" aria-label="Previous"><PrevIcon /></button>
+            <button className={isPlaying ? 'dd-player__is-pressed' : undefined} onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause"><PauseIcon /></button>
+            <button onClick={handlePlay} title="Play (X)" aria-label="Play"><PlayIcon /></button>
+            <button onClick={handleStop} title="Stop (V)" aria-label="Stop"><StopIcon /></button>
+            <button onClick={goNext} title="Next (B)" aria-label="Next"><NextIcon /></button>
+            <button className="dd-player__upload-btn" onClick={() => uploadRef.current?.click()} title="Open file" aria-label="Open file"><EjectIcon /></button>
             <input ref={uploadRef} type="file" accept="audio/*" style={{ display: 'none' }} onChange={handleUpload} />
             <button
               className={`dd-player__toggle dd-player__shuffle${shuffle ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={shuffle} onClick={() => setShuffle(v => !v)}
-            >Shuffle</button>
+              title="Shuffle" aria-label="Shuffle"
+            ><span className="dd-player__led" aria-hidden="true" />Shuf</button>
             <button
               className={`dd-player__toggle dd-player__repeat${repeat ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={repeat} onClick={() => setRepeat(v => !v)}
-            >Repeat</button>
+              title="Repeat" aria-label="Repeat"
+            ><span className="dd-player__led" aria-hidden="true" />Rpt</button>
           </div>
 
         </div>
