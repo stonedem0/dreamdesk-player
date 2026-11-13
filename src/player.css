@@ -436,6 +436,18 @@
     inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
 }
 
+/* The pause button stays pressed in while a track is playing, as Winamp's
+   did: the same flipped bevel and pattern as a toggle that is on, without its
+   outline */
+.dd-player__controls button.dd-player__is-pressed {
+  background-image: var(--skin-pressed-pattern, none);
+  background-size: 4px 4px;
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+    inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
+  padding: 1px 0 0 1px;
+}
+
 /* Shuffle and Repeat against the right edge */
 .dd-player__shuffle { margin-left: auto; }
 

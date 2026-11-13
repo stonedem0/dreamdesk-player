@@ -811,7 +811,7 @@ export function Player({
 
           <div className="dd-player__controls">
             <button onClick={goPrev} title="Previous (Z)" aria-label="Previous"><PrevIcon /></button>
-            <button onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause"><PauseIcon /></button>
+            <button className={isPlaying ? 'dd-player__is-pressed' : undefined} onClick={handlePause} disabled={!isPlaying} title="Pause (C)" aria-label="Pause"><PauseIcon /></button>
             <button onClick={handlePlay} title="Play (X)" aria-label="Play"><PlayIcon /></button>
             <button onClick={handleStop} title="Stop (V)" aria-label="Stop"><StopIcon /></button>
             <button onClick={goNext} title="Next (B)" aria-label="Next"><NextIcon /></button>
