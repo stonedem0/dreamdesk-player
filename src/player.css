@@ -437,8 +437,18 @@
 .dd-player__shuffle,
 .dd-player__repeat {
   width: auto !important;
-  min-width: 43px !important;
+  min-width: 36px !important;
   padding: 0 3px !important;
+}
+
+/* The labels on text buttons: a skin can give them the same depth as the
+   transport icons (dark, with a pale edge below-right, as if pressed into the
+   button). Two more specific classes so it wins over each button's own colour. */
+.dd-player .dd-player__toggle,
+.dd-player .dd-player__mini-btn,
+.dd-player .dd-player__statusbar-btn {
+  color: var(--skin-label-color, var(--color-text-secondary, var(--color-text-primary)));
+  text-shadow: var(--skin-label-shadow, none);
 }
 
 /* ── Playlist dock ───────────────────────────────────────────────────────── */

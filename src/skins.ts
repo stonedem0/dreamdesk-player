@@ -115,6 +115,9 @@ export const SKINS: Record<string, Skin> = {
       // The icons themselves: black, with the white edge below-right giving them depth
       '--skin-icon-fill':      '#16100f',
       '--skin-icon-lo':        '#16100f',
+      // The labels on text buttons: the icons' black, with the same pale edge below-right
+      '--skin-label-color':    '#16100f',
+      '--skin-label-shadow':   '1px 1px 0 rgba(255,255,255,0.5)',
       '--color-pure-black':    '#3d2d33',
       '--player-gradient':     'linear-gradient(90deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',
       '--eq-gradient':         'linear-gradient(180deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',
