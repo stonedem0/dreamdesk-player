@@ -109,9 +109,17 @@ export const SKINS: Record<string, Skin> = {
       '--color-neon-primary':  '#a7fcfb',
       '--color-neon-red':      '#ff9ea6',
       '--color-accent-primary':'#fb6f92',
-      // Button and icon shadows: a darker pink, not black
-      '--skin-bevel-lo':       'rgba(214,92,126,0.36)',
-      '--skin-bevel-lo-soft':  'rgba(214,92,126,0.12)',
+      // The transport row: black buttons with light pink icons, and the same
+      // depth as before (a light top-left edge, pure black bottom-right)
+      '--skin-transport-bg':       '#211a1d',
+      '--skin-transport-text':     '#ffb6c8',
+      '--skin-transport-press-bg': '#33252b',
+      '--skin-bevel-hi':       'rgba(255,255,255,0.3)',
+      '--skin-bevel-hi-soft':  'rgba(255,255,255,0.1)',
+      '--skin-bevel-lo':       'rgba(0,0,0,0.9)',
+      '--skin-bevel-lo-soft':  'rgba(0,0,0,0.45)',
+      '--skin-icon-hi':        'rgba(255,182,200,0.85)',
+      '--skin-icon-lo':        'rgba(255,182,200,0.35)',
       '--color-pure-black':    '#3d2d33',
       '--player-gradient':     'linear-gradient(90deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',
       '--eq-gradient':         'linear-gradient(180deg,#fde2e4,#fec5bb,#fff1e6,#bee1e6,#a7fcfb,#c8b6ff)',

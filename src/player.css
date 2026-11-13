@@ -384,17 +384,18 @@
    bottom-right, and pressed in (the edges swap) while held. Icons are SVG in
    one box, so they sit the same in every button. */
 .dd-player__controls button {
-  --bevel-hi: rgba(255,255,255,0.45);
-  --bevel-hi-soft: rgba(255,255,255,0.15);
-  /* A skin can tint its shadows (--skin-bevel-lo...) instead of the black default */
+  /* A skin can tint the bevel (--skin-bevel-hi / -lo ...) instead of the defaults */
+  --bevel-hi: var(--skin-bevel-hi, rgba(255,255,255,0.45));
+  --bevel-hi-soft: var(--skin-bevel-hi-soft, rgba(255,255,255,0.15));
   --bevel-lo: var(--skin-bevel-lo, rgba(0,0,0,0.6));
   --bevel-lo-soft: var(--skin-bevel-lo-soft, rgba(0,0,0,0.2));
   font-size: var(--player-font-size-small);
   height: 24px;
   width: 28px;
   min-width: 28px;
-  background-color: var(--color-button-bg);
-  color: var(--color-text-secondary, var(--color-text-primary));
+  /* --skin-transport-bg / -text: a skin can colour this row apart from its other buttons */
+  background-color: var(--skin-transport-bg, var(--color-button-bg));
+  color: var(--skin-transport-text, var(--color-text-secondary, var(--color-text-primary)));
   border: 0.5px solid var(--border-color);
   box-shadow:
     inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
@@ -419,7 +420,7 @@
 
 /* A toggle that is on stays pressed in */
 .dd-player__toggle[aria-pressed="true"] {
-  background-color: var(--color-button-press-bg);
+  background-color: var(--skin-transport-press-bg, var(--color-button-press-bg));
   outline: 1px solid var(--color-accent-primary);
   box-shadow:
     inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
