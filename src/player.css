@@ -363,10 +363,8 @@
   background-color: var(--color-button-bg, var(--player-bg-soft));
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
-  &:active { transform: translateY(1px); }
 }
 
 /* ── Transport controls ──────────────────────────────────────────────────── */
@@ -381,14 +379,30 @@
 }
 
 /* Winamp's buttons: raised, with a light edge top-left and a dark one
-   bottom-right, and pressed in (the edges swap) while held. Icons are SVG in
-   one box, so they sit the same in every button. */
-.dd-player__controls button {
+   bottom-right, and pressed in (the edges swap) while held. The transport
+   buttons, EQ / PL / presets and the playlist's ADD / REM / SEL / MISC all
+   share it. */
+.dd-player__controls button,
+.dd-player__mini-btn,
+.dd-player__statusbar-btn {
   --bevel-hi: rgba(255,255,255,0.45);
   --bevel-hi-soft: rgba(255,255,255,0.15);
   /* A skin can tint its shadows (--skin-bevel-lo...) instead of the black default */
   --bevel-lo: var(--skin-bevel-lo, rgba(0,0,0,0.6));
   --bevel-lo-soft: var(--skin-bevel-lo-soft, rgba(0,0,0,0.2));
+  box-shadow:
+    inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
+    inset -1px -1px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-lo-soft);
+
+  &:active:not(:disabled) {
+    box-shadow:
+      inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
+      inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
+    padding: 1px 0 0 1px; /* the label moves with the press */
+  }
+}
+
+.dd-player__controls button {
   font-size: var(--player-font-size-small);
   height: 24px;
   width: 28px;
@@ -396,20 +410,11 @@
   background-color: var(--color-button-bg);
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow:
-    inset 1px 1px 0 var(--bevel-hi), inset 2px 2px 0 var(--bevel-hi-soft),
-    inset -1px -1px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-lo-soft);
   display: flex; align-items: center; justify-content: center;
   line-height: 1; padding: 0; cursor: pointer;
   transition: filter 120ms ease;
 
   &:hover { filter: brightness(1.15); }
-  &:active:not(:disabled) {
-    box-shadow:
-      inset 1px 1px 0 var(--bevel-lo), inset 2px 2px 0 var(--bevel-lo-soft),
-      inset -1px -1px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-hi-soft);
-    padding: 1px 0 0 1px; /* the icon moves with the press */
-  }
   &:disabled { opacity: 0.4; cursor: default; }
 }
 
@@ -497,10 +502,8 @@
   background-color: var(--color-button-bg, var(--player-bg-soft));
   color: var(--color-text-secondary, var(--color-text-primary));
   border: 0.5px solid var(--border-color);
-  box-shadow: inset 1px 1px 0 rgba(255,246,169,0.22), inset -1px -1px 0 rgba(0,0,0,0.65);
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
-  &:active { transform: translateY(1px); }
 }
 
 .dd-player__track-items {
