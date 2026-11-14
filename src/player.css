@@ -451,28 +451,8 @@
   padding: 1px 0 0 1px;
 }
 
-/* The little square before a toggle's label: empty when it's off, filled when
-   it's on */
-.dd-player__led {
-  flex: none;
-  box-sizing: border-box;
-  width: 8px;
-  height: 8px;
-  margin-right: 3px;
-  border: 1px solid currentColor;
-  text-shadow: none;
-}
-.dd-player__toggle[aria-pressed="true"] .dd-player__led { background: var(--color-accent-primary); }
-
 /* Shuffle and Repeat against the right edge */
 .dd-player__shuffle { margin-left: auto; }
-
-.dd-player__shuffle,
-.dd-player__repeat {
-  width: auto !important;
-  min-width: 36px !important;
-  padding: 0 3px !important;
-}
 
 /* The labels on text buttons: a skin can give them the same depth as the
    transport icons (dark, with a pale edge below-right, as if pressed into the

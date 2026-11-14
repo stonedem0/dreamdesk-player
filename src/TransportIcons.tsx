@@ -47,3 +47,35 @@ export const EjectIcon = () => (
     lit={['M1 6L5 1.5', 'M1 9.5v-2h8']}
   />
 );
+
+/**
+ * Shuffle and repeat are line drawings (arrows), not closed shapes, so they are
+ * engraved another way: the drawing in the icon colour, over a copy of it one
+ * step below-right in the light edge colour.
+ */
+const LineIcon = ({ children }: { children: React.ReactNode }) => (
+  <svg className="dd-player__icon" viewBox="-1 -1 12 12" width="14" height="14" aria-hidden="true" focusable="false">
+    <g style={{ color: 'var(--skin-icon-hi, rgba(255,255,255,0.5))' }} transform="translate(0.7 0.7)">{children}</g>
+    <g style={{ color: 'var(--skin-icon-fill, currentColor)' }}>{children}</g>
+  </svg>
+);
+
+const line = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round', strokeLinecap: 'butt' } as const;
+
+export const ShuffleIcon = () => (
+  <LineIcon>
+    <path {...line} d="M0.8 3H2.6C4.6 3 5 7 7.4 7" />
+    <path {...line} d="M0.8 7H2.6C4.6 7 5 3 7.4 3" />
+    <path fill="currentColor" d="M7.2 1.2L9.8 3 7.2 4.8z" />
+    <path fill="currentColor" d="M7.2 5.2L9.8 7 7.2 8.8z" />
+  </LineIcon>
+);
+
+export const RepeatIcon = () => (
+  <LineIcon>
+    <path {...line} d="M1.5 6V4.6Q1.5 2.6 3.5 2.6H7.2" />
+    <path {...line} d="M8.5 4V5.4Q8.5 7.4 6.5 7.4H2.8" />
+    <path fill="currentColor" d="M7 0.9L9.6 2.6 7 4.3z" />
+    <path fill="currentColor" d="M3 5.7L0.4 7.4 3 9.1z" />
+  </LineIcon>
+);

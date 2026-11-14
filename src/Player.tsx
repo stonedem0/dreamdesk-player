@@ -11,7 +11,7 @@ import { SKINS, DEFAULT_SKIN, type Skin } from './skins';
 import type { AudioSource } from './Visualizer';
 import { WINDOW_ICONS } from './windowIcons';
 import { readTags } from './trackTags';
-import { PrevIcon, PauseIcon, PlayIcon, StopIcon, NextIcon, EjectIcon } from './TransportIcons';
+import { PrevIcon, PauseIcon, PlayIcon, StopIcon, NextIcon, EjectIcon, ShuffleIcon, RepeatIcon } from './TransportIcons';
 import { probeLength } from './trackLength';
 import {
   EQ_PRESETS,
@@ -821,12 +821,12 @@ export function Player({
               className={`dd-player__toggle dd-player__shuffle${shuffle ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={shuffle} onClick={() => setShuffle(v => !v)}
               title="Shuffle" aria-label="Shuffle"
-            ><span className="dd-player__led" aria-hidden="true" />Shuf</button>
+            ><ShuffleIcon /></button>
             <button
               className={`dd-player__toggle dd-player__repeat${repeat ? ' dd-player__toggle--on' : ''}`}
               aria-pressed={repeat} onClick={() => setRepeat(v => !v)}
               title="Repeat" aria-label="Repeat"
-            ><span className="dd-player__led" aria-hidden="true" />Rpt</button>
+            ><RepeatIcon /></button>
           </div>
 
         </div>
